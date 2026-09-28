@@ -474,7 +474,7 @@ window.EduconData = {
           <text x="50" y="310" font-size="11" fill="#4b5563">under the Constitution (Scheduled Tribes) Order, 1950 as amended from time to time.</text>
           
           <rect x="420" y="315" width="130" height="70" fill="#f8fafc" stroke="#94a3b8" stroke-dasharray="3 3"/>
-          <text x="485" y="340" text-anchor="middle" font-size="10" fill="#059669" font-weight="bold">✓ e-DIGITALLY SIGNED</text>
+          <text x="485" y="340" text-anchor="middle" font-size="10" fill="#059669" font-weight="bold"> e-DIGITALLY SIGNED</text>
           <text x="485" y="355" text-anchor="middle" font-size="9" fill="#64748b">Tehsildar Baripada</text>
           <text x="485" y="370" text-anchor="middle" font-size="8" fill="#64748b">Odisha e-District Portal</text>
           

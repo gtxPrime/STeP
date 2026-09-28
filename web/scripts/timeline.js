@@ -42,7 +42,7 @@ window.EduconTimeline = (function() {
             ${app.steps.map((st, idx) => `
               <div class="stepper-node ${st.completed ? 'completed' : (isDeficient && idx === 1 ? 'error' : 'pending')}">
                 <div class="node-dot">
-                  ${st.completed ? '✓' : (isDeficient && idx === 1 ? '!' : idx + 1)}
+                  ${st.completed ? '' : (isDeficient && idx === 1 ? '!' : idx + 1)}
                 </div>
                 <div class="node-label">${st.label}</div>
                 <div class="node-date">${st.date}</div>
@@ -54,7 +54,7 @@ window.EduconTimeline = (function() {
           ${isDeficient ? `
             <div class="deficiency-banner">
               <div class="flex items-center gap-2">
-                <span class="warning-icon">⚠</span>
+                <span class="warning-icon"></span>
                 <div>
                   <h4 class="font-bold text-amber">Defect Code: ${app.deficiencyData.code} (Action Required)</h4>
                   <p class="text-xs text-muted mb-2 font-mono">${app.deficiencyData.bureaucraticReason.substring(0, 140)}...</p>
@@ -62,7 +62,7 @@ window.EduconTimeline = (function() {
               </div>
               <div class="deficiency-actions">
                 <button class="btn btn-warning btn-sm" onclick="EduconTimeline.openDeficiencyExplainer('${app.applicationId}')">
-                  ✨ Explain in Simple Words (Gemini AI)
+                   Explain in Simple Words (MoTa Sovereign AI)
                 </button>
                 <span class="text-xs text-amber font-bold ml-2">⏳ ${app.deficiencyData.daysRemaining} days left to rectify</span>
               </div>
@@ -111,7 +111,7 @@ window.EduconTimeline = (function() {
             <span class="label">PFMS UTR Number</span>
             <span class="value font-mono flex items-center gap-1">
               ${app.dbtDetails.utr}
-              <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${app.dbtDetails.utr}'); EduconApp.showToast('UTR Copied!');">📋</button>
+              <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${app.dbtDetails.utr}'); EduconApp.showToast('UTR Copied!');"></button>
             </span>
           </div>
           <div class="dbt-info-item">
@@ -134,7 +134,7 @@ window.EduconTimeline = (function() {
             <span class="text-xs text-muted">NPCI Aadhaar Mapper Confirmed (Active)</span>
           </div>
           <button class="btn btn-outline btn-xs" onclick="EduconTimeline.openGrievanceEscalation('${app.applicationId}', '${app.dbtDetails.utr}')">
-            ⚠️ Payment Not Received? Escalate
+            ️ Payment Not Received? Escalate
           </button>
         </div>
       </div>
@@ -249,21 +249,21 @@ window.EduconTimeline = (function() {
   async function triggerDeficiencyTranslation(app, lang) {
     const contentEl = document.getElementById('deficiency-explanation-body');
     if (contentEl) {
-      contentEl.innerHTML = `<div class="p-6 text-center"><span class="spinner-ring"></span> Gemini AI translating bureaucratic defect to plain everyday language...</div>`;
+      contentEl.innerHTML = `<div class="p-6 text-center"><span class="spinner-ring"></span> MoTa Sovereign AI translating bureaucratic defect to plain everyday language...</div>`;
     }
 
-    const res = await EduconGemini.explainDeficiency(app.deficiencyData.bureaucraticReason, lang);
+    const res = await EduconMoTa AI.explainDeficiency(app.deficiencyData.bureaucraticReason, lang);
 
     if (contentEl) {
       contentEl.innerHTML = `
         <div class="deficiency-result-box">
           <div class="plain-summary">
-            <h4 class="font-bold text-accent text-base mb-1">💡 What does this actually mean?</h4>
+            <h4 class="font-bold text-accent text-base mb-1"> What does this actually mean?</h4>
             <p class="text-sm leading-relaxed">${res.simpleExplanation}</p>
           </div>
 
           <div class="action-checklist mt-4">
-            <h4 class="font-bold text-base mb-2">📋 How to Fix It (3-Step Checklist):</h4>
+            <h4 class="font-bold text-base mb-2"> How to Fix It (3-Step Checklist):</h4>
             ${res.actionSteps.map(step => `
               <div class="step-check-item">
                 <input type="checkbox" checked readonly />
@@ -282,8 +282,8 @@ window.EduconTimeline = (function() {
           </div>
 
           <div class="mt-4 pt-3 border-t flex justify-end gap-2">
-            <button class="btn btn-outline btn-sm" onclick="EduconApp.showToast('Direct helpline connecting to MoTA Overseas Desk: 1800-11-7700')">📞 Call Officer Helpline</button>
-            <button class="btn btn-primary btn-sm" onclick="EduconApp.showToast('Opening Document Upload for Offer Letter...'); document.getElementById('deficiency-modal').classList.add('hidden'); EduconApp.switchTab('scanner');">📸 Upload Corrected Letter</button>
+            <button class="btn btn-outline btn-sm" onclick="EduconApp.showToast('Direct helpline connecting to MoTA Overseas Desk: 1800-11-7700')"> Call Officer Helpline</button>
+            <button class="btn btn-primary btn-sm" onclick="EduconApp.showToast('Opening Document Upload for Offer Letter...'); document.getElementById('deficiency-modal').classList.add('hidden'); EduconApp.switchTab('scanner');"> Upload Corrected Letter</button>
           </div>
         </div>
       `;
@@ -368,7 +368,7 @@ window.EduconTimeline = (function() {
       ]
     });
 
-    EduconApp.showToast(`✓ Grievance ${newTicketId} registered! Assigned 30-day SLA with MoTA PFMS Cell.`);
+    EduconApp.showToast(` Grievance ${newTicketId} registered! Assigned 30-day SLA with MoTA PFMS Cell.`);
     EduconApp.switchTab('dbt');
   }
 

@@ -1,6 +1,6 @@
 /**
  * Educon MoTA Unified Portal - 5-Scheme Eligibility Wizard Module
- * Conversational / Stepped flow with Gemini reasoning & benefit ranking
+ * Conversational / Stepped flow with MoTa AI reasoning & benefit ranking
  */
 
 window.EduconEligibility = (function() {
@@ -158,7 +158,7 @@ window.EduconEligibility = (function() {
     if (loadingBanner) loadingBanner.classList.remove('hidden');
     if (resultsContainer) resultsContainer.innerHTML = '';
 
-    const evaluation = await EduconGemini.reasonEligibility(state);
+    const evaluation = await EduconMoTa AI.reasonEligibility(state);
 
     if (loadingBanner) loadingBanner.classList.add('hidden');
 
@@ -166,7 +166,7 @@ window.EduconEligibility = (function() {
       topPickBanner.classList.remove('hidden');
       topPickBanner.innerHTML = `
         <div class="top-pick-glow">
-          <div class="top-pick-tag">★ HIGHEST BENEFIT MATCH FOR YOU</div>
+          <div class="top-pick-tag"> HIGHEST BENEFIT MATCH FOR YOU</div>
           <h3 class="text-xl font-bold">${evaluation.topPick.schemeTitle}</h3>
           <p class="text-emerald font-bold text-lg my-1">Entitlement: ${evaluation.topPick.benefit}</p>
           <p class="text-sm opacity-90">${evaluation.topPick.reason}</p>
@@ -184,7 +184,7 @@ window.EduconEligibility = (function() {
           <div class="scheme-eval-header">
             <div>
               <span class="badge ${r.eligible ? 'badge-success' : 'badge-neutral'}">
-                ${r.eligible ? '✓ Fully Eligible' : '✕ Not Applicable'}
+                ${r.eligible ? ' Fully Eligible' : ' Not Applicable'}
               </span>
               <span class="badge badge-outline ml-2">${r.portal}</span>
               <h4 class="font-bold text-md mt-1">${r.schemeTitle}</h4>
@@ -199,7 +199,7 @@ window.EduconEligibility = (function() {
           <div class="scheme-eval-body">
             <p class="text-sm my-1"><strong>Benefit:</strong> ${r.benefit}</p>
             <p class="text-xs text-muted"><strong>Eligibility Verdict:</strong> ${r.reason}</p>
-            ${r.pvtgBonus ? `<div class="pvtg-badge mt-1"><span class="badge badge-warning">⚡ ${r.pvtgBonus}</span></div>` : ''}
+            ${r.pvtgBonus ? `<div class="pvtg-badge mt-1"><span class="badge badge-warning"> ${r.pvtgBonus}</span></div>` : ''}
           </div>
         </div>
       `).join('');

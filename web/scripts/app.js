@@ -108,7 +108,7 @@ window.STePApp = window.EduconApp = (function() {
         studentShell.classList.remove('hidden');
         officerShell.classList.add('hidden');
         switchTab(currentTab);
-        showToast("Switched to Student Self-Service Experience 📱");
+        showToast("Switched to Student Self-Service Experience ");
       });
 
       officerModeBtn.addEventListener('click', () => {
@@ -118,7 +118,7 @@ window.STePApp = window.EduconApp = (function() {
         officerShell.classList.remove('hidden');
         studentShell.classList.add('hidden');
         if (window.EduconOfficer) EduconOfficer.init();
-        showToast("Switched to Ministry / Nodal Officer Portal 🏛️");
+        showToast("Switched to Ministry / Nodal Officer Portal ️");
       });
     }
   }
@@ -133,8 +133,8 @@ window.STePApp = window.EduconApp = (function() {
         appContainer.classList.toggle('phone-frame-mode', isPhoneFrameActive);
         toggleBtn.classList.toggle('active', isPhoneFrameActive);
         toggleBtn.innerHTML = isPhoneFrameActive 
-          ? `📱 Phone Frame: <strong>ON</strong>` 
-          : `🖥️ Fullscreen View`;
+          ? ` Phone Frame: <strong>ON</strong>` 
+          : `️ Fullscreen View`;
         showToast(isPhoneFrameActive ? "Viewing in Mobile Frame simulator" : "Viewing in Full Responsive Mode");
       });
     }
@@ -178,7 +178,7 @@ window.STePApp = window.EduconApp = (function() {
 
     if (apiKeyBtn && modal) {
       apiKeyBtn.addEventListener('click', () => {
-        if (input) input.value = EduconGemini.getApiKey();
+        if (input) input.value = EduconMoTa AI.getApiKey();
         modal.classList.remove('hidden');
       });
     }
@@ -190,9 +190,9 @@ window.STePApp = window.EduconApp = (function() {
     if (saveBtn && input && modal) {
       saveBtn.addEventListener('click', () => {
         const val = input.value.trim();
-        EduconGemini.setApiKey(val);
+        EduconMoTa AI.setApiKey(val);
         modal.classList.add('hidden');
-        showToast(val ? "✓ Gemini API Key saved! Live Gemini 1.5 Flash activated." : "Gemini API Key removed. Using smart offline simulation.");
+        showToast(val ? " MoTa AI API Key saved! Live MoTa AI 1.5 Flash activated." : "MoTa AI API Key removed. Using smart offline simulation.");
       });
     }
   }
@@ -227,8 +227,8 @@ window.STePApp = window.EduconApp = (function() {
 
         setTimeout(() => {
           renewBtn.disabled = false;
-          renewBtn.innerHTML = `✓ Renewal Application Submitted!`;
-          showToast("✓ 1-Tap Renewal Complete! Class 12 marksheet auto-fetched from APAAR ID 9842-1084-2026. Forwarded to Institute Verification.");
+          renewBtn.innerHTML = ` Renewal Application Submitted!`;
+          showToast(" 1-Tap Renewal Complete! Class 12 marksheet auto-fetched from APAAR ID 9842-1084-2026. Forwarded to Institute Verification.");
           switchTab('timeline');
         }, 1200);
       });

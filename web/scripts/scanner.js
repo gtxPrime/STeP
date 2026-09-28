@@ -1,6 +1,6 @@
 /**
  * Educon MoTA Unified Portal - AI Document Scanner Module
- * Live Camera / File / Sample OCR with Gemini Vision and Confidence Scoring
+ * Live Camera / File / Sample OCR with MoTa AI Vision and Confidence Scoring
  */
 
 window.EduconScanner = (function() {
@@ -156,11 +156,11 @@ window.EduconScanner = (function() {
     if (scanOverlay) scanOverlay.classList.remove('hidden');
     if (scanStatus) {
       scanStatus.classList.remove('hidden');
-      scanStatus.innerHTML = `<span class="spinner-ring"></span> Gemini 1.5 Flash Vision analyzing document pixels & signatures...`;
+      scanStatus.innerHTML = `<span class="spinner-ring"></span> MoTa Sovereign Vision analyzing document pixels & signatures...`;
     }
 
     try {
-      const result = await EduconGemini.scanDocument(dataUrl, hint);
+      const result = await EduconMoTa AI.scanDocument(dataUrl, hint);
       currentScanData = result.data;
 
       renderScanResults(result.data, result.source);
@@ -184,7 +184,7 @@ window.EduconScanner = (function() {
     const notesEl = document.getElementById('scan-verification-notes');
     const engineEl = document.getElementById('scan-engine-name');
 
-    if (engineEl) engineEl.textContent = sourceEngine || "Gemini 1.5 Flash Vision";
+    if (engineEl) engineEl.textContent = sourceEngine || "MoTa Sovereign Vision";
 
     const score = data.confidenceScore || 95;
     if (meterFill) meterFill.style.width = `${score}%`;
@@ -193,13 +193,13 @@ window.EduconScanner = (function() {
     if (badgeEl) {
       if (score >= 90) {
         badgeEl.className = "badge badge-success";
-        badgeEl.innerHTML = "✓ High Confidence (Auto-Approve Eligible)";
+        badgeEl.innerHTML = " High Confidence (Auto-Approve Eligible)";
       } else if (score >= 75) {
         badgeEl.className = "badge badge-warning";
-        badgeEl.innerHTML = "⚠ Moderate Confidence (Fast-Track Review)";
+        badgeEl.innerHTML = " Moderate Confidence (Fast-Track Review)";
       } else {
         badgeEl.className = "badge badge-error";
-        badgeEl.innerHTML = "✕ Low Confidence (Manual Queue)";
+        badgeEl.innerHTML = " Low Confidence (Manual Queue)";
       }
     }
 
@@ -263,7 +263,7 @@ window.EduconScanner = (function() {
     if (!currentScanData) return;
     
     // Switch to Eligibility or Timeline tab and notify
-    EduconApp.showToast(`✓ Auto-filled application with Certificate #${currentScanData.certificateNumber}! Zero manual typing required.`);
+    EduconApp.showToast(` Auto-filled application with Certificate #${currentScanData.certificateNumber}! Zero manual typing required.`);
     
     // Update student local context
     if (currentScanData.annualIncomeNumeric) {

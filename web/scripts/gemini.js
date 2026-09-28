@@ -1,10 +1,10 @@
 /**
- * Educon MoTA Unified Portal - Gemini 1.5 Flash & Vision AI Engine
+ * Educon MoTA Unified Portal - MoTa AI 1.5 Flash & Vision AI Engine
  * Handles Document OCR Extraction, Conversational JAGO RAG,
  * Multilingual Deficiency Translation, and 5-Scheme Eligibility Reasoning.
  */
 
-window.EduconGemini = (function() {
+window.EduconMoTa AI = (function() {
   const GEMINI_MODEL = 'gemini-1.5-flash';
   const API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -26,7 +26,7 @@ window.EduconGemini = (function() {
   }
 
   /**
-   * Core request dispatcher to Gemini 1.5 Flash API with graceful intelligent fallback
+   * Core request dispatcher to MoTa AI 1.5 Flash API with graceful intelligent fallback
    */
   async function generateContent({ prompt, systemInstruction, imageBase64, mimeType = 'image/jpeg', temperature = 0.2 }) {
     const apiKey = getApiKey();
@@ -71,7 +71,7 @@ window.EduconGemini = (function() {
 
         if (!response.ok) {
           const errData = await response.json();
-          console.warn('[Gemini API error, falling back to smart local simulation]', errData);
+          console.warn('[MoTa AI API error, falling back to smart local simulation]', errData);
           throw new Error(errData?.error?.message || 'API request failed');
         }
 
@@ -82,7 +82,7 @@ window.EduconGemini = (function() {
           return { text, source: 'LIVE_GEMINI_1_5_FLASH' };
         }
       } catch (err) {
-        console.warn('[Gemini API call failed, using intelligent built-in fallback]', err);
+        console.warn('[MoTa AI API call failed, using intelligent built-in fallback]', err);
       }
     }
 
@@ -91,7 +91,7 @@ window.EduconGemini = (function() {
   }
 
   /**
-   * 1. AI Document Scanner (Gemini Vision)
+   * 1. AI Document Scanner (MoTa AI Vision)
    * Extracts certificate number, issuing authority, applicant name, father's name, caste/income, validity
    */
   async function scanDocument(imageBase64, docHint = 'caste') {
@@ -130,11 +130,11 @@ Return ONLY valid JSON without markdown fences.`;
         const parsed = JSON.parse(cleaned);
         return {
           success: true,
-          source: 'Gemini 1.5 Flash Vision (Live)',
+          source: 'MoTa Sovereign Vision (Live)',
           data: parsed
         };
       } catch (e) {
-        console.warn('Failed to parse live Gemini JSON, using structured response');
+        console.warn('Failed to parse live MoTa AI JSON, using structured response');
       }
     }
 
@@ -144,7 +144,7 @@ Return ONLY valid JSON without markdown fences.`;
     if (docHint.includes('income')) {
       return {
         success: true,
-        source: 'Gemini Vision Engine (Verified)',
+        source: 'MoTa AI Vision Engine (Verified)',
         data: {
           documentType: "Annual Family Income Certificate",
           candidateName: "BIRSA MUNDA",
@@ -166,7 +166,7 @@ Return ONLY valid JSON without markdown fences.`;
     } else if (docHint.includes('offer') || docHint.includes('nos')) {
       return {
         success: true,
-        source: 'Gemini Vision Engine (Verified)',
+        source: 'MoTa AI Vision Engine (Verified)',
         data: {
           documentType: "Foreign University Admission Offer Letter",
           candidateName: "Birsa Munda",
@@ -188,7 +188,7 @@ Return ONLY valid JSON without markdown fences.`;
       // Default Caste Certificate
       return {
         success: true,
-        source: 'Gemini Vision Engine (Verified)',
+        source: 'MoTa AI Vision Engine (Verified)',
         data: {
           documentType: "Scheduled Tribe (ST) Community Certificate",
           candidateName: "BIRSA MUNDA",
@@ -360,7 +360,7 @@ ${knowledgeBase}`;
     if (liveResult.text) {
       return {
         reply: liveResult.text,
-        source: 'Gemini 1.5 Flash (Grounded RAG)'
+        source: 'MoTa AI 1.5 Flash (Grounded RAG)'
       };
     }
 

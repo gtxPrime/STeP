@@ -83,10 +83,10 @@ window.EduconJago = (function() {
     if (!micBtn) return;
     if (listening) {
       micBtn.classList.add('mic-active');
-      micBtn.innerHTML = '🔴 Listening...';
+      micBtn.innerHTML = ' Listening...';
     } else {
       micBtn.classList.remove('mic-active');
-      micBtn.innerHTML = '🎙️ Speak';
+      micBtn.innerHTML = '️ Speak';
     }
   }
 
@@ -123,7 +123,7 @@ window.EduconJago = (function() {
     const chatContainer = document.getElementById('jago-messages-scroll');
     if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
 
-    const result = await EduconGemini.chatJago(text, conversationHistory);
+    const result = await EduconMoTa AI.chatJago(text, conversationHistory);
 
     removeTypingIndicator(typingId);
     appendMessage('jago', result.reply, result.source);
@@ -154,8 +154,8 @@ window.EduconJago = (function() {
         <div class="bubble-text">${formattedText}</div>
         ${!isUser ? `
           <div class="bubble-actions">
-            <button class="btn btn-ghost btn-xs" onclick="EduconJago.speakText(this)" data-text="${encodeURIComponent(text)}">🔊 Read Aloud</button>
-            <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'")}'); EduconApp.showToast('Copied answer!');">📋 Copy</button>
+            <button class="btn btn-ghost btn-xs" onclick="EduconJago.speakText(this)" data-text="${encodeURIComponent(text)}"> Read Aloud</button>
+            <button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${text.replace(/'/g, "\\'")}'); EduconApp.showToast('Copied answer!');"> Copy</button>
           </div>
         ` : ''}
       </div>
@@ -199,7 +199,7 @@ window.EduconJago = (function() {
     synth.speak(utterance);
     btn.textContent = '⏹ Stop Voice';
     utterance.onend = () => {
-      btn.textContent = '🔊 Read Aloud';
+      btn.textContent = ' Read Aloud';
     };
   }
 
