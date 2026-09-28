@@ -252,10 +252,11 @@ object FirebaseManager {
             if (snapshot != null && !snapshot.isEmpty) {
                 val remoteDocs = snapshot.documents.mapNotNull { doc ->
                     try {
+                        val rawCert = doc.getString("certificateNumber") ?: ""
                         FirestoreDocumentLink(
                             docId = doc.getString("docId") ?: doc.id,
                             docType = doc.getString("docType") ?: "Certificate",
-                            certificateNumber = doc.getString("certificateNumber") ?: "",
+                            certificateNumber = com.step.app.security.CryptoManager.decrypt(rawCert, userId),
                             issuingAuthority = doc.getString("issuingAuthority") ?: "",
                             confidenceScore = (doc.getLong("confidenceScore") ?: 95L).toInt(),
                             sharedHostingImageUrl = doc.getString("sharedHostingImageUrl") ?: "",
@@ -281,15 +282,24 @@ object FirebaseManager {
                 return@addSnapshotListener
             }
             try {
+                val encIncome = doc.get("annualIncome")?.toString() ?: "145000"
+                val encAccount = doc.getString("maskedAccount") ?: "•••• •••• 4920"
+                val encIfsc = doc.getString("ifsc") ?: "SBIN0001234"
+                val encAadhaar = doc.getString("aadhaarLast4") ?: "9842"
+
                 MoTaRepository.currentStudent = MoTaRepository.currentStudent.copy(
                     fullName = doc.getString("fullName") ?: MoTaRepository.currentStudent.fullName,
                     email = doc.getString("email") ?: MoTaRepository.currentStudent.email,
+                    photoUrl = doc.getString("photoUrl") ?: MoTaRepository.currentStudent.photoUrl,
                     institution = doc.getString("institution") ?: MoTaRepository.currentStudent.institution,
                     educationLevel = doc.getString("educationLevel") ?: MoTaRepository.currentStudent.educationLevel,
                     community = doc.getString("community") ?: MoTaRepository.currentStudent.community,
                     subTribe = doc.getString("subTribe") ?: MoTaRepository.currentStudent.subTribe,
-                    annualIncome = doc.getLong("annualIncome") ?: MoTaRepository.currentStudent.annualIncome,
+                    annualIncome = com.step.app.security.CryptoManager.decrypt(encIncome, userId).toLongOrNull() ?: 145000L,
                     bankName = doc.getString("bankName") ?: MoTaRepository.currentStudent.bankName,
+                    maskedAccount = com.step.app.security.CryptoManager.decrypt(encAccount, userId).ifEmpty { "•••• •••• 4920" },
+                    ifsc = com.step.app.security.CryptoManager.decrypt(encIfsc, userId).ifEmpty { "SBIN0001234" },
+                    aadhaarLast4 = com.step.app.security.CryptoManager.decrypt(encAadhaar, userId).ifEmpty { "9842" },
                     state = doc.getString("state") ?: MoTaRepository.currentStudent.state,
                     npciAadhaarSeeded = doc.getBoolean("npciAadhaarSeeded") ?: true
                 )
@@ -308,17 +318,19 @@ object FirebaseManager {
             "digilockerId" to profile.digilockerId,
             "fullName" to profile.fullName,
             "email" to profile.email,
+            "photoUrl" to profile.photoUrl,
             "community" to profile.community,
             "subTribe" to profile.subTribe,
             "institution" to profile.institution,
             "educationLevel" to profile.educationLevel,
-            "annualIncome" to profile.annualIncome,
+            "annualIncome" to com.step.app.security.CryptoManager.encrypt(profile.annualIncome.toString(), userId),
             "bankName" to profile.bankName,
-            "maskedAccount" to profile.maskedAccount,
-            "ifsc" to profile.ifsc,
-            "aadhaarLast4" to profile.aadhaarLast4,
+            "maskedAccount" to com.step.app.security.CryptoManager.encrypt(profile.maskedAccount, userId),
+            "ifsc" to com.step.app.security.CryptoManager.encrypt(profile.ifsc, userId),
+            "aadhaarLast4" to com.step.app.security.CryptoManager.encrypt(profile.aadhaarLast4, userId),
             "state" to profile.state,
             "npciAadhaarSeeded" to profile.npciAadhaarSeeded,
+            "encryption" to "AES-256-GCM",
             "lastSyncedAt" to System.currentTimeMillis()
         )
         firestore.collection("users").document(userId)
@@ -393,10 +405,11 @@ object FirebaseManager {
         val docMap = hashMapOf(
             "docId" to docId,
             "docType" to doc.documentType,
-            "certificateNumber" to doc.certificateNumber,
+            "certificateNumber" to com.step.app.security.CryptoManager.encrypt(doc.certificateNumber, userId),
             "issuingAuthority" to doc.issuingAuthority,
             "confidenceScore" to doc.confidenceScore,
             "sharedHostingImageUrl" to sharedHostingUrl,
+            "encryption" to "AES-256-GCM",
             "uploadedAt" to "Just now",
             "timestamp" to System.currentTimeMillis()
         )

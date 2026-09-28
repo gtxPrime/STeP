@@ -16,8 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.step.app.data.ApplicationRecord
 import com.step.app.data.MoTaRepository
 import com.step.app.data.PendingAction
@@ -99,12 +101,23 @@ fun HomeScreen(
                             .border(1.5.dp, PrimaryDeepOrange, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = FontAwesomeIcons.Solid.User,
-                            contentDescription = "Profile Avatar",
-                            tint = PrimaryDeepOrange,
-                            modifier = Modifier.size(22.dp)
-                        )
+                        if (student.photoUrl.isNotBlank()) {
+                            AsyncImage(
+                                model = student.photoUrl,
+                                contentDescription = "Profile Avatar",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.User,
+                                contentDescription = "Profile Avatar",
+                                tint = PrimaryDeepOrange,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {

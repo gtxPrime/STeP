@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,7 +19,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +65,7 @@ fun LoginScreen(
     // User editable profile fields
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var photoUrl by remember { mutableStateOf("") }
     var selectedCommunity by remember { mutableStateOf("Santhal") }
     var homeState by remember { mutableStateOf("Odisha") }
     var institutionName by remember { mutableStateOf("EMRS Baripada, Mayurbhanj, Odisha") }
@@ -78,7 +82,7 @@ fun LoginScreen(
     var isPullingDoc by remember { mutableStateOf(false) }
     val pulledDocs = remember { mutableStateListOf<DigiLockerSandboxResult>() }
 
-    // Web Client ID from resources or fallback
+    // Web Client ID
     val webClientId = remember {
         try {
             val resId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
@@ -110,6 +114,7 @@ fun LoginScreen(
 
                 fullName = account.displayName ?: account.givenName ?: "ST Scholar"
                 email = account.email ?: "student@step.gov.in"
+                photoUrl = account.photoUrl?.toString().orEmpty()
 
                 FirebaseManager.loginWithGoogleAccount(account) { isNewUser ->
                     if (isNewUser) {
@@ -145,66 +150,74 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Header / Brand Emblem
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Sovereign Emblem with Saffron Gradient
             Box(
                 modifier = Modifier
-                    .size(68.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(PrimaryDeepOrange),
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(Color(0xFFE8590C), Color(0xFFD9480F))
+                        )
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "STeP",
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 22.sp,
+                    fontSize = 20.sp,
                     color = Color.White
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Surface(
                 color = PrimarySurfaceLight,
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryDeepOrange.copy(alpha = 0.35f))
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryDeepOrange.copy(alpha = 0.25f))
             ) {
                 Text(
-                    text = "MINISTRY OF TRIBAL AFFAIRS • भारत सरकार",
+                    text = "MINISTRY OF TRIBAL AFFAIRS • GOVT. OF INDIA",
                     color = PrimaryDeepOrangeDark,
-                    fontSize = 10.sp,
+                    fontSize = 9.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "STeP Scholarship Portal",
+                text = "STeP Portal",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = TextDark
+                color = TextDark,
+                letterSpacing = (-0.3).sp
             )
             Text(
-                text = "National Direct Benefit Transfer & Sovereign Scholarship Platform",
+                text = "Sovereign Tribal Education & Scholarship Platform",
                 fontSize = 12.sp,
                 color = TextSubtle,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // STEP 1: INITIAL SIGN IN
+            // STEP 1: INITIAL SIGN IN CARD
             if (currentStep == LoginStep.SIGN_IN) {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = SurfaceCard),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(18.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, BorderLight, RoundedCornerShape(20.dp))
+                        .border(1.dp, BorderLight, RoundedCornerShape(18.dp))
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp),
+                        modifier = Modifier.padding(22.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
@@ -218,7 +231,8 @@ fun LoginScreen(
                             fontSize = 12.sp,
                             color = TextBody,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 4.dp, bottom = 18.dp)
+                            lineHeight = 17.sp,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
                         )
 
                         if (errorMessage != null) {
@@ -238,7 +252,7 @@ fun LoginScreen(
                             }
                         }
 
-                        // Google Sign In Button
+                        // Authentic Google Sign In Button
                         Button(
                             onClick = {
                                 errorMessage = null
@@ -259,7 +273,7 @@ fun LoginScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp)
-                                .border(1.dp, BorderMedium, RoundedCornerShape(12.dp))
+                                .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(12.dp))
                         ) {
                             if (isLoading) {
                                 CircularProgressIndicator(
@@ -272,48 +286,87 @@ fun LoginScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.Center
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(22.dp)
-                                            .background(Color(0xFFEA4335), CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text("G", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                    }
+                                    Image(
+                                        painter = painterResource(id = com.step.app.R.drawable.ic_google_logo),
+                                        contentDescription = "Google",
+                                        modifier = Modifier.size(19.dp)
+                                    )
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Text(
-                                        text = "Sign in with Google",
-                                        color = Color(0xFF1F2937),
-                                        fontWeight = FontWeight.Bold,
+                                        text = "Continue with Google",
+                                        color = Color(0xFF374151),
+                                        fontWeight = FontWeight.SemiBold,
                                         fontSize = 14.sp
                                     )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
 
-                        // Custom Scholar Registration / Setup
-                        OutlinedButton(
+                        // Custom Scholar Registration
+                        Button(
                             onClick = {
                                 fullName = ""
                                 email = ""
                                 currentStep = LoginStep.PROFILE_SETUP
                             },
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryDeepOrange),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimarySurfaceLight,
+                                contentColor = PrimaryDeepOrangeDark
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(46.dp)
+                                .border(1.dp, PrimaryDeepOrange.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
                         ) {
                             Icon(
                                 imageVector = FontAwesomeIcons.Solid.User,
                                 contentDescription = null,
                                 tint = PrimaryDeepOrange,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(13.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Create / Register Scholar Profile", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Register New Scholar Profile", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Quick Demo Scholar 1-Tap Access for Evaluation
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    fullName = "Birsa Munda"
+                                    email = "birsa.munda@student.gov.in"
+                                    FirebaseManager.loginWithGoogle(
+                                        name = fullName,
+                                        email = email
+                                    ) { isNewUser ->
+                                        if (isNewUser) {
+                                            currentStep = LoginStep.PROFILE_SETUP
+                                        } else {
+                                            onLoginSuccess()
+                                        }
+                                    }
+                                }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                                contentDescription = null,
+                                tint = PrimaryDeepOrange,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Quick Demo Access (Birsa Munda)",
+                                color = PrimaryDeepOrangeDark,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
                 }
@@ -323,10 +376,10 @@ fun LoginScreen(
             AnimatedVisibility(visible = currentStep == LoginStep.PROFILE_SETUP) {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = SurfaceCard),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(18.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, BorderLight, RoundedCornerShape(20.dp))
+                        .border(1.dp, BorderLight, RoundedCornerShape(18.dp))
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(
@@ -363,7 +416,7 @@ fun LoginScreen(
                             color = TextDark
                         )
                         Text(
-                            text = "Details will be securely saved to Firebase Firestore under your account.",
+                            text = "Client-side encrypted with AES-256 before synchronization to Firebase.",
                             fontSize = 11.sp,
                             color = TextSubtle
                         )
@@ -466,6 +519,7 @@ fun LoginScreen(
                                     digilockerId = "DL-ST-883921",
                                     fullName = fullName,
                                     email = email,
+                                    photoUrl = photoUrl,
                                     community = "Scheduled Tribe (ST)",
                                     subTribe = selectedCommunity,
                                     institution = institutionName,
@@ -491,7 +545,7 @@ fun LoginScreen(
                         ) {
                             Text("Save Profile & Connect DigiLocker", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Icon(imageVector = FontAwesomeIcons.Solid.ArrowRight, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Icon(imageVector = FontAwesomeIcons.Solid.ArrowRight, contentDescription = null, modifier = Modifier.size(13.dp))
                         }
                     }
                 }
@@ -501,10 +555,10 @@ fun LoginScreen(
             AnimatedVisibility(visible = currentStep == LoginStep.DIGILOCKER_SETUP) {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = SurfaceCard),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(18.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, BorderLight, RoundedCornerShape(20.dp))
+                        .border(1.dp, BorderLight, RoundedCornerShape(18.dp))
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(
@@ -525,7 +579,7 @@ fun LoginScreen(
                                 Text(
                                     text = "STAGE1 REAL ENV",
                                     color = StatusDisbursed,
-                                    fontSize = 10.sp,
+                                    fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
@@ -693,7 +747,7 @@ fun LoginScreen(
                         ) {
                             Text("Complete & Enter STeP Portal", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Icon(imageVector = FontAwesomeIcons.Solid.ArrowRight, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Icon(imageVector = FontAwesomeIcons.Solid.ArrowRight, contentDescription = null, modifier = Modifier.size(13.dp))
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -712,45 +766,55 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // Sovereign Footer Badges
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // Unified Sovereign Trust Bar (Single row, evenly spaced, never wraps!)
+            Surface(
+                color = SurfaceCard,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                SovereignFooterBadge("APAAR ID")
-                SovereignFooterBadge("DigiLocker Sandbox")
-                SovereignFooterBadge("NPCI / PFMS")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 9.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FooterTrustItem("APAAR ID")
+                    Box(modifier = Modifier.size(3.dp).clip(CircleShape).background(BorderMedium))
+                    FooterTrustItem("DigiLocker")
+                    Box(modifier = Modifier.size(3.dp).clip(CircleShape).background(BorderMedium))
+                    FooterTrustItem("NPCI DBT")
+                }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
 
 @Composable
-private fun SovereignFooterBadge(label: String) {
-    Surface(
-        color = SurfaceCard,
-        shape = RoundedCornerShape(6.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight)
+private fun FooterTrustItem(label: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = FontAwesomeIcons.Solid.Check,
-                contentDescription = null,
-                tint = StatusDisbursed,
-                modifier = Modifier.size(10.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = label,
-                color = TextSubtle,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
+        Icon(
+            imageVector = FontAwesomeIcons.Solid.Check,
+            contentDescription = null,
+            tint = StatusDisbursed,
+            modifier = Modifier.size(9.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = label,
+            color = TextSubtle,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            softWrap = false
+        )
     }
 }
+

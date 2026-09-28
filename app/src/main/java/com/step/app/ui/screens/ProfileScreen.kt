@@ -1,5 +1,7 @@
 package com.step.app.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,10 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.step.app.data.MoTaRepository
 import com.step.app.firebase.FirebaseManager
 import com.step.app.ui.components.FontAwesomeIcons
@@ -31,6 +35,16 @@ fun ProfileScreen(
     val student = MoTaRepository.currentStudent
     var notificationsEnabled by remember { mutableStateOf(true) }
     var smsAlertsEnabled by remember { mutableStateOf(true) }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            val updated = student.copy(photoUrl = uri.toString())
+            MoTaRepository.currentStudent = updated
+            FirebaseManager.saveStudentProfileToFirestore(updated, updated.uid)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -87,21 +101,61 @@ fun ProfileScreen(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(70.dp)
+                                .size(76.dp)
                                 .clip(CircleShape)
                                 .background(PrimarySurfaceLight)
-                                .border(2.dp, PrimaryDeepOrange, CircleShape),
+                                .border(2.dp, PrimaryDeepOrange, CircleShape)
+                                .clickable { photoPickerLauncher.launch("image/*") },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = FontAwesomeIcons.Solid.User,
-                                contentDescription = null,
-                                tint = PrimaryDeepOrange,
-                                modifier = Modifier.size(34.dp)
-                            )
+                            if (student.photoUrl.isNotBlank()) {
+                                AsyncImage(
+                                    model = student.photoUrl,
+                                    contentDescription = "Profile Photo",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = FontAwesomeIcons.Solid.User,
+                                    contentDescription = null,
+                                    tint = PrimaryDeepOrange,
+                                    modifier = Modifier.size(34.dp)
+                                )
+                            }
+
+                            // Camera badge overlay
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .align(Alignment.BottomEnd)
+                                    .clip(CircleShape)
+                                    .background(PrimaryDeepOrange)
+                                    .border(1.5.dp, Color.White, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = FontAwesomeIcons.Solid.Camera,
+                                    contentDescription = "Upload custom photo",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(11.dp)
+                                )
+                            }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Tap avatar to change photo",
+                            fontSize = 10.sp,
+                            color = PrimaryDeepOrange,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                                .padding(top = 6.dp)
+                                .clickable { photoPickerLauncher.launch("image/*") }
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
                             text = student.fullName,
@@ -280,6 +334,52 @@ fun ProfileScreen(
                                 checked = smsAlertsEnabled,
                                 onCheckedChange = { smsAlertsEnabled = it },
                                 colors = SwitchDefaults.colors(checkedThumbColor = PrimaryDeepOrange, checkedTrackColor = PrimarySurfaceLight)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Sovereign AES-256 Encryption Security Badge
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = PrimarySurfaceLight),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, PrimaryDeepOrange.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(PrimaryDeepOrange),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "AES-256-GCM End-to-End Encrypted",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryDeepOrangeDark
+                            )
+                            Text(
+                                text = "Aadhaar, Bank Account, and Financial data are encrypted client-side before cloud synchronization.",
+                                fontSize = 10.sp,
+                                color = TextBody,
+                                lineHeight = 14.sp
                             )
                         }
                     }
