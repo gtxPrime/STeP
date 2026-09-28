@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a2540" />
+      <stop offset="50%" stop-color="#001833" />
+      <stop offset="100%" stop-color="#020d1a" />
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c" />
+      <stop offset="100%" stop-color="#ea580c" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#grad)" />
+  <circle cx="96" cy="96" r="76" stroke="#f97316" stroke-width="3" stroke-dasharray="8 4" fill="none" opacity="0.6"/>
+  
+  <!-- Tribal motif sunburst rays -->
+  <g transform="translate(96,96)">
+    <circle cx="0" cy="0" r="32" fill="url(#sunGrad)"/>
+    <path d="M0 -46 L5 -36 L-5 -36 Z" fill="#fb923c"/>
+    <path d="M0 46 L5 36 L-5 36 Z" fill="#fb923c"/>
+    <path d="M-46 0 L-36 5 L-36 -5 Z" fill="#fb923c"/>
+    <path d="M46 0 L36 5 L36 -5 Z" fill="#fb923c"/>
+    <path d="M-32 -32 L-23 -27 L-27 -23 Z" fill="#fde047"/>
+    <path d="M32 32 L23 27 L27 23 Z" fill="#fde047"/>
+    <path d="M-32 32 L-23 27 L-27 23 Z" fill="#fde047"/>
+    <path d="M32 -32 L23 -27 L27 -23 Z" fill="#fde047"/>
+  </g>
+
+  <!-- Open Book of Education -->
+  <path d="M60 120 Q96 112 96 132 Q96 112 132 120 L132 142 Q96 134 96 150 Q96 134 60 142 Z" fill="#10b981"/>
+  <path d="M60 120 Q96 112 96 132 L96 150 Q96 134 60 142 Z" fill="#059669"/>
+  
+  <!-- Graduation Cap -->
+  <polygon points="96,52 140,68 96,84 52,68" fill="url(#goldGrad)"/>
+  <rect x="76" y="80" width="40" height="12" rx="4" fill="#d97706"/>
+  <path d="M134 70 L134 94 Q130 96 128 92" stroke="#fde047" stroke-width="2.5" fill="none"/>
+</svg>

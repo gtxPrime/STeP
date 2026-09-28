@@ -1,0 +1,24 @@
+{
+  "name": "STeP - Scheduled Tribe e-Portal",
+  "short_name": "STeP MoTA",
+  "description": "Unified Scholarship & Fellowship Platform for Ministry of Tribal Affairs, Government of India",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#071626",
+  "theme_color": "#f97316",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./assets/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
