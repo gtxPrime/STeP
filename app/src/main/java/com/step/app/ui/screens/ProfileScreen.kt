@@ -55,8 +55,7 @@ fun ProfileScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onBack) {
@@ -382,6 +381,48 @@ fun ProfileScreen(
                                 lineHeight = 14.sp
                             )
                         }
+                    }
+                }
+            }
+
+            // Data Provenance & Sandbox Notice
+            item {
+                Surface(
+                    color = SurfaceCard,
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                                contentDescription = null,
+                                tint = StatusDisbursed,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Data Provenance & Environment",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDark
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Account authenticated via Google SSO. Caste, Income & Academic credentials verified via National DigiLocker Sandbox (stage1.digitallocker.gov.in). Simulated data for MoTa testing environment.",
+                            fontSize = 10.sp,
+                            color = TextSubtle,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 14.sp
+                        )
                     }
                 }
             }

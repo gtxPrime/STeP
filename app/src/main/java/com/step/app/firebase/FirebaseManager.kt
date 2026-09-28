@@ -46,6 +46,7 @@ object FirebaseManager {
     val firestoreDocuments = mutableStateListOf<FirestoreDocumentLink>()
 
     private var isSyncInitialized = false
+    private var hasSeededDemoApps = false
 
     /**
      * Initializes bidirectional dynamic Firestore synchronization.
@@ -112,8 +113,16 @@ object FirebaseManager {
             }
 
             if (snapshot == null || snapshot.isEmpty) {
-                // Seed initial applications to user's Firestore path
-                seedApplicationsToFirestore(userId)
+                if (!hasSeededDemoApps) {
+                    hasSeededDemoApps = true
+                    Log.d(TAG, "First-time user or empty applications in Firestore: seeding demo scholarship applications...")
+                    seedApplicationsToFirestore(userId)
+                    seedPendingActionsToFirestore(userId)
+                    seedNotificationsToFirestore(userId)
+                    seedDocumentsToFirestore(userId)
+                } else {
+                    MoTaRepository.applications.clear()
+                }
             } else {
                 val remoteApps = snapshot.documents.mapNotNull { doc ->
                     try {
@@ -173,11 +182,9 @@ object FirebaseManager {
                     }
                 }
 
-                if (remoteApps.isNotEmpty()) {
-                    MoTaRepository.applications.clear()
-                    MoTaRepository.applications.addAll(remoteApps)
-                    Log.d(TAG, "Loaded ${remoteApps.size} dynamic applications from Firebase Firestore")
-                }
+                MoTaRepository.applications.clear()
+                MoTaRepository.applications.addAll(remoteApps)
+                Log.d(TAG, "Loaded ${remoteApps.size} dynamic applications from Firebase Firestore")
             }
         }
 
@@ -190,7 +197,7 @@ object FirebaseManager {
             }
 
             if (snapshot == null || snapshot.isEmpty) {
-                seedPendingActionsToFirestore(userId)
+                MoTaRepository.pendingActions.clear()
             } else {
                 val remoteActions = snapshot.documents.mapNotNull { doc ->
                     try {
@@ -220,7 +227,7 @@ object FirebaseManager {
             }
 
             if (snapshot == null || snapshot.isEmpty) {
-                seedNotificationsToFirestore(userId)
+                MoTaRepository.notifications.clear()
             } else {
                 val remoteNotifs = snapshot.documents.mapNotNull { doc ->
                     try {
@@ -269,8 +276,29 @@ object FirebaseManager {
                 }
                 firestoreDocuments.clear()
                 firestoreDocuments.addAll(remoteDocs)
+
+                val scannedDocs = remoteDocs.map { dl ->
+                    ScannedDocument(
+                        id = dl.docId,
+                        documentType = dl.docType,
+                        candidateName = MoTaRepository.currentStudent.fullName,
+                        fatherName = "Verified Scholar",
+                        certificateNumber = dl.certificateNumber,
+                        issuingAuthority = dl.issuingAuthority,
+                        issueDate = dl.uploadedAt,
+                        validity = "Verified via DigiLocker",
+                        isExpired = false,
+                        confidenceScore = dl.confidenceScore,
+                        autoApproveEligible = dl.confidenceScore >= 85,
+                        sharedHostingUrl = dl.sharedHostingImageUrl,
+                        syncedToFirebase = true
+                    )
+                }
+                MoTaRepository.scannedDocuments.clear()
+                MoTaRepository.scannedDocuments.addAll(scannedDocs)
             } else {
-                seedDocumentsToFirestore(userId)
+                firestoreDocuments.clear()
+                MoTaRepository.scannedDocuments.clear()
             }
         }
 
@@ -278,7 +306,6 @@ object FirebaseManager {
         val profileDocRef = firestore.collection("users").document(userId).collection("profile").document("info")
         profileDocRef.addSnapshotListener { doc, error ->
             if (error != null || doc == null || !doc.exists()) {
-                saveStudentProfileToFirestore(MoTaRepository.currentStudent, userId)
                 return@addSnapshotListener
             }
             try {
@@ -560,21 +587,27 @@ object FirebaseManager {
             .get()
             .addOnSuccessListener { doc ->
                 if (doc != null && doc.exists()) {
+                    val encIncome = doc.get("annualIncome")?.toString() ?: "145000"
+                    val encAccount = doc.getString("maskedAccount") ?: "•••• •••• 4920"
+                    val encIfsc = doc.getString("ifsc") ?: "SBIN0001234"
+                    val encAadhaar = doc.getString("aadhaarLast4") ?: "9842"
+
                     val p = StudentProfile(
                         uid = uid,
                         apaarId = doc.getString("apaarId") ?: "9842-1084-2026",
                         digilockerId = doc.getString("digilockerId") ?: "DL-ST-${uid.takeLast(6)}",
                         fullName = doc.getString("fullName") ?: "ST Scholar",
                         email = doc.getString("email") ?: "",
+                        photoUrl = doc.getString("photoUrl") ?: "",
                         community = doc.getString("community") ?: "Scheduled Tribe (ST)",
                         subTribe = doc.getString("subTribe") ?: "ST",
                         institution = doc.getString("institution") ?: "",
                         educationLevel = doc.getString("educationLevel") ?: "Class 12",
-                        annualIncome = doc.getLong("annualIncome") ?: 145000L,
+                        annualIncome = com.step.app.security.CryptoManager.decrypt(encIncome, uid).toLongOrNull() ?: 145000L,
                         bankName = doc.getString("bankName") ?: "State Bank of India",
-                        maskedAccount = doc.getString("maskedAccount") ?: "•••• •••• 4920",
-                        ifsc = doc.getString("ifsc") ?: "SBIN0001234",
-                        aadhaarLast4 = doc.getString("aadhaarLast4") ?: "9842",
+                        maskedAccount = com.step.app.security.CryptoManager.decrypt(encAccount, uid).ifEmpty { "•••• •••• 4920" },
+                        ifsc = com.step.app.security.CryptoManager.decrypt(encIfsc, uid).ifEmpty { "SBIN0001234" },
+                        aadhaarLast4 = com.step.app.security.CryptoManager.decrypt(encAadhaar, uid).ifEmpty { "9842" },
                         state = doc.getString("state") ?: "Odisha",
                         npciAadhaarSeeded = doc.getBoolean("npciAadhaarSeeded") ?: true
                     )
@@ -603,7 +636,7 @@ object FirebaseManager {
         val email = account.email ?: "student@step.gov.in"
         val photo = account.photoUrl?.toString().orEmpty()
         val idToken = account.idToken.orEmpty()
-        val uid = account.id ?: ("usr_google_" + System.currentTimeMillis().toString().takeLast(6))
+        val uid = account.id ?: ("usr_" + email.replace(Regex("[^a-zA-Z0-9]"), "_"))
 
         val user = GoogleUser(
             uid = uid,
@@ -623,6 +656,7 @@ object FirebaseManager {
                 MoTaRepository.currentStudent = MoTaRepository.currentStudent.copy(
                     fullName = name,
                     email = email,
+                    photoUrl = photo,
                     uid = uid
                 )
                 onReady(true)

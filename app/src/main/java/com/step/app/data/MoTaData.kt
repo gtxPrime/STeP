@@ -460,25 +460,17 @@ object MoTaDefaults {
 object MoTaRepository {
     var currentStudent by mutableStateOf(MoTaDefaults.currentStudent)
 
-    val pendingActions = mutableStateListOf<PendingAction>().apply {
-        addAll(MoTaDefaults.pendingActions)
-    }
+    val pendingActions = mutableStateListOf<PendingAction>()
 
-    val notifications = mutableStateListOf<NotificationItem>().apply {
-        addAll(MoTaDefaults.notifications)
-    }
+    val notifications = mutableStateListOf<NotificationItem>()
 
     val schemes = mutableStateListOf<Scheme>().apply {
         addAll(MoTaDefaults.schemes)
     }
 
-    val applications = mutableStateListOf<ApplicationRecord>().apply {
-        addAll(MoTaDefaults.applications)
-    }
+    val applications = mutableStateListOf<ApplicationRecord>()
 
-    val scannedDocuments = mutableStateListOf<ScannedDocument>().apply {
-        addAll(listOf(MoTaDefaults.sampleCasteDoc, MoTaDefaults.sampleIncomeDoc, MoTaDefaults.sampleMarksheetDoc))
-    }
+    val scannedDocuments = mutableStateListOf<ScannedDocument>()
 
     val sampleCasteDoc get() = MoTaDefaults.sampleCasteDoc
     val sampleIncomeDoc get() = MoTaDefaults.sampleIncomeDoc

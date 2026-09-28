@@ -41,8 +41,7 @@ fun DocumentWalletScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -189,26 +188,81 @@ fun DocumentWalletScreen(
                         text = "Verified Certificates (${documents.size})",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = TextDark
+                        color = TextDark,
+                        maxLines = 1
                     )
                     Surface(
                         color = StatusDisbursedBg,
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = "Cloud Firebase Synced",
+                            text = "Cloud Synced",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = StatusDisbursed,
+                            maxLines = 1,
+                            softWrap = false,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
                 }
             }
 
-            // Documents List
-            items(documents) { doc ->
-                DocumentWalletCard(doc = doc)
+            // Documents List or Empty State
+            if (documents.isEmpty()) {
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, BorderLight, RoundedCornerShape(14.dp))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "No Verified Documents Yet",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = TextDark
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Pull caste, income, or academic certificates from the DigiLocker Sandbox to attach them to scholarship applications.",
+                                fontSize = 11.sp,
+                                color = TextSubtle,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                lineHeight = 16.sp
+                            )
+                        }
+                    }
+                }
+            } else {
+                items(documents) { doc ->
+                    DocumentWalletCard(doc = doc)
+                }
+            }
+
+            // Data Provenance Note
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    color = SurfaceCard,
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Notice: Documents shown are retrieved from the official DigiLocker Stage-1 Sandbox (stage1.digitallocker.gov.in) with simulated X.509 certificates for MoTa test evaluation.",
+                        fontSize = 10.sp,
+                        color = TextSubtle,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        lineHeight = 14.sp,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
             }
         }
 

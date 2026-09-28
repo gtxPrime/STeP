@@ -304,68 +304,23 @@ fun LoginScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Custom Scholar Registration
-                        Button(
-                            onClick = {
-                                fullName = ""
-                                email = ""
-                                currentStep = LoginStep.PROFILE_SETUP
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PrimarySurfaceLight,
-                                contentColor = PrimaryDeepOrangeDark
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(46.dp)
-                                .border(1.dp, PrimaryDeepOrange.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                        ) {
-                            Icon(
-                                imageVector = FontAwesomeIcons.Solid.User,
-                                contentDescription = null,
-                                tint = PrimaryDeepOrange,
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Register New Scholar Profile", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Quick Demo Scholar 1-Tap Access for Evaluation
+                        // Info pill indicating automatic account recognition
                         Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable {
-                                    fullName = "Birsa Munda"
-                                    email = "birsa.munda@student.gov.in"
-                                    FirebaseManager.loginWithGoogle(
-                                        name = fullName,
-                                        email = email
-                                    ) { isNewUser ->
-                                        if (isNewUser) {
-                                            currentStep = LoginStep.PROFILE_SETUP
-                                        } else {
-                                            onLoginSuccess()
-                                        }
-                                    }
-                                }
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = FontAwesomeIcons.Solid.ShieldCheck,
                                 contentDescription = null,
-                                tint = PrimaryDeepOrange,
+                                tint = StatusDisbursed,
                                 modifier = Modifier.size(12.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Quick Demo Access (Birsa Munda)",
-                                color = PrimaryDeepOrangeDark,
+                                text = "Auto-detects existing account or guides new scholar setup",
+                                color = TextSubtle,
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
@@ -391,7 +346,9 @@ fun LoginScreen(
                                 text = "Step 1 of 2: Scholar Profile",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = PrimaryDeepOrange
+                                color = PrimaryDeepOrange,
+                                maxLines = 1,
+                                softWrap = false
                             )
                             Surface(
                                 color = PrimarySurfaceLight,
@@ -402,7 +359,9 @@ fun LoginScreen(
                                     color = PrimaryDeepOrangeDark,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                 )
                             }
                         }
@@ -567,21 +526,25 @@ fun LoginScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Step 2 of 2: DigiLocker Sandbox",
+                                text = "Step 2: DigiLocker Sandbox",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = PrimaryDeepOrange
+                                color = PrimaryDeepOrange,
+                                maxLines = 1,
+                                softWrap = false
                             )
                             Surface(
                                 color = StatusDisbursedBg,
                                 shape = RoundedCornerShape(6.dp)
                             ) {
                                 Text(
-                                    text = "STAGE1 REAL ENV",
+                                    text = "STAGE 1 SANDBOX",
                                     color = StatusDisbursed,
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                 )
                             }
                         }
@@ -789,6 +752,16 @@ fun LoginScreen(
                     FooterTrustItem("NPCI DBT")
                 }
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "Profile Data: Authenticated via Google SSO • Verified via DigiLocker Sandbox",
+                fontSize = 10.sp,
+                color = TextSubtle,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
         }

@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,6 +39,18 @@ fun HomeScreen(
     val applications = MoTaRepository.applications
     val pendingActions = MoTaRepository.pendingActions
     var isOffline by remember { mutableStateOf(false) }
+
+    val totalDisbursed = applications
+        .filter { it.stage.equals("DISBURSED", ignoreCase = true) || it.currentStepIndex >= 3 }
+        .sumOf { it.sanctionAmount }
+
+    val activeEnrolledCount = applications.count { 
+        it.stage.equals("DISBURSED", ignoreCase = true) || it.stage.equals("SANCTIONED", ignoreCase = true)
+    }
+
+    val pendingCount = applications.count { 
+        !it.stage.equals("DISBURSED", ignoreCase = true) && !it.stage.equals("SANCTIONED", ignoreCase = true)
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -82,8 +95,7 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                    .padding(horizontal = 20.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -223,7 +235,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "₹ 1,12,000",
+                        text = if (totalDisbursed > 0) "₹ %,d".format(totalDisbursed) else "₹ 0",
                         color = Color.White,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.ExtraBold,
@@ -255,7 +267,7 @@ fun HomeScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        text = "2 Schemes",
+                                        text = "$activeEnrolledCount ${if (activeEnrolledCount == 1) "Scheme" else "Schemes"}",
                                         color = Color.White,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
@@ -287,7 +299,7 @@ fun HomeScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        text = "1 Pending",
+                                        text = "$pendingCount Pending",
                                         color = Color.White,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
@@ -331,67 +343,115 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                items(applications) { app ->
-                    SchemeCardItem(
-                        application = app,
-                        onClick = { onNavigateToApplicationDetail(app) }
-                    )
+            if (applications.isEmpty()) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                        .border(1.dp, BorderLight, RoundedCornerShape(16.dp))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.GraduationCap,
+                            contentDescription = null,
+                            tint = PrimaryDeepOrange,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "No Scholarship Applications Yet",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = TextDark
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "You haven't submitted any scholarship applications yet. Apply for centrally-funded Pre-Matric, Post-Matric, Top Class, NFST, or NOS schemes directly through STeP.",
+                            fontSize = 12.sp,
+                            color = TextSubtle,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 17.sp
+                        )
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Button(
+                            onClick = onNavigateToWizard,
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryDeepOrange),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("Explore & Apply for Schemes", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            } else {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    items(applications) { app ->
+                        SchemeCardItem(
+                            application = app,
+                            onClick = { onNavigateToApplicationDetail(app) }
+                        )
+                    }
                 }
             }
         }
 
-        // 5. "Pending Actions" Section (Red Dot Badge)
-        item {
-            Spacer(modifier = Modifier.height(28.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
+        // 5. "Pending Actions" Section (Only if pending actions exist)
+        if (pendingActions.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(28.dp))
+                Row(
                     modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(StatusRejected)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Pending Actions",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextDark
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Surface(
-                    color = StatusRejectedBg,
-                    shape = RoundedCornerShape(10.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(StatusRejected)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "${pendingActions.size}",
-                        color = StatusRejected,
-                        fontSize = 11.sp,
+                        text = "Pending Actions",
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        color = TextDark
                     )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        color = StatusRejectedBg,
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text(
+                            text = "${pendingActions.size}",
+                            color = StatusRejected,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Column(
-                modifier = Modifier.padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                pendingActions.forEach { action ->
-                    PendingActionCard(
-                        action = action,
-                        onClick = { onResolvePendingAction(action) }
-                    )
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    pendingActions.forEach { action ->
+                        PendingActionCard(
+                            action = action,
+                            onClick = { onResolvePendingAction(action) }
+                        )
+                    }
                 }
             }
         }
@@ -438,7 +498,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "You may be eligible for 2 more schemes. Check now.",
+                            text = "Check eligibility across all 5 sovereign MoTA schemes.",
                             fontSize = 12.sp,
                             color = TextBody
                         )
@@ -451,6 +511,28 @@ fun HomeScreen(
                         modifier = Modifier.size(16.dp)
                     )
                 }
+            }
+        }
+
+        // 7. Data Provenance Footnote at bottom
+        item {
+            Spacer(modifier = Modifier.height(18.dp))
+            Surface(
+                color = SurfaceCard,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            ) {
+                Text(
+                    text = "Profile Data: Authenticated via Google SSO • Verified via DigiLocker Sandbox • MoTa Test Environment",
+                    fontSize = 10.sp,
+                    color = TextSubtle,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 14.sp,
+                    modifier = Modifier.padding(12.dp)
+                )
             }
         }
     }
