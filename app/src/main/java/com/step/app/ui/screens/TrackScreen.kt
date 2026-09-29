@@ -176,12 +176,17 @@ private fun TrackApplicationCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 10.dp)
+                ) {
                     Text(
                         text = application.schemeTitle,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = TextDark
+                        color = TextDark,
+                        lineHeight = 20.sp
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
@@ -201,6 +206,7 @@ private fun TrackApplicationCard(
                         color = statusColor,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
+                        maxLines = 1,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -270,7 +276,7 @@ fun HorizontalStepBar(currentStepIndex: Int) {
     val steps = listOf("Submitted", "Verified", "Sanctioned", "Disbursed")
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Row 1: Circles & Connecting Lines - Perfectly centered horizontally and vertically
+        // Row 1: Circles & Connecting Lines
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -327,9 +333,11 @@ fun HorizontalStepBar(currentStepIndex: Int) {
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Row 2: Labels with equal weights, perfectly centered under the circles, no wrapping/hyphenation
+        // Row 2: Labels aligned with circles
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 2.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             steps.forEachIndexed { index, stepName ->
@@ -338,13 +346,13 @@ fun HorizontalStepBar(currentStepIndex: Int) {
 
                 Text(
                     text = stepName,
-                    fontSize = 10.sp,
+                    fontSize = 9.5.sp,
                     fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
                     color = if (isCurrent) PrimaryDeepOrange else if (isCompleted) StatusDisbursed else TextSubtle,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
-                    softWrap = false
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
         }

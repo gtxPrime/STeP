@@ -49,17 +49,19 @@ fun ApplicationDetailScreen(
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Column {
+                    Column(modifier = Modifier.weight(1f, fill = false)) {
                         Text(
                             text = "Application Status",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextDark
+                            color = TextDark,
+                            maxLines = 1
                         )
                         Text(
                             text = application.applicationId,
                             fontSize = 11.sp,
-                            color = TextSubtle
+                            color = TextSubtle,
+                            maxLines = 1
                         )
                     }
                 }
@@ -100,13 +102,18 @@ fun ApplicationDetailScreen(
                                 text = "Source: ${application.sourcePortal}",
                                 fontSize = 11.sp,
                                 color = TextSubtle,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f, fill = false),
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "₹ ${application.sanctionAmount}",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = PrimaryDeepOrange
+                                color = PrimaryDeepOrange,
+                                maxLines = 1
                             )
                         }
 
@@ -134,22 +141,27 @@ fun ApplicationDetailScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                ) {
                                     Icon(
                                         imageVector = FontAwesomeIcons.Solid.TriangleExclamation,
                                         contentDescription = null,
                                         tint = StatusRejected,
                                         modifier = Modifier.size(16.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = "Defect Code: ${def.code}",
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = StatusRejected
+                                        color = StatusRejected,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                     )
                                 }
-
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Surface(
                                     color = Color.White,
                                     shape = RoundedCornerShape(8.dp)
@@ -159,6 +171,7 @@ fun ApplicationDetailScreen(
                                         color = StatusRejected,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                                     )
                                 }
@@ -366,22 +379,28 @@ fun ApplicationDetailScreen(
 
                     Spacer(modifier = Modifier.width(14.dp))
 
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = step.label,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = TextDark
+                                color = TextDark,
+                                modifier = Modifier.weight(1f, fill = false),
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = step.date,
                                 fontSize = 11.sp,
                                 color = TextSubtle,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1
                             )
                         }
                         Spacer(modifier = Modifier.height(2.dp))
