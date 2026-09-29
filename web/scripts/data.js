@@ -6,46 +6,46 @@
 window.EduconData = {
   // Current logged in student profile (mocked from DigiLocker + APAAR)
   currentStudent: {
-    apaarId: "9842-1084-2026",
-    digilockerId: "DL-ST-883921",
-    aadhaarSuffix: "8492",
-    fullName: "Birsa Munda",
-    dob: "2006-11-15",
-    gender: "Male",
+    apaarId: "NFS*",
+    digilockerId: "NFS*",
+    aadhaarSuffix: "NFS*",
+    fullName: "Scholar (NFS*)",
+    dob: "NFS*",
+    gender: "NFS*",
     community: "Scheduled Tribe (ST)",
-    subTribe: "Santhal",
+    subTribe: "NFS*",
     pvtgStatus: false, // Particularly Vulnerable Tribal Group
-    state: "Odisha",
-    district: "Mayurbhanj",
-    tehsil: "Baripada",
-    pincode: "757001",
-    phone: "+91 98451 23456",
-    email: "birsa.munda.st@student.gov.in",
-    fatherName: "Sukram Munda",
-    motherName: "Sumitra Munda",
-    annualIncome: 145000, // ₹1,45,000 p.a.
+    state: "NFS*",
+    district: "NFS*",
+    tehsil: "NFS*",
+    pincode: "NFS*",
+    phone: "NFS*",
+    email: "student@step.gov.in",
+    fatherName: "NFS*",
+    motherName: "NFS*",
+    annualIncome: 0,
     disabilityStatus: "None",
     
     // Academic record from APAAR / UDISE+
     currentEducation: {
       level: "Class 12",
-      institution: "Eklavya Model Residential School (EMRS), Mayurbhanj",
-      udiseCode: "21070104502",
+      institution: "NFS*",
+      udiseCode: "NFS*",
       board: "CBSE",
-      marksPercentage: 86.4,
+      marksPercentage: 0,
       passingYear: "2026",
-      stream: "Science (PCMB)",
-      hostelStatus: "Hosteller"
+      stream: "Science",
+      hostelStatus: "Day Scholar"
     },
 
     // DBT Bank Account (NPCI Aadhaar Payment Bridge Seeding Status)
     dbtBank: {
-      bankName: "State Bank of India",
-      branch: "Baripada Main Branch",
-      accountMasked: "XXXX-XXXX-4920",
-      ifsc: "SBIN0001234",
-      npciAadhaarSeeded: true,
-      lastStatusVerified: "2026-09-15"
+      bankName: "NFS*",
+      branch: "NFS*",
+      accountMasked: "•••• •••• NFS*",
+      ifsc: "NFS*",
+      npciAadhaarSeeded: false,
+      lastStatusVerified: "NFS*"
     },
 
     // DigiLocker Verified Documents
@@ -554,7 +554,7 @@ window.EduconData = {
           <line x1="50" y1="85" x2="550" y2="85" stroke="#002147" stroke-width="1"/>
           
           <text x="50" y="120" font-size="12" fill="#333">Date: 15 August 2026</text>
-          <text x="50" y="140" font-size="12" fill="#333">Dear Mr. Birsa Munda (CID: 02194812),</text>
+          <text x="50" y="140" font-size="12" fill="#333">Dear Scholar (CID: 02194812),</text>
           
           <text x="50" y="170" font-size="13" font-weight="bold" fill="#002147">CONDITIONAL OFFER OF ADMISSION: M.Sc in Environmental Data Science (2027 Intake)</text>
           <text x="50" y="195" font-size="11" fill="#333">We are delighted to offer you a place on the Master of Science program commencing October 2027.</text>
@@ -572,7 +572,7 @@ window.EduconData = {
       `),
       expectedFields: {
         documentType: "Foreign University Offer Letter",
-        candidateName: "Birsa Munda",
+        candidateName: "Scholar (NFS*)",
         institutionName: "Imperial College London",
         courseName: "M.Sc Environmental Data Science",
         qsRankingTier: "Top 10 Global (QS #2)",

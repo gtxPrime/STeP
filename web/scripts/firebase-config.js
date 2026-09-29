@@ -48,8 +48,7 @@ window.STePFirebase = (function() {
           updateSyncBadge(true, "Cloud Ready (step-sih)");
         });
 
-      // Auto-seed demo applications if empty so first-time users & officers see rich data
-      seedDemoDataIfEmpty();
+      // Zero demo applications seeded by default
 
     } catch (e) {
       console.error("[STeP Firebase] Initialization error:", e);

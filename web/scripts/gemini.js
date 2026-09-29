@@ -169,7 +169,7 @@ Return ONLY valid JSON without markdown fences.`;
         source: 'MoTa AI Vision Engine (Verified)',
         data: {
           documentType: "Foreign University Admission Offer Letter",
-          candidateName: "Birsa Munda",
+          candidateName: "Scholar (NFS*)",
           institutionName: "Imperial College London",
           courseName: "M.Sc Environmental Data Science",
           qsRankingTier: "QS World Rank #2 (Eligible for Top 500 NOS)",

@@ -19,7 +19,27 @@ window.EduconTimeline = (function() {
 
     const apps = EduconData.applicationsTimeline;
 
-    container.innerHTML = apps.map(app => {
+    if (!apps || apps.length === 0) {
+      container.innerHTML = `
+        <div class="glass-card text-center" style="padding: 48px 24px;">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#d9480f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 16px; opacity: 0.85;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <h3 class="font-bold text-lg mb-1">No Active Scholarship Applications</h3>
+          <p class="text-xs text-muted mb-4" style="max-width: 420px; margin-left: auto; margin-right: auto;">
+            You have not submitted any scholarship applications yet. Apply for MoTA Pre-Matric, Post-Matric, Top Class, or National Overseas schemes using the 5-Scheme Wizard or the STeP Android App.
+          </p>
+          <button class="btn btn-primary btn-sm" onclick="EduconApp.switchTab('eligibility')">
+            + Apply for New Scheme
+          </button>
+        </div>
+      `;
+      return;
+    }
       const isDeficient = app.stage === 'DEFICIENCY_FLAGGED';
 
       return `
