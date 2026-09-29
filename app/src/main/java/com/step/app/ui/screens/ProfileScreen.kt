@@ -98,15 +98,15 @@ fun ProfileScreen(
                         modifier = Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Unclipped container so the camera badge overlaps cleanly
+                        // Container with exact dimensions for avatar and camera badge
                         Box(
-                            modifier = Modifier.size(92.dp),
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier.size(88.dp)
                         ) {
                             // Circular Avatar
                             Box(
                                 modifier = Modifier
-                                    .size(82.dp)
+                                    .size(84.dp)
+                                    .align(Alignment.TopStart)
                                     .clip(CircleShape)
                                     .background(PrimarySurfaceLight)
                                     .border(2.5.dp, PrimaryDeepOrange, CircleShape)
@@ -130,23 +130,28 @@ fun ProfileScreen(
                                 }
                             }
 
-                            // Camera badge overlay - NOT clipped!
-                            Box(
+                            // Camera badge overlay anchored precisely at the bottom right rim of the avatar
+                            Surface(
                                 modifier = Modifier
                                     .size(28.dp)
                                     .align(Alignment.BottomEnd)
-                                    .clip(CircleShape)
-                                    .background(PrimaryDeepOrange)
-                                    .border(2.dp, Color.White, CircleShape)
                                     .clickable { photoPickerLauncher.launch("image/*") },
-                                contentAlignment = Alignment.Center
+                                shape = CircleShape,
+                                color = PrimaryDeepOrange,
+                                shadowElevation = 3.dp,
+                                border = androidx.compose.foundation.BorderStroke(2.dp, Color.White)
                             ) {
-                                Icon(
-                                    imageVector = FontAwesomeIcons.Solid.Camera,
-                                    contentDescription = "Upload custom photo",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(13.dp)
-                                )
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Icon(
+                                        imageVector = FontAwesomeIcons.Solid.Camera,
+                                        contentDescription = "Upload custom photo",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                }
                             }
                         }
 
