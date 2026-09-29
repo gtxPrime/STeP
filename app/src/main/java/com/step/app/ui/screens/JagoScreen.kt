@@ -123,8 +123,17 @@ fun JagoScreen() {
             }
         }
 
+        val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+
+        LaunchedEffect(messages.size) {
+            if (messages.isNotEmpty()) {
+                listState.animateScrollToItem(messages.size - 1)
+            }
+        }
+
         // Messages List
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()

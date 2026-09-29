@@ -162,6 +162,7 @@ window.EduconJago = (function() {
     `;
 
     container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
   }
 
   function appendTypingIndicator() {
@@ -180,6 +181,7 @@ window.EduconJago = (function() {
       </div>
     `;
     container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
     return id;
   }
 

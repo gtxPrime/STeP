@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,7 +38,7 @@ fun HelpScreen() {
     var inputText by remember { mutableStateOf("") }
     var isListening by remember { mutableStateOf(false) }
 
-    val languages = listOf("English", "हिन्दी (Hindi)", "ଓଡ଼ିଆ (Odia)", "తెలుగు (Telugu)", "தமிழ் (Tamil)")
+    val languages = listOf("English", "हिन्दी (Hindi)", "मराठी (Marathi)", "ଓଡ଼ିଆ (Odia)", "తెలుగు (Telugu)", "தமிழ் (Tamil)")
 
     val quickChips = listOf(
         "Check my status",
@@ -54,6 +56,15 @@ fun HelpScreen() {
         )
     }
 
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+
+    // Auto-scroll to the latest response whenever a message is added
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.size - 1)
+        }
+    }
+
     Scaffold(
         topBar = {
             Surface(
@@ -64,14 +75,19 @@ fun HelpScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(horizontal = 18.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(PrimarySurfaceLight)
                                 .border(1.5.dp, PrimaryDeepOrange, CircleShape),
@@ -81,22 +97,26 @@ fun HelpScreen() {
                                 imageVector = FontAwesomeIcons.Solid.Headset,
                                 contentDescription = null,
                                 tint = PrimaryDeepOrange,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "JAGO — Scholarship Assistant",
-                                fontSize = 15.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = TextDark
+                                color = TextDark,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                             Text(
-                                text = "MoTA AI Sovereign Voice & Text RAG",
-                                fontSize = 11.sp,
+                                text = "MoTA AI Voice & Text RAG",
+                                fontSize = 10.5.sp,
                                 color = StatusDisbursed,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -105,19 +125,27 @@ fun HelpScreen() {
                     Box {
                         Surface(
                             color = SurfaceCard,
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(12.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, BorderMedium),
                             modifier = Modifier.clickable { showLanguageMenu = true }
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = selectedLanguage,
+                                    text = selectedLanguage.substringBefore(" "),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextDark
+                                    color = TextDark,
+                                    maxLines = 1
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Select Language",
+                                    tint = TextSubtle,
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
@@ -154,8 +182,9 @@ fun HelpScreen() {
                 .background(BackgroundWhite)
                 .padding(padding)
         ) {
-            // Chat Message Stream
+            // Chat Message Stream with Auto-Scroll State
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 16.dp),
