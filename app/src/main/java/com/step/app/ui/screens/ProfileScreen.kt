@@ -32,6 +32,7 @@ fun ProfileScreen(
     onNavigateToDocumentWallet: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val student = MoTaRepository.currentStudent
     var notificationsEnabled by remember { mutableStateOf(true) }
     var smsAlertsEnabled by remember { mutableStateOf(true) }
@@ -42,7 +43,7 @@ fun ProfileScreen(
         if (uri != null) {
             val updated = student.copy(photoUrl = uri.toString())
             MoTaRepository.currentStudent = updated
-            FirebaseManager.saveStudentProfileToFirestore(updated, updated.uid)
+            FirebaseManager.saveStudentProfileToFirestore(updated, updated.uid, context)
         }
     }
 
@@ -95,18 +96,22 @@ fun ProfileScreen(
                         .border(1.dp, BorderLight, RoundedCornerShape(20.dp))
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Container with exact dimensions for avatar and camera badge
+                        // Centered avatar with camera badge
                         Box(
-                            modifier = Modifier.size(88.dp)
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .wrapContentSize()
+                                .padding(4.dp)
                         ) {
                             // Circular Avatar
                             Box(
                                 modifier = Modifier
-                                    .size(84.dp)
-                                    .align(Alignment.TopStart)
+                                    .size(86.dp)
                                     .clip(CircleShape)
                                     .background(PrimarySurfaceLight)
                                     .border(2.5.dp, PrimaryDeepOrange, CircleShape)
@@ -130,11 +135,12 @@ fun ProfileScreen(
                                 }
                             }
 
-                            // Camera badge overlay anchored precisely at the bottom right rim of the avatar
+                            // Camera badge overlay anchored at the bottom right rim of the avatar
                             Surface(
                                 modifier = Modifier
                                     .size(28.dp)
                                     .align(Alignment.BottomEnd)
+                                    .offset(x = 2.dp, y = 2.dp)
                                     .clickable { photoPickerLauncher.launch("image/*") },
                                 shape = CircleShape,
                                 color = PrimaryDeepOrange,
@@ -183,33 +189,64 @@ fun ProfileScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
                             text = student.fullName,
-                            fontSize = 18.sp,
+                            fontSize = 19.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextDark
+                            color = TextDark,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = student.email,
                             fontSize = 12.sp,
-                            color = TextSubtle
+                            color = TextSubtle,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                        Surface(
-                            color = StatusDisbursedBg,
-                            shape = RoundedCornerShape(12.dp)
+                        // Centered ID option badges
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = "APAAR ID: ${student.apaarId}",
-                                color = StatusDisbursed,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
+                            Surface(
+                                color = StatusDisbursedBg,
+                                shape = RoundedCornerShape(12.dp),
+                                border = androidx.compose.foundation.BorderStroke(0.8.dp, StatusDisbursed.copy(alpha = 0.3f))
+                            ) {
+                                Text(
+                                    text = "APAAR ID: ${student.apaarId}",
+                                    color = StatusDisbursed,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                                )
+                            }
+                            if (student.digilockerId.isNotBlank() && student.digilockerId != "NFS") {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Surface(
+                                    color = PrimarySurfaceLight,
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = androidx.compose.foundation.BorderStroke(0.8.dp, PrimaryDeepOrange.copy(alpha = 0.3f))
+                                ) {
+                                    Text(
+                                        text = "DigiLocker: ${student.digilockerId}",
+                                        color = PrimaryDeepOrangeDark,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -469,7 +506,7 @@ fun ProfileScreen(
             item {
                 OutlinedButton(
                     onClick = {
-                        FirebaseManager.logout()
+                        FirebaseManager.logout(context)
                         onLogout()
                     },
                     shape = RoundedCornerShape(10.dp),

@@ -7,8 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.step.app.data.MoTaRepository
 import com.step.app.data.Scheme
 import com.step.app.ui.components.FontAwesomeIcons
 import com.step.app.ui.theme.*
@@ -600,6 +603,16 @@ fun SchemeDetailScreen(
                 }
             }
 
+            if (scheme.id == "TOP_CLASS") {
+                item {
+                    TopClassInstitutesSection()
+                }
+            } else if (scheme.id in listOf("PRE_MATRIC", "POST_MATRIC")) {
+                item {
+                    StateScholarshipStatsSection()
+                }
+            }
+
             // 6. OFFICIAL NODAL AUTHORITY & ASSURANCE
             item {
                 Card(
@@ -704,6 +717,245 @@ private fun MetricChipCard(
                 maxLines = 2,
                 lineHeight = 16.sp
             )
+        }
+    }
+}
+
+@Composable
+private fun TopClassInstitutesSection() {
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCat by remember { mutableStateOf("All") }
+    val categories = listOf("All", "IIT", "NIT", "IIM", "AIIMS", "NLU", "IIIT", "NIFT")
+
+    val institutes = remember(searchQuery, selectedCat, MoTaRepository.topInstitutes.size) {
+        MoTaRepository.searchTopInstitutes(searchQuery, if (selectedCat == "All") null else selectedCat)
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, BorderMedium, RoundedCornerShape(16.dp))
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "265 Notified Premier Institutes",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
+                    )
+                    Text(
+                        text = "Official Ministry dataset • 100% Fee Waiver",
+                        fontSize = 11.sp,
+                        color = TextSubtle
+                    )
+                }
+                Surface(
+                    color = PrimarySurfaceLight,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "${MoTaRepository.topInstitutes.size} Institutes",
+                        color = PrimaryDeepOrangeDark,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Search your college or state...", fontSize = 12.sp, color = TextSubtle) },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PrimaryDeepOrange,
+                    unfocusedBorderColor = BorderMedium,
+                    focusedContainerColor = BackgroundWhite,
+                    unfocusedContainerColor = BackgroundWhite
+                )
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                items(categories) { cat ->
+                    val isSelected = selectedCat == cat
+                    Surface(
+                        color = if (isSelected) PrimaryDeepOrange else BackgroundWhite,
+                        shape = RoundedCornerShape(10.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) PrimaryDeepOrange else BorderMedium),
+                        modifier = Modifier.clickable { selectedCat = cat }
+                    ) {
+                        Text(
+                            text = cat,
+                            fontSize = 11.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) Color.White else TextDark,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "Showing ${institutes.take(5).size} of ${institutes.size} matching institutes",
+                fontSize = 11.sp,
+                color = TextSubtle,
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            institutes.take(5).forEach { inst ->
+                Surface(
+                    color = BackgroundWhite,
+                    shape = RoundedCornerShape(10.dp),
+                    border = androidx.compose.foundation.BorderStroke(0.8.dp, BorderLight),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 3.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            color = PrimarySurfaceLight,
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = inst.category,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryDeepOrangeDark,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = inst.name,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDark
+                            )
+                            Text(
+                                text = "${inst.state} • ${inst.course}",
+                                fontSize = 10.sp,
+                                color = TextSubtle
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StateScholarshipStatsSection() {
+    val studentState = MoTaRepository.currentStudent.state
+    val initialSelected = if (studentState != "NFS" && studentState.isNotBlank()) studentState else "Odisha"
+    var selectedState by remember { mutableStateOf(initialSelected) }
+    val stat = remember(selectedState, MoTaRepository.stateStats.size) {
+        MoTaRepository.getStateStat(selectedState) ?: MoTaRepository.stateStats.firstOrNull()
+    }
+
+    if (stat != null) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, BorderMedium, RoundedCornerShape(16.dp))
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "State Scholarship Reach",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDark
+                        )
+                        Text(
+                            text = "Official MoTA Dataset (Annexure I)",
+                            fontSize = 11.sp,
+                            color = TextSubtle
+                        )
+                    }
+                    Surface(
+                        color = StatusDisbursedBg,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = stat.state,
+                            color = StatusDisbursed,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Surface(
+                        color = BackgroundWhite,
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("PRE-MATRIC", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = TextSubtle)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("${java.text.NumberFormat.getIntegerInstance().format(stat.preBen)} students", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                            Text("₹ ${stat.preFund} Cr released", fontSize = 10.sp, color = PrimaryDeepOrange, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+
+                    Surface(
+                        color = BackgroundWhite,
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("POST-MATRIC", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = TextSubtle)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("${java.text.NumberFormat.getIntegerInstance().format(stat.postBen)} scholars", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                            Text("₹ ${stat.postFund} Cr released", fontSize = 10.sp, color = PrimaryDeepOrange, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            }
         }
     }
 }

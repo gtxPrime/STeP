@@ -1,9 +1,11 @@
 package com.step.app.data
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import org.json.JSONArray
 
 data class StudentProfile(
     val uid: String = "",
@@ -295,5 +297,97 @@ object MoTaRepository {
     val sampleCasteDoc get() = scannedDocuments.firstOrNull { it.documentType.contains("Caste") || it.documentType.contains("ST") }
     val sampleIncomeDoc get() = scannedDocuments.firstOrNull { it.documentType.contains("Income") }
     val sampleMarksheetDoc get() = scannedDocuments.firstOrNull { it.documentType.contains("Marksheet") || it.documentType.contains("Academic") }
+
+    val topInstitutes = mutableStateListOf<TopInstitute>()
+    val stateStats = mutableStateListOf<StateScholarshipStat>()
+
+    fun loadDatasetsIfEmpty(context: Context) {
+        if (topInstitutes.isEmpty()) {
+            try {
+                val json = context.assets.open("mota_top_institutes.json").bufferedReader().use { it.readText() }
+                val arr = JSONArray(json)
+                for (i in 0 until arr.length()) {
+                    val obj = arr.getJSONObject(i)
+                    topInstitutes.add(
+                        TopInstitute(
+                            id = obj.getInt("id"),
+                            name = obj.getString("name"),
+                            state = obj.getString("state"),
+                            category = obj.getString("category"),
+                            course = obj.getString("course")
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        if (stateStats.isEmpty()) {
+            try {
+                val json = context.assets.open("mota_state_stats.json").bufferedReader().use { it.readText() }
+                val arr = JSONArray(json)
+                for (i in 0 until arr.length()) {
+                    val obj = arr.getJSONObject(i)
+                    stateStats.add(
+                        StateScholarshipStat(
+                            state = obj.getString("state"),
+                            preBen = obj.getInt("preBen"),
+                            preFund = obj.getDouble("preFund"),
+                            postBen = obj.getInt("postBen"),
+                            postFund = obj.getDouble("postFund"),
+                            totalBen = obj.getInt("totalBen"),
+                            totalFund = obj.getDouble("totalFund")
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun findTopInstitute(query: String): TopInstitute? {
+        if (query.isBlank()) return null
+        val q = query.trim().lowercase()
+        return topInstitutes.firstOrNull {
+            it.name.lowercase().contains(q) || q.contains(it.name.lowercase())
+        }
+    }
+
+    fun searchTopInstitutes(query: String, category: String? = null): List<TopInstitute> {
+        val q = query.trim().lowercase()
+        return topInstitutes.filter { inst ->
+            val matchesCat = category == null || category == "All" || inst.category.equals(category, ignoreCase = true)
+            val matchesQuery = q.isEmpty() || inst.name.lowercase().contains(q) || inst.state.lowercase().contains(q)
+            matchesCat && matchesQuery
+        }
+    }
+
+    fun getStateStat(stateName: String): StateScholarshipStat? {
+        if (stateName.isBlank()) return null
+        val s = stateName.trim().lowercase()
+        return stateStats.firstOrNull {
+            it.state.lowercase().contains(s) || s.contains(it.state.lowercase())
+        }
+    }
 }
+
+data class TopInstitute(
+    val id: Int,
+    val name: String,
+    val state: String,
+    val category: String,
+    val course: String
+)
+
+data class StateScholarshipStat(
+    val state: String,
+    val preBen: Int,
+    val preFund: Double,
+    val postBen: Int,
+    val postFund: Double,
+    val totalBen: Int,
+    val totalFund: Double
+)
 

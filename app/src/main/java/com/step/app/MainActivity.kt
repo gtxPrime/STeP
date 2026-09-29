@@ -38,6 +38,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Auto-restore user session, profile, and dynamic data immediately on launch
+        FirebaseManager.autoRestoreSession(this)
+
         setContent {
             STePTheme {
                 if (!FirebaseManager.isGoogleLoggedIn) {
@@ -49,7 +53,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     STePMainApp(
                         onLogout = {
-                            FirebaseManager.logout()
+                            FirebaseManager.logout(this@MainActivity)
                         }
                     )
                 }
@@ -88,8 +92,10 @@ fun STePMainApp(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    val context = androidx.compose.ui.platform.LocalContext.current
     LaunchedEffect(Unit) {
         FirebaseManager.initDynamicFirestore()
+        MoTaRepository.loadDatasetsIfEmpty(context)
     }
 
     // Handle Android system back button when sub-screens are open
