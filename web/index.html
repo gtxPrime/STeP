@@ -2,27 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>STeP - Scheduled Tribe e-Portal (MoTA Sovereign Administration)</title>
-  <meta name="description" content="Unified mobile-first scholarship portal for Ministry of Tribal Affairs (MoTA), Government of India. Covers Pre-Matric, Post-Matric, Top Class, NFST, and National Overseas Scholarship with Intelligent AI Rules Engine and DigiLocker integration." />
-  <meta name="theme-color" content="#f97316" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STeP Admin - Sovereign Scholarship Administration Suite (Ministry of Tribal Affairs)</title>
+  <meta name="description" content="Central Sovereign Administration Portal for Ministry of Tribal Affairs (MoTA), Government of India. Full powers to create schemes, inspect student enrolment & DigiLocker documents, manage approvals, and track district equity." />
+  <meta name="theme-color" content="#d9480f" />
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" type="image/svg+xml" href="./assets/icon-192.svg" />
   <link rel="apple-touch-icon" href="./assets/icon-192.svg" />
-  <link rel="stylesheet" href="./styles/main.css" />
+  <link rel="stylesheet" href="./styles/main.css?v=3.1" />
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <!-- Ambient Gradient Background Mesh -->
   <div class="bg-mesh-overlay"></div>
 
-  <!-- Warli Tribal Art Pattern Strip -->
+  <!-- Sovereign Tricolor Strip -->
   <div class="tribal-header-strip"></div>
-
-  <!-- Real-time Network Status Banner (PWA Offline First) -->
-  <div id="network-status-indicator" class="network-banner online">
-    <span class="status-indicator-dot online"></span>
-    <span><strong>Online</strong> • DigiLocker API & PFMS live sync active</span>
-  </div>
 
   <!-- Main Viewport Shell -->
   <div id="app-main-viewport">
@@ -34,813 +31,398 @@
           <img src="./assets/icon-192.svg" alt="MoTA Emblem" class="mota-emblem" />
           <div>
             <h1 class="brand-title">
-              STeP Admin Dashboard
-              <span class="badge badge-success text-xs">MoTA Sovereign</span>
+              STeP <span class="title-accent">Sovereign Admin Suite</span>
+              <span class="badge badge-success text-xs font-mono">MoTA Central Authority</span>
               <span id="firebase-sync-badge" class="badge badge-success text-xs font-mono">Firestore: Live Synced (step-sih)</span>
+              <span class="badge badge-outline text-xs font-mono">DigiLocker & PFMS Active</span>
             </h1>
-            <p class="brand-subtitle">Scheduled Tribe e-Portal • जनजातीय कार्य मंत्रालय, प्रशासनिक पोर्टल</p>
+            <p class="brand-subtitle">Ministry of Tribal Affairs • जनजातीय कार्य मंत्रालय | Government of India</p>
           </div>
         </div>
 
-        <!-- Toolbar & Switchers -->
+        <!-- Top Actions -->
         <div class="header-actions">
-          <!-- Download Student Android APK Button -->
-          <a href="./assets/step-student-app.apk" download="STeP-Student-App.apk" class="btn btn-primary btn-xs" title="Download compiled native Android APK for students">
-            Download STeP Student App (.APK)
-          </a>
-
-          <!-- Dual Experience Switcher -->
-          <div class="mode-switcher">
-            <button id="btn-mode-officer" class="mode-btn active">Admin Web Panel</button>
-            <button id="btn-mode-student" class="mode-btn">Student App View</button>
-          </div>
-
-          <!-- Phone Frame Simulator Toggle for Judges -->
-          <button id="btn-toggle-phone-frame" class="btn btn-outline btn-xs" title="Toggle Mobile Phone Mockup Frame">
-            Phone Frame
+          <button class="btn btn-primary btn-sm" onclick="EduconOfficer.openAddSchemeModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Create New Scholarship
           </button>
 
-          <!-- High-Contrast Accessibility (WCAG AAA) -->
-          <button id="btn-toggle-contrast" class="btn btn-outline btn-xs" title="High Contrast Mode for Low Vision">
+          <a href="./assets/step-student-app.apk" download="STeP-Student-App.apk" class="btn btn-outline btn-sm" title="Download compiled native Android APK for students">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Student App (.APK)
+          </a>
+
+          <button id="btn-toggle-contrast" class="btn btn-outline btn-xs" title="High Contrast Accessibility">
             Contrast
           </button>
 
-          <!-- Multilingual Language Selector -->
           <select id="global-language-select" class="select-clean">
             <option value="en">English</option>
-            <option value="hi">हिन्दी (Hindi)</option>
-            <option value="or">ଓଡ଼ିଆ (Odia)</option>
-            <option value="mr">मराठी (Marathi)</option>
-            <option value="te">తెలుగు (Telugu)</option>
-            <option value="ta">தமிழ் (Tamil)</option>
+            <option value="hi">हिन्दी</option>
+            <option value="or">ଓଡ଼ିଆ</option>
+            <option value="mr">मराठी</option>
+            <option value="te">తెలుగు</option>
           </select>
-
-          <!-- API Key Config Button -->
-          <button id="btn-config-api-key" class="btn btn-ghost btn-xs" title="Configure AI Intelligence Engine">
-            AI Engine Config
-          </button>
         </div>
       </div>
     </header>
 
-    <!-- ========================================== -->
-    <!-- 1. STUDENT SELF-SERVICE PORTAL SHELL       -->
-    <!-- ========================================== -->
-    <div id="student-portal-shell">
-      
-      <!-- Student Profile Strip (DigiLocker + APAAR) -->
-      <div class="student-strip-banner">
-        <div class="student-info-left">
-          <div class="avatar-badge" id="student-avatar-badge">ST</div>
-          <div>
-            <div class="student-name">
-              <span id="header-student-name">Scholar (NFS*)</span>
-              <span class="badge badge-success text-xs">DigiLocker Sandbox*</span>
-              <span class="badge badge-outline text-xs" id="header-student-community">Scheduled Tribe (ST)</span>
+    <!-- Executive KPI Ribbon -->
+    <section class="p-6 pb-2">
+      <div class="grid grid-cols-4 gap-4">
+        <!-- 1. Registered Scholars -->
+        <div class="glass-card p-5 mb-0 border-l-4 border-l-saffron-primary">
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-xs text-muted font-bold tracking-wider uppercase">Registered Scholars</span>
+              <div class="text-2xl font-bold text-main mt-1" id="kpi-total-students">--</div>
+              <span class="text-xs text-emerald font-semibold mt-1 block">Live from Cloud Firestore</span>
             </div>
-            <div class="flex items-center gap-2 mt-1">
-              <span class="apaar-chip" id="header-student-apaar">APAAR ID: NFS*</span>
-              <span class="text-xs text-muted" id="header-student-school">Institution: NFS*</span>
+            <div class="avatar-badge" style="width: 36px; height: 36px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             </div>
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
-          <!-- Document Expiry Alert -->
-          <div class="doc-expiry-alert" onclick="EduconApp.showToast('Income Certificate renewal request submitted to Odisha e-District Portal!')" title="Click to auto-renew via e-District">
-            <span>Income Cert Expires in <strong>28 Days</strong> (Auto-Renew)</span>
+        <!-- 2. Scholarships Master -->
+        <div class="glass-card p-5 mb-0 border-l-4 border-l-blue-600">
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-xs text-muted font-bold tracking-wider uppercase">Scholarship Schemes</span>
+              <div class="text-2xl font-bold text-main mt-1" id="kpi-total-schemes">5 Active</div>
+              <span class="text-xs text-muted mt-1 block">Central MoTA & State Catalog</span>
+            </div>
+            <div class="avatar-badge" style="width: 36px; height: 36px; background: var(--navy-tint); color: var(--navy-accent); border-color: var(--navy-accent);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            </div>
           </div>
+        </div>
 
-          <!-- One-Tap Renewal Button -->
-          <button id="btn-one-tap-renewal" class="btn btn-outline btn-xs">
-            One-Tap Renewal 2026-27
-          </button>
+        <!-- 3. DBT Disbursed -->
+        <div class="glass-card p-5 mb-0 border-l-4 border-l-emerald-600">
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-xs text-muted font-bold tracking-wider uppercase">DBT Sanctioned (PFMS)</span>
+              <div class="text-2xl font-bold text-emerald mt-1" id="kpi-total-dbt">₹ 428.60 Cr*</div>
+              <span class="text-xs text-emerald font-semibold mt-1 block">100% Aadhaar APBS Bridge</span>
+            </div>
+            <div class="avatar-badge" style="width: 36px; height: 36px; background: var(--emerald-tint); color: var(--emerald-success); border-color: var(--emerald-success);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Scrutiny Queue -->
+        <div class="glass-card p-5 mb-0 border-l-4 border-l-amber-500">
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-xs text-muted font-bold tracking-wider uppercase">Scrutiny Queue</span>
+              <div class="text-2xl font-bold text-amber mt-1" id="kpi-pending-cases">0 Cases</div>
+              <span class="text-xs text-amber font-semibold mt-1 block">DigiLocker Auto-Clear Ready</span>
+            </div>
+            <div class="avatar-badge" style="width: 36px; height: 36px; background: var(--amber-tint); color: var(--amber-warning); border-color: var(--amber-warning);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+          </div>
         </div>
       </div>
+    </section>
 
-      <!-- Navigation Tabs (Mobile-First Ergonomics) -->
-      <nav class="student-nav-tabs">
-        <button class="nav-tab-btn active" data-tab="timeline">
-          Unified Timeline
+    <!-- Main Admin Navigation Bar -->
+    <nav class="admin-nav-tabs">
+      <button class="admin-nav-tab-btn active" data-tab="schemes">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        Scholarships Master
+      </button>
+
+      <button class="nav-tab-btn admin-nav-tab-btn" data-tab="students">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Registered Students Directory
+      </button>
+
+      <button class="nav-tab-btn admin-nav-tab-btn" data-tab="documents">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        Student Documents Vault
+      </button>
+
+      <button class="nav-tab-btn admin-nav-tab-btn" data-tab="queue">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        Application Scrutiny & Approvals
+      </button>
+
+      <button class="nav-tab-btn admin-nav-tab-btn" data-tab="heatmap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+        District Outreach Heatmap
+      </button>
+    </nav>
+
+    <!-- ============================================================== -->
+    <!-- TAB 1: SCHOLARSHIPS MASTER (CREATE, EDIT, RETIRE SCHEMES)       -->
+    <!-- ============================================================== -->
+    <section id="admin-panel-schemes" class="tab-content-panel admin-panel">
+      <div class="mb-6 flex justify-between items-end flex-wrap gap-4">
+        <div>
+          <span class="badge badge-outline mb-1">SOVEREIGN CATALOG</span>
+          <h2 class="text-2xl font-bold text-main">MoTA Scholarship Schemes Master</h2>
+          <p class="text-xs text-muted">Create, edit, or retire central and state scholarship guidelines. Synced live to the Firebase Cloud Firestore catalog.</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="EduconOfficer.openAddSchemeModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          + Create New Scholarship (Cloud)
         </button>
-        <button class="nav-tab-btn" data-tab="scanner">
-          AI Doc Scanner
-        </button>
-        <button class="nav-tab-btn" data-tab="eligibility">
-          5-Scheme Wizard
-        </button>
-        <button class="nav-tab-btn" data-tab="dbt">
-          DBT & Grievance SLA
-        </button>
-        <button class="nav-tab-btn" data-tab="jago">
-          JAGO Voice Assistant
-        </button>
-        <button class="nav-tab-btn" data-tab="impact">
-          Impact & Peers
-        </button>
-      </nav>
-
-      <!-- TAB 1: UNIFIED SCHOLARSHIP TIMELINE -->
-      <section id="tab-panel-timeline" class="tab-content-panel">
-        <div class="mb-4 flex justify-between items-end">
-          <div>
-            <span class="badge badge-outline mb-1">CONSOLIDATED MULTI-PORTAL TRACKER</span>
-            <h2 class="text-xl font-bold">Your MoTA Scholarship Applications</h2>
-            <p class="text-xs text-muted">Eliminating portal hopping across NSP, Canara Bank SFMP, and NOS into a single live stream.</p>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="EduconApp.switchTab('eligibility')">
-            + Apply for New Scheme
-          </button>
-        </div>
-
-        <!-- Rendered by timeline.js -->
-        <div id="timeline-cards-container"></div>
-      </section>
-
-      <!-- TAB 2: AI DOCUMENT SCANNER (GEMINI VISION) -->
-      <section id="tab-panel-scanner" class="tab-content-panel hidden">
-        <div class="mb-4">
-          <span class="badge badge-success mb-1">GEMINI 1.5 FLASH VISION OCR</span>
-          <h2 class="text-xl font-bold">AI Smart Document Scanner & Autofill</h2>
-          <p class="text-xs text-muted">Photograph your Caste, Income, or Admission letter. MoTa AI Vision extracts fields and computes Sovereign Confidence Scores with zero manual typing.</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Left: Capture Box & Preloaded Samples -->
-          <div class="glass-card">
-            <h3 class="font-bold text-base mb-3">1. Capture or Select Certificate</h3>
-            
-            <div class="scanner-viewport-box">
-              <div id="scanner-laser-overlay" class="scanner-laser hidden"></div>
-              
-              <div id="scanner-placeholder" class="text-center p-6">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d9480f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 10px; display: block; opacity: 0.85;">
-                  <path d="M4 8V4h4"></path>
-                  <path d="M20 8V4h-4"></path>
-                  <path d="M4 16v4h4"></path>
-                  <path d="M20 16v4h-4"></path>
-                  <line x1="4" y1="12" x2="20" y2="12" stroke-dasharray="2 2"></line>
-                  <rect x="8" y="7" width="8" height="10" rx="1.5"></rect>
-                </svg>
-                <p class="text-sm font-semibold">No Document Loaded</p>
-                <p class="text-xs text-muted mb-4">Take a phone photo, upload image, or pick a sample certificate</p>
-                <div class="flex justify-center gap-2">
-                  <button id="btn-open-camera" class="btn btn-primary btn-sm">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-                    Open Camera
-                  </button>
-                  <label class="btn btn-outline btn-sm cursor-pointer">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                    Upload File
-                    <input type="file" id="doc-file-input" accept="image/*" class="hidden" />
-                  </label>
-                </div>
-              </div>
-
-              <div id="scanner-preview-wrapper" class="hidden w-full h-full flex items-center justify-center p-2">
-                <img id="scanner-preview-img" src="" alt="Document Preview" class="max-h-72 object-contain rounded" />
-              </div>
-            </div>
-
-            <!-- Instant 1-Click Test Samples for Hackathon Judges -->
-            <div class="mt-4 pt-3 border-t">
-              <span class="text-xs text-muted block mb-2">1-Click Sandbox Test Certificates*:</span>
-              <div class="flex flex-wrap gap-2">
-                <button class="btn btn-outline btn-xs btn-load-sample" data-sample-id="sample-caste-odisha">
-                  Odisha ST Certificate*
-                </button>
-                <button class="btn btn-outline btn-xs btn-load-sample" data-sample-id="sample-income-mp">
-                  Family Income Certificate*
-                </button>
-                <button class="btn btn-outline btn-xs btn-load-sample" data-sample-id="sample-nos-offer">
-                  Imperial College Offer*
-                </button>
-              </div>
-            </div>
-
-            <div id="scan-status-indicator" class="mt-3 text-xs text-amber font-semibold hidden"></div>
-          </div>
-
-          <!-- Right: Extraction Results & Confidence Score -->
-          <div class="glass-card">
-            <div class="flex justify-between items-start">
-              <div>
-                <h3 class="font-bold text-base">2. Extracted Data & Sovereign Confidence</h3>
-                <span id="scan-engine-name" class="text-xs text-muted">Awaiting Scan...</span>
-              </div>
-              <div id="scan-confidence-badge" class="badge badge-neutral">Pending</div>
-            </div>
-
-            <!-- Verification Confidence Meter -->
-            <div class="confidence-meter-box">
-              <div class="flex justify-between text-xs mb-1">
-                <span>Verification Confidence Level</span>
-                <span id="scan-meter-score" class="font-bold text-emerald">--</span>
-              </div>
-              <div class="progress-bar-track">
-                <div id="scan-meter-fill" class="progress-bar-fill bg-emerald" style="width: 0%"></div>
-              </div>
-              <p class="text-xs text-muted mt-2" id="scan-verification-notes">
-                Applications with ≥85% confidence score qualify for Instant Auto-Approval without manual officer bottlenecks.
-              </p>
-            </div>
-
-            <!-- Empty State -->
-            <div id="scanner-empty-state" class="p-8 text-center text-muted text-xs">
-              Select one of the sample certificates or upload an image to view real-time MoTa AI Vision field extraction.
-            </div>
-
-            <!-- Populated Extracted Fields -->
-            <div id="scanner-results-container" class="hidden">
-              <div id="scan-fields-grid" class="scan-field-grid"></div>
-
-              <div class="mt-4 pt-3 border-t flex justify-end gap-2">
-                <button id="btn-autofill-app" class="btn btn-primary btn-sm">
-                   Auto-Fill Application Form
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: 5-SCHEME ELIGIBILITY WIZARD -->
-      <section id="tab-panel-eligibility" class="tab-content-panel hidden">
-        <div class="mb-4">
-          <span class="badge badge-outline mb-1">MULTI-SCHEME REASONING ENGINE</span>
-          <h2 class="text-xl font-bold">Eligibility Wizard & Scheme Benefit Ranker</h2>
-          <p class="text-xs text-muted">Evaluates Pre-Matric, Post-Matric, Top Class, NFST, and NOS guidelines simultaneously to find your maximum financial entitlement.</p>
-        </div>
-
-        <!-- Stepper Indicator -->
-        <div class="wizard-steps-indicator">
-          <div id="step-indicator-1" class="step-dot active">1</div>
-          <div id="step-indicator-2" class="step-dot">2</div>
-          <div id="step-indicator-3" class="step-dot">3</div>
-        </div>
-
-        <div class="glass-card">
-          <!-- Step 1: Educational Stage -->
-          <div id="wizard-step-1">
-            <h3 class="font-bold text-base mb-1">Step 1: Current Education Level</h3>
-            <p class="text-xs text-muted mb-3">Select the course or stage you are pursuing or intend to join:</p>
-
-            <div class="edu-choices-grid">
-              <div class="edu-choice-card" data-edu-level="class9_10">
-                <span class="text-2xl block mb-1"></span>
-                <span class="font-bold text-xs block">Class 9 - 10</span>
-                <span class="text-xs text-muted">Pre-Matric School</span>
-              </div>
-              <div class="edu-choice-card" data-edu-level="class11_12">
-                <span class="text-2xl block mb-1"></span>
-                <span class="font-bold text-xs block">Class 11 - 12 / ITI</span>
-                <span class="text-xs text-muted">Higher Secondary</span>
-              </div>
-              <div class="edu-choice-card" data-edu-level="undergrad_general">
-                <span class="text-2xl block mb-1"></span>
-                <span class="font-bold text-xs block">General Degree / PG</span>
-                <span class="text-xs text-muted">B.A, B.Sc, B.Com, M.A</span>
-              </div>
-              <div class="edu-choice-card active" data-edu-level="premier_institute">
-                <span class="text-2xl block mb-1">️</span>
-                <span class="font-bold text-xs block">Premier Institutes</span>
-                <span class="text-xs text-muted">IIT, IIM, NIT, AIIMS, NLU</span>
-              </div>
-              <div class="edu-choice-card" data-edu-level="mphil_phd">
-                <span class="text-2xl block mb-1"></span>
-                <span class="font-bold text-xs block">M.Phil / Ph.D (India)</span>
-                <span class="text-xs text-muted">UGC/CSIR NET Research</span>
-              </div>
-              <div class="edu-choice-card" data-edu-level="study_abroad">
-                <span class="text-2xl block mb-1">️</span>
-                <span class="font-bold text-xs block">Study Abroad (QS 500)</span>
-                <span class="text-xs text-muted">Foreign Masters / Ph.D</span>
-              </div>
-            </div>
-
-            <div class="mt-4">
-              <label class="form-label text-xs block mb-1">Institution Name</label>
-              <input type="text" id="wizard-inst-input" class="input-text w-full" value="IIT Bhubaneswar" placeholder="e.g. IIT Delhi, EMRS, Imperial College London" />
-            </div>
-          </div>
-
-          <!-- Step 2: Family Annual Income -->
-          <div id="wizard-step-2" class="hidden">
-            <h3 class="font-bold text-base mb-1">Step 2: Annual Family Income from All Sources</h3>
-            <p class="text-xs text-muted mb-3">Certified by Revenue Authority (Tehsildar / SDO):</p>
-
-            <div class="text-center my-4">
-              <span id="wizard-income-display" class="text-3xl font-bold text-emerald">₹ 1,45,000</span>
-              <span class="text-xs text-muted block mt-1">per annum</span>
-            </div>
-
-            <input type="range" id="wizard-income-slider" min="50000" max="1000000" step="25000" value="145000" class="w-full" />
-
-            <div class="income-chips-row justify-center">
-              <button class="income-chip" data-income="100000">&lt; ₹1.0 Lakh</button>
-              <button class="income-chip active" data-income="145000">₹1.45 Lakh (Default)</button>
-              <button class="income-chip" data-income="240000">₹2.4 Lakh (Pre/Post-Matric Limit)</button>
-              <button class="income-chip" data-income="550000">₹5.5 Lakh (Top Class Limit)</button>
-              <button class="income-chip" data-income="750000">₹7.5 Lakh (NOS Limit)</button>
-            </div>
-          </div>
-
-          <!-- Step 3: Special Affirmative Categories -->
-          <div id="wizard-step-3" class="hidden">
-            <h3 class="font-bold text-base mb-1">Step 3: Category & Affirmative Priority</h3>
-            <p class="text-xs text-muted mb-4">MoTA provides special reserved quotas and priority processing for vulnerable communities:</p>
-
-            <div class="flex flex-col gap-3">
-              <label class="flex items-center gap-3 p-3 bg-white/5 rounded cursor-pointer">
-                <input type="checkbox" id="wizard-check-st" checked />
-                <div>
-                  <span class="font-bold text-xs block">Scheduled Tribe (ST) Candidate</span>
-                  <span class="text-xs text-muted">Primary requirement across all 5 MoTA schemes</span>
-                </div>
-              </label>
-
-              <label class="flex items-center gap-3 p-3 bg-white/5 rounded cursor-pointer">
-                <input type="checkbox" id="wizard-check-pvtg" />
-                <div>
-                  <span class="font-bold text-xs text-amber block">Particularly Vulnerable Tribal Group (PVTG)</span>
-                  <span class="text-xs text-muted">Eligible for PM-JANMAN mission fast-track and NOS 3-slot ringfenced quota</span>
-                </div>
-              </label>
-
-              <label class="flex items-center gap-3 p-3 bg-white/5 rounded cursor-pointer">
-                <input type="checkbox" id="wizard-check-pwd" />
-                <div>
-                  <span class="font-bold text-xs block">Person with Benchmark Disability (PwD ≥ 40%)</span>
-                  <span class="text-xs text-muted">Entitled to additional reader/escort allowance under Post-Matric & NFST</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- Wizard Footer Controls -->
-          <div class="mt-6 pt-4 border-t flex justify-between">
-            <button id="wizard-btn-prev" class="btn btn-outline btn-sm" disabled>← Previous</button>
-            <button id="wizard-btn-next" class="btn btn-primary btn-sm">Next Step →</button>
-            <button id="wizard-btn-evaluate" class="btn btn-primary btn-sm hidden"> Evaluate Schemes</button>
-          </div>
-        </div>
-
-        <!-- Wizard Evaluation Results -->
-        <div id="wizard-loading-banner" class="hidden p-6 text-center">
-          <span class="spinner-ring"></span> MoTa AI AI reasoning over 5-Scheme operational guidelines...
-        </div>
-
-        <div id="wizard-top-pick-banner" class="hidden"></div>
-        <div id="wizard-results-list"></div>
-      </section>
-
-      <!-- TAB 4: DBT TRACKER & GRIEVANCE SLA -->
-      <section id="tab-panel-dbt" class="tab-content-panel hidden">
-        <div class="mb-4">
-          <span class="badge badge-success mb-1">NPCI AADHAAR PAYMENT BRIDGE (APB)</span>
-          <h2 class="text-xl font-bold">DBT Payment Tracker & Citizen SLA Desk</h2>
-          <p class="text-xs text-muted">Direct sovereign bank-level disbursements with UTR confirmation and 30-day RTI-backed grievance countdown.</p>
-        </div>
-
-        <!-- Rendered by timeline.js -->
-        <div id="dbt-transactions-list"></div>
-
-        <!-- Active Grievances Ledger -->
-        <div class="glass-card mt-6">
-          <h3 class="font-bold text-base mb-2">Active Grievance & SLA Countdown (MoTA Citizen Charter)</h3>
-          <div class="sla-clock-card p-4 bg-white/5 rounded-lg border border-amber/30">
-            <div class="flex justify-between items-center">
-              <div>
-                <span class="badge badge-warning text-xs">TICKET: GRV-2026-MOTA-9104</span>
-                <h4 class="font-bold text-base mt-1">PFMS UTR Status Confirmation (Post-Matric Q4)</h4>
-                <p class="text-xs text-muted">Assigned: Shri R. K. Soren, Deputy Secretary (Scholarships), MoTA New Delhi</p>
-              </div>
-              <div class="text-right">
-                <span class="text-xs text-muted">SLA Window Remaining</span>
-                <div class="text-2xl font-bold text-amber">20 Days Left</div>
-              </div>
-            </div>
-            <div class="progress-bar-track mt-3"><div class="progress-bar-fill bg-amber" style="width: 66%"></div></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 5: JAGO AI VOICE ASSISTANT -->
-      <section id="tab-panel-jago" class="tab-content-panel hidden">
-        <div class="mb-4">
-          <span class="badge badge-outline mb-1">RAG GROUNDED SCHEME AI</span>
-          <h2 class="text-xl font-bold">JAGO Conversational Voice Assistant</h2>
-          <p class="text-xs text-muted">Speak in tribal languages or English. Sourced directly from MoTA guidelines and your active application records.</p>
-        </div>
-
-        <div class="jago-chat-container">
-          <div class="jago-chat-header">
-            <div class="flex items-center gap-2">
-              <span class="avatar-badge" style="width: 28px; height: 28px; font-size: 11px;">J</span>
-              <div>
-                <span class="font-bold text-sm">JAGO AI Assistant</span>
-                <span class="text-xs text-emerald block">● Connected to MoTA Sovereign Rules Engine</span>
-              </div>
-            </div>
-            <span class="badge badge-success text-xs">MoTa AI 1.5 Flash</span>
-          </div>
-
-          <!-- Suggested Quick Prompts -->
-          <div class="p-2 bg-white/5 flex gap-2 overflow-x-auto text-xs">
-            <button class="jago-suggestion-chip btn btn-ghost btn-xs whitespace-nowrap">Can I apply for Top Class if I'm on Pre-Matric?</button>
-            <button class="jago-suggestion-chip btn btn-ghost btn-xs whitespace-nowrap">What is the income ceiling for NOS?</button>
-            <button class="jago-suggestion-chip btn btn-ghost btn-xs whitespace-nowrap">Explain my DBT payment status</button>
-            <button class="jago-suggestion-chip btn btn-ghost btn-xs whitespace-nowrap">Are PVTG students given relaxation?</button>
-          </div>
-
-          <div id="jago-messages-scroll" class="jago-messages-scroll">
-            <div class="chat-bubble-wrapper jago-side">
-              <div class="chat-bubble bubble-jago">
-                <div class="bubble-header">
-                  <span class="bubble-sender">JAGO Assistant (MoTA AI)</span>
-                  <span class="bubble-source-tag">Official Knowledge Core</span>
-                </div>
-                <div class="bubble-text">
-                  Johar Scholar! I am JAGO, your Ministry of Tribal Affairs scholarship assistant. You can speak to me by tapping the microphone or ask any question about the 5 MoTA schemes, your active applications, or bank disbursement details. How can I help you today?
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="jago-input-bar">
-            <button id="btn-jago-mic" class="btn btn-outline btn-sm">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-              Speak
-            </button>
-            <input type="text" id="jago-input-text" class="input-text" placeholder="Ask anything about MoTA scholarships or speak your query..." />
-            <button id="btn-jago-send" class="btn btn-primary btn-sm">
-              Send
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 6: IMPACT DASHBOARD & PEER NAVIGATOR -->
-      <section id="tab-panel-impact" class="tab-content-panel hidden">
-        <div class="mb-4">
-          <span class="badge badge-outline mb-1">BEYOND SIMPLE LEDGERS</span>
-          <h2 class="text-xl font-bold">Scholarship Impact & Peer Benchmarks</h2>
-          <p class="text-xs text-muted">Seeing the real-world value of sovereign support and expectations from your student cohort.</p>
-        </div>
-
-        <div id="student-impact-card" class="mb-4"></div>
-        <div id="peer-navigator-card" class="glass-card"></div>
-      </section>
-
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 2. MINISTRY / NODAL OFFICER PORTAL SHELL   -->
-    <!-- ========================================== -->
-    <div id="officer-portal-shell" class="hidden">
-      <!-- Executive KPI Ribbon for MoTA Admin -->
-      <div class="p-4 pb-0 grid grid-cols-4 gap-3">
-        <div class="glass-card p-3 border border-orange-500/30">
-          <div class="text-xs text-muted font-bold">TOTAL ST BENEFICIARIES</div>
-          <div class="text-xl font-bold text-accent mt-1">1,48,290</div>
-          <div class="text-xs text-emerald mt-1">+14.2% YoY Coverage</div>
-        </div>
-        <div class="glass-card p-3 border border-emerald-500/30">
-          <div class="text-xs text-muted font-bold">DBT DISBURSED (PFMS)</div>
-          <div class="text-xl font-bold text-accent mt-1">₹ 428.60 Cr</div>
-          <div class="text-xs text-emerald mt-1">100% Aadhaar Seeded</div>
-        </div>
-        <div class="glass-card p-3 border border-blue-500/30">
-          <div class="text-xs text-muted font-bold">DIGILOCKER AUTO-APPROVED</div>
-          <div class="text-xl font-bold text-accent mt-1">94.8%</div>
-          <div class="text-xs text-muted mt-1">Zero Paperwork Delay</div>
-        </div>
-        <div class="glass-card p-3 border border-amber-500/30">
-          <div class="text-xs text-muted font-bold">SCRUTINY QUEUE</div>
-          <div class="text-xl font-bold text-amber mt-1" id="kpi-pending-count">4 Cases</div>
-          <div class="text-xs text-amber mt-1">Action Needed &lt;48h</div>
-        </div>
       </div>
 
-      <div class="officer-nav-bar mt-2 flex justify-between items-center flex-wrap gap-2">
-        <div class="flex gap-1 flex-wrap">
-          <button class="officer-tab-btn active" data-tab="heatmap">
-            Unreached Beneficiary Heatmap
-          </button>
-          <button class="officer-tab-btn" data-tab="queue">
-            Semi-Automated Verification Queue (Firestore)
-          </button>
-          <button class="officer-tab-btn" data-tab="schemes">
-            Scholarship Master (Cloud Schemes)
-          </button>
-          <button class="officer-tab-btn" data-tab="directives">
-            Directives & Camp Log
-          </button>
+      <!-- Schemes Grid rendered by officer.js -->
+      <div id="officer-schemes-container"></div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 2: REGISTERED STUDENTS & ENROLMENT DIRECTORY               -->
+    <!-- ============================================================== -->
+    <section id="admin-panel-students" class="tab-content-panel admin-panel hidden">
+      <div class="mb-6 flex justify-between items-end flex-wrap gap-4">
+        <div>
+          <span class="badge badge-success mb-1">LIVE CLOUD FIRESTORE DIRECTORY</span>
+          <h2 class="text-2xl font-bold text-main">Registered Tribal Scholars Directory</h2>
+          <p class="text-xs text-muted">Real-time enrolment roster of students authenticated via Google, DigiLocker, or Facilitation Desks with APAAR and Bank verification.</p>
         </div>
         <div class="flex gap-2">
-          <button class="btn btn-primary btn-xs" onclick="EduconOfficer.openAddSchemeModal()">
-            + Add Scheme (Cloud)
-          </button>
-          <button class="btn btn-outline btn-xs" onclick="EduconOfficer.openAddAppModal()">
-            + Walk-in Registration (Cloud)
-          </button>
+          <input type="text" id="student-search-input" class="input-text" style="width: 280px; padding: 7px 12px; font-size: 13px;" placeholder="Search by name, tribe, APAAR..." />
         </div>
       </div>
 
-      <!-- OFFICER TAB 1: UNREACHED BENEFICIARY HEATMAP -->
-      <div id="officer-panel-heatmap" class="officer-panel p-4">
-        <div class="mb-4 flex justify-between items-end">
-          <div>
-            <span class="badge badge-error mb-1">TARGETED OUTREACH & CITIZEN EQUITY</span>
-            <h2 class="text-xl font-bold">Unreached ST Beneficiary Heatmap (UDISE+ vs MoTA)</h2>
-            <p class="text-xs text-muted">Cross-matching tribal enrollment in schools/colleges with active scholarship records to identify unserved hamlets.</p>
-          </div>
-          <div class="flex gap-2">
-            <button class="heatmap-filter-btn btn btn-outline btn-xs active" data-priority="ALL">All Districts</button>
-            <button class="heatmap-filter-btn btn btn-outline btn-xs" data-priority="CRITICAL">Critical &gt;50% Gap</button>
-            <button class="heatmap-filter-btn btn btn-outline btn-xs" data-priority="HIGH">High Priority</button>
-          </div>
-        </div>
-
-        <div class="heatmap-grid-layout">
-          <!-- District Gap List -->
-          <div class="glass-card">
-            <h3 class="font-bold text-sm mb-3">Tribal Districts Ranked by Coverage Deficit</h3>
-            <div id="heatmap-districts-list"></div>
-          </div>
-
-          <!-- District Inspector & Targeted Outreach Action -->
-          <div id="heatmap-district-details"></div>
-        </div>
+      <div class="glass-card p-0 overflow-hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>Scholar Name & UID</th>
+              <th>Tribe & State</th>
+              <th>Enrolled Institution</th>
+              <th>APAAR ID</th>
+              <th>Annual Income</th>
+              <th>DBT Bank (PFMS)</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="registered-students-table-body">
+            <!-- Rendered by officer.js -->
+          </tbody>
+        </table>
       </div>
+    </section>
 
-      <!-- OFFICER TAB 2: VERIFICATION QUEUE -->
-      <div id="officer-panel-queue" class="officer-panel p-4 hidden">
-        <div class="mb-4 flex justify-between items-end">
-          <div>
-            <span class="badge badge-outline mb-1">SEMI-AUTOMATED VERIFICATION LAYER</span>
-            <h2 class="text-xl font-bold">Sovereign Verification & Scrutiny Desk</h2>
-            <p class="text-xs text-muted">Real-time sync with Google Firebase Firestore. Confidence Scores ≥85% auto-cleared. Actions sync immediately to mobile app.</p>
-          </div>
-          <div class="flex gap-2">
-            <button class="btn btn-primary btn-xs" onclick="EduconOfficer.openAddAppModal()">+ Walk-in Application</button>
-          </div>
-        </div>
-
-        <div id="officer-verification-table"></div>
-      </div>
-
-      <!-- OFFICER TAB 3: SCHOLARSHIP SCHEMES MASTER -->
-      <div id="officer-panel-schemes" class="officer-panel p-4 hidden">
-        <div class="mb-4 flex justify-between items-end">
-          <div>
-            <span class="badge badge-success mb-1">CLOUD SCHEMES MASTER (FIRESTORE)</span>
-            <h2 class="text-xl font-bold">Active Scholarship Schemes & Allocation Rules</h2>
-            <p class="text-xs text-muted">Centrally configured scholarship rules synced to both web and native Android mobile apps.</p>
-          </div>
-          <button class="btn btn-primary btn-xs" onclick="EduconOfficer.openAddSchemeModal()">+ Add New Scheme</button>
-        </div>
-
-        <div id="officer-schemes-table"></div>
-      </div>
-
-      <!-- OFFICER TAB 4: DIRECTIVES & OUTREACH LOG -->
-      <div id="officer-panel-directives" class="officer-panel p-4 hidden">
-        <div class="mb-4">
-          <span class="badge badge-warning mb-1">INTERVENTIONS & FIELD DIRECTIVES</span>
-          <h2 class="text-xl font-bold">Dispatched Mobile Camps & SMS Broadcasts</h2>
-          <p class="text-xs text-muted">Real-time operational directives recorded in cloud database.</p>
-        </div>
-
-        <div id="officer-directives-table"></div>
-      </div>
-    </div>
-
-  </div> <!-- End App Viewport -->
-
-  <!-- ========================================== -->
-  <!-- MODALS                                     -->
-  <!-- ========================================== -->
-
-  <!-- Camera Modal for Live Doc Scanner -->
-  <div id="camera-modal" class="modal-overlay hidden">
-    <div class="modal-content text-center">
-      <h3 class="font-bold text-lg mb-2">Live Camera Document Scanner</h3>
-      <p class="text-xs text-muted mb-3">Align your certificate within the camera viewfinder</p>
-      <div class="relative bg-black rounded-lg overflow-hidden mb-3">
-        <video id="camera-video" class="w-full h-64 object-cover" autoplay playsinline></video>
-      </div>
-      <div class="flex justify-center gap-2">
-        <button id="btn-close-camera" class="btn btn-outline btn-sm">Cancel</button>
-        <button id="btn-capture-photo" class="btn btn-primary btn-sm">Capture & OCR</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Multilingual Deficiency Explainer Modal -->
-  <div id="deficiency-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="flex justify-between items-center mb-3">
+    <!-- ============================================================== -->
+    <!-- TAB 3: STUDENT DOCUMENTS & DIGILOCKER VAULT                    -->
+    <!-- ============================================================== -->
+    <section id="admin-panel-documents" class="tab-content-panel admin-panel hidden">
+      <div class="mb-6 flex justify-between items-end flex-wrap gap-4">
         <div>
-          <span class="badge badge-warning text-xs">SOVEREIGN MULTILINGUAL DEFICIENCY EXPLAINER</span>
-          <h3 class="font-bold text-lg text-white mt-1">Application Scrutiny Clarification</h3>
+          <span class="badge badge-success mb-1">SOVEREIGN REPOSITORY</span>
+          <h2 class="text-2xl font-bold text-main">Student Documents & DigiLocker Vault</h2>
+          <p class="text-xs text-muted">All ST Caste, Family Income, and Academic Marksheets fetched via NeGD DigiLocker Sandbox API or AI Vision OCR with cryptographic DSC signatures.</p>
         </div>
-        <button id="btn-close-deficiency-modal" class="btn btn-ghost btn-xs text-lg"></button>
-      </div>
-
-      <!-- Language Pills -->
-      <div class="flex flex-wrap gap-1 mb-3">
-        <button class="lang-pill btn btn-outline btn-xs active" data-lang="en">English</button>
-        <button class="lang-pill btn btn-outline btn-xs" data-lang="hi">हिन्दी</button>
-        <button class="lang-pill btn btn-outline btn-xs" data-lang="or">ଓଡ଼ିଆ</button>
-        <button class="lang-pill btn btn-outline btn-xs" data-lang="mr">मराठी</button>
-        <button class="lang-pill btn btn-outline btn-xs" data-lang="te">తెలుగు</button>
-        <button class="lang-pill btn btn-outline btn-xs" data-lang="ta">தமிழ்</button>
-      </div>
-
-      <!-- Bureaucratic Original Text -->
-      <div class="p-3 bg-black/40 rounded border border-white/10 mb-3">
-        <span class="text-xs text-muted block mb-1">Official Bureaucratic Defect Code Notice:</span>
-        <p id="deficiency-original-text" class="text-xs font-mono text-amber leading-relaxed"></p>
-      </div>
-
-      <!-- Plain Language Translation -->
-      <div id="deficiency-explanation-body"></div>
-    </div>
-  </div>
-
-  <!-- Grievance SLA Modal -->
-  <div id="grievance-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="flex justify-between items-center mb-3">
-        <div>
-          <span class="badge badge-warning text-xs">DIRECT BENEFIT TRANSFER ESCALATION</span>
-          <h3 class="font-bold text-lg text-white mt-1">Lodge DBT Payment Grievance</h3>
-        </div>
-        <button id="btn-close-grievance-modal" class="btn btn-ghost btn-xs text-lg"></button>
-      </div>
-      <div id="grievance-modal-body"></div>
-    </div>
-  </div>
-
-  <!-- AI Intelligence Engine Key Config Modal -->
-  <div id="api-key-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <h3 class="font-bold text-lg mb-2">MoTa AI Intelligence Engine Configuration</h3>
-      <p class="text-xs text-muted mb-4">
-        Enter your API key to activate live AI Vision and Text reasoning. If left empty, STeP automatically runs on its built-in intelligent sovereign heuristics!
-      </p>
-      <div class="form-group mb-4">
-        <label class="form-label text-xs block mb-1">Google AI Studio API Key</label>
-        <input type="password" id="input-gemini-key" class="input-text w-full font-mono text-xs" placeholder="AIzaSy..." />
-      </div>
-      <div class="flex justify-end gap-2">
-        <button id="btn-close-api-key-modal" class="btn btn-outline btn-sm">Close</button>
-        <button id="btn-save-api-key" class="btn btn-primary btn-sm">Save Key</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Scheme Modal (Cloud Firestore) -->
-  <div id="add-scheme-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="flex justify-between items-center mb-3">
-        <div>
-          <span class="badge badge-success text-xs">SOVEREIGN ALLOCATION LAYER</span>
-          <h3 class="font-bold text-lg text-white mt-1">Add Scholarship Scheme to Cloud</h3>
-        </div>
-        <button id="btn-close-scheme-modal" class="btn btn-ghost btn-xs text-lg">✕</button>
-      </div>
-      <p class="text-xs text-muted mb-3">Creates and immediately publishes a scholarship scheme to Firebase Firestore, syncing instantly to the mobile app.</p>
-      <div class="grid grid-cols-2 gap-3 mb-3">
-        <div>
-          <label class="text-xs text-muted block mb-1">Scheme Code</label>
-          <input type="text" id="new-scheme-code" class="input-text w-full text-xs" placeholder="e.g. SCH-06" />
-        </div>
-        <div>
-          <label class="text-xs text-muted block mb-1">Source Portal</label>
-          <select id="new-scheme-portal" class="select-clean w-full text-xs">
-            <option value="NSP">National Scholarship Portal (NSP)</option>
-            <option value="SFMP">SFMP (Canara Bank)</option>
-            <option value="NOS">Standalone NOS Portal</option>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-muted">Filter Document:</span>
+          <select id="doc-type-filter-select" class="select-clean">
+            <option value="ALL">All Documents</option>
+            <option value="Caste">ST Caste Certificates</option>
+            <option value="Income">Family Income Certificates</option>
+            <option value="Marksheet">Academic Marksheets</option>
+            <option value="Domicile">Resident / Domicile</option>
           </select>
         </div>
       </div>
-      <div class="mb-3">
-        <label class="text-xs text-muted block mb-1">Scheme English Title</label>
-        <input type="text" id="new-scheme-title" class="input-text w-full text-xs" placeholder="e.g. National Fellowship for PVTG Scholars" />
+
+      <div id="documents-vault-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered by officer.js -->
       </div>
-      <div class="mb-3">
-        <label class="text-xs text-muted block mb-1">Hindi Title</label>
-        <input type="text" id="new-scheme-hindi" class="input-text w-full text-xs" placeholder="अनुसूचित जनजाति अध्येतावृत्ति..." />
-      </div>
-      <div class="grid grid-cols-2 gap-3 mb-3">
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 4: APPLICATION SCRUTINY & APPROVALS QUEUE                  -->
+    <!-- ============================================================== -->
+    <section id="admin-panel-queue" class="tab-content-panel admin-panel hidden">
+      <div class="mb-6 flex justify-between items-end flex-wrap gap-4">
         <div>
-          <label class="text-xs text-muted block mb-1">Max Benefit Amount (₹)</label>
-          <input type="number" id="new-scheme-amount" class="input-text w-full text-xs" placeholder="50000" />
+          <span class="badge badge-warning mb-1">SEMI-AUTOMATED PIPELINE</span>
+          <h2 class="text-2xl font-bold text-main">Application Scrutiny & Sanction Queue</h2>
+          <p class="text-xs text-muted">Review, approve, or flag defects on incoming scholarship applications. 1-click approvals sync live to student mobile apps with PFMS UTR generation.</p>
+        </div>
+      </div>
+
+      <div id="officer-verification-table">
+        <!-- Rendered by officer.js -->
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 5: DISTRICT OUTREACH HEATMAP & DIRECTIVES                  -->
+    <!-- ============================================================== -->
+    <section id="admin-panel-heatmap" class="tab-content-panel admin-panel hidden">
+      <div class="mb-6 flex justify-between items-end flex-wrap gap-4">
+        <div>
+          <span class="badge badge-error mb-1">TARGETED OUTREACH & EQUITY</span>
+          <h2 class="text-2xl font-bold text-main">Unreached ST Beneficiary Heatmap (UDISE+ vs MoTA)</h2>
+          <p class="text-xs text-muted">Cross-matching tribal enrollment in schools/colleges with active scholarship records to identify unserved hamlets.</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="heatmap-filter-btn btn btn-outline btn-xs active" data-priority="ALL">All Districts</button>
+          <button class="heatmap-filter-btn btn btn-outline btn-xs" data-priority="CRITICAL">Critical &gt;50% Gap</button>
+          <button class="heatmap-filter-btn btn btn-outline btn-xs" data-priority="HIGH">High Priority</button>
+        </div>
+      </div>
+
+      <div class="heatmap-grid-layout">
+        <!-- District Gap List -->
+        <div class="glass-card p-4">
+          <h3 class="text-sm font-bold text-main mb-3">District Coverage Deficit Roster</h3>
+          <div id="heatmap-districts-list"></div>
+        </div>
+
+        <!-- District Details & Action Card -->
+        <div id="heatmap-district-details"></div>
+      </div>
+
+      <div class="mt-6">
+        <h3 class="text-sm font-bold text-main mb-3">Directives & Outreach Dispatch Log (Cloud Firestore)</h3>
+        <div id="officer-directives-table"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 1: CREATE NEW SCHOLARSHIP MODAL                          -->
+  <!-- ============================================================== -->
+  <div id="add-scheme-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="flex justify-between items-center border-b pb-3 mb-4">
+        <h3 class="font-bold text-lg text-main">Create New MoTA Scholarship Scheme</h3>
+        <button id="btn-close-scheme-modal" class="btn btn-ghost btn-xs text-lg">&times;</button>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <div class="md:col-span-2">
+          <label class="font-bold block mb-1">Scheme Title (English) *</label>
+          <input type="text" id="new-scheme-title" class="input-text w-full" placeholder="e.g. National Scholarship for Higher Education of ST Students" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="font-bold block mb-1">Hindi Title (Optional)</label>
+          <input type="text" id="new-scheme-hindi" class="input-text w-full" placeholder="e.g. अनुसूचित जनजाति के छात्रों के लिए राष्ट्रीय उच्च शिक्षा छात्रवृत्ति" />
         </div>
         <div>
-          <label class="text-xs text-muted block mb-1">Income Ceiling (₹ p.a.)</label>
-          <input type="number" id="new-scheme-ceiling" class="input-text w-full text-xs" placeholder="250000" />
+          <label class="font-bold block mb-1">Unique Scheme Code *</label>
+          <input type="text" id="new-scheme-code" class="input-text w-full" placeholder="MOTA-TOP-01" />
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Sovereign Portal *</label>
+          <select id="new-scheme-portal" class="select-clean w-full" style="padding: 10px;">
+            <option value="NSP">National Scholarship Portal (NSP)</option>
+            <option value="Canara SFMP">Canara Bank SFMP (Fellowship)</option>
+            <option value="MoTA NOS">MoTA National Overseas Portal</option>
+            <option value="State e-District">State e-District Portal</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Target Class / Education Level *</label>
+          <input type="text" id="new-scheme-target" class="input-text w-full" placeholder="Class 11-12 / UG / PG" />
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Family Income Ceiling (₹/year) *</label>
+          <input type="number" id="new-scheme-income" class="input-text w-full" placeholder="250000" />
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Maximum Benefit Amount (₹) *</label>
+          <input type="number" id="new-scheme-amount" class="input-text w-full" placeholder="28500" />
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Application Deadline *</label>
+          <input type="text" id="new-scheme-deadline" class="input-text w-full" placeholder="31-Dec-2026" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="font-bold block mb-1">Benefit Summary & Stipend Description *</label>
+          <textarea id="new-scheme-summary" class="input-text w-full" rows="2" placeholder="Full tuition fees + monthly maintenance allowance of ₹1,500"></textarea>
+        </div>
+        <div class="md:col-span-2">
+          <label class="font-bold block mb-1">Eligibility Criteria & Rules (Semicolon separated)</label>
+          <input type="text" id="new-scheme-rules" class="input-text w-full" placeholder="Must possess ST Certificate; Annual income ≤ ₹2.5 Lakh; Minimum 50% marks" />
         </div>
       </div>
-      <div class="mb-3">
-        <label class="text-xs text-muted block mb-1">Target Beneficiary Group / Level</label>
-        <input type="text" id="new-scheme-target" class="input-text w-full text-xs" placeholder="e.g. Undergrad & Postgrad ST Scholars" />
-      </div>
-      <div class="flex justify-end gap-2 mt-4">
+
+      <div class="mt-5 pt-3 border-t flex justify-end gap-2">
         <button class="btn btn-outline btn-sm" onclick="document.getElementById('add-scheme-modal').classList.add('hidden')">Cancel</button>
-        <button id="btn-save-new-scheme" class="btn btn-primary btn-sm">Save to Cloud Firestore</button>
+        <button id="btn-save-new-scheme" class="btn btn-primary btn-sm">Save Scheme to Cloud Firestore</button>
       </div>
     </div>
   </div>
 
-  <!-- Walk-in Application Registration Modal (Cloud Firestore) -->
-  <div id="add-app-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="flex justify-between items-center mb-3">
-        <div>
-          <span class="badge badge-primary text-xs">OFFICER FACILITATION DESK</span>
-          <h3 class="font-bold text-lg text-white mt-1">Register Walk-in Scholarship Application</h3>
-        </div>
-        <button id="btn-close-app-modal" class="btn btn-ghost btn-xs text-lg">✕</button>
+  <!-- ============================================================== -->
+  <!-- MODAL 2: STUDENT FULL DOSSIER & DOCUMENTS MODAL                -->
+  <!-- ============================================================== -->
+  <div id="student-dossier-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 720px;">
+      <div class="flex justify-between items-center border-b pb-3 mb-4">
+        <h3 class="font-bold text-lg text-main">Scholar Comprehensive Sovereign Dossier</h3>
+        <button id="btn-close-dossier-modal" class="btn btn-ghost btn-xs text-lg">&times;</button>
       </div>
-      <p class="text-xs text-muted mb-3">Directly record an application for a tribal scholar from an outreach camp or district facilitation center.</p>
-      <div class="mb-3">
-        <label class="text-xs text-muted block mb-1">Scholar Full Name</label>
-        <input type="text" id="new-app-student-name" class="input-text w-full text-xs" placeholder="e.g. Sanatan Murmu" />
+      <div id="student-dossier-modal-content"></div>
+      <div class="mt-4 pt-3 border-t flex justify-end">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('student-dossier-modal').classList.add('hidden')">Close Dossier</button>
       </div>
-      <div class="grid grid-cols-2 gap-3 mb-3">
-        <div>
-          <label class="text-xs text-muted block mb-1">District & State</label>
-          <input type="text" id="new-app-district" class="input-text w-full text-xs" placeholder="e.g. Mayurbhanj, Odisha" />
-        </div>
-        <div>
-          <label class="text-xs text-muted block mb-1">Scholarship Amount (₹)</label>
-          <input type="number" id="new-app-amount" class="input-text w-full text-xs" placeholder="28500" />
-        </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 3: DOCUMENT INSPECTION & PREVIEW MODAL                   -->
+  <!-- ============================================================== -->
+  <div id="doc-inspection-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="flex justify-between items-center border-b pb-3 mb-3">
+        <h3 class="font-bold text-lg text-main">NeGD DigiLocker Sandbox Certificate Inspection</h3>
+        <button id="btn-close-doc-modal" class="btn btn-ghost btn-xs text-lg">&times;</button>
       </div>
-      <div class="mb-3">
-        <label class="text-xs text-muted block mb-1">Select Scheme</label>
-        <select id="new-app-scheme" class="select-clean w-full text-xs">
-          <option value="Pre-Matric Scholarship for ST Students">Pre-Matric Scholarship for ST Students (Class IX-X)</option>
-          <option value="Post-Matric Scholarship for ST Students">Post-Matric Scholarship for ST Students (PMS-ST)</option>
-          <option value="National Scholarship for Top Class Education">National Scholarship for Top Class Education</option>
-          <option value="National Fellowship for Higher Education (NFST)">National Fellowship for Higher Education (NFST)</option>
-          <option value="National Overseas Scholarship (NOS)">National Overseas Scholarship (NOS)</option>
+      <div id="doc-inspection-modal-content"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 4: OFFICER DEFECT FLAGGING MODAL                         -->
+  <!-- ============================================================== -->
+  <div id="officer-defect-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="flex justify-between items-center border-b pb-3 mb-4">
+        <h3 class="font-bold text-lg text-main">Flag Application Deficiency</h3>
+        <button id="btn-close-officer-defect-modal" class="btn btn-ghost btn-xs text-lg">&times;</button>
+      </div>
+      <div class="text-xs mb-3">
+        <div>App ID: <strong id="officer-defect-appid" class="font-mono">--</strong></div>
+        <div>Scholar: <strong id="officer-defect-student">--</strong></div>
+      </div>
+      <div class="mb-3 text-xs">
+        <label class="font-bold block mb-1">Standard MoTA Defect Code *</label>
+        <select id="officer-defect-code" class="select-clean w-full">
+          <option value="DEF-INC-01">DEF-INC-01: Income Certificate Validity Expired</option>
+          <option value="DEF-CST-02">DEF-CST-02: ST Certificate Lacks Digital DSC Signature</option>
+          <option value="DEF-BNK-03">DEF-BNK-03: Bank Account Not Seeded with NPCI Aadhaar</option>
+          <option value="DEF-INS-04">DEF-INS-04: Bonafide Student Letter Stamp Missing</option>
+          <option value="DEF-OTH-99">DEF-OTH-99: General Scrutiny Clarification Needed</option>
         </select>
       </div>
-      <div class="flex justify-end gap-2 mt-4">
-        <button class="btn btn-outline btn-sm" onclick="document.getElementById('add-app-modal').classList.add('hidden')">Cancel</button>
-        <button id="btn-save-new-app" class="btn btn-primary btn-sm">Submit to Live Firestore</button>
+      <div class="mb-4 text-xs">
+        <label class="font-bold block mb-1">Plain-Language Action Explanation for Scholar *</label>
+        <textarea id="officer-defect-reason" class="input-text w-full" rows="3" placeholder="Explain the defect clearly so the student can rectify it via mobile app..."></textarea>
       </div>
-    </div>
-  </div>
-
-  <!-- Officer Defect Flag Modal -->
-  <div id="officer-defect-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="flex justify-between items-center mb-3">
-        <div>
-          <span class="badge badge-error text-xs">SOVEREIGN SCRUTINY OVERRIDE</span>
-          <h3 class="font-bold text-lg text-white mt-1">Flag Deficiency Notice</h3>
-          <p id="officer-defect-app-title" class="text-xs text-muted mt-1"></p>
-        </div>
-        <button id="btn-close-officer-defect-modal" class="btn btn-ghost btn-xs text-lg">✕</button>
-      </div>
-      <div class="mb-3">
-        <label class="text-xs text-muted block mb-1">Official Defect Code</label>
-        <input type="text" id="officer-defect-code" class="input-text w-full text-xs font-mono" value="DEF-D402" />
-      </div>
-      <div class="mb-3">
-        <label class="text-xs text-muted block mb-1">Plain Language Explanation & Instructions</label>
-        <textarea id="officer-defect-reason" class="input-text w-full text-xs h-20" placeholder="Specify document defect and how applicant can rectify it..."></textarea>
-      </div>
-      <div class="mb-3">
-        <label class="text-xs text-muted block mb-1">Cure Period / Rectification Deadline (Days)</label>
-        <input type="number" id="officer-defect-days" class="input-text w-full text-xs" value="15" />
-      </div>
-      <div class="flex justify-end gap-2 mt-4">
+      <div class="flex justify-end gap-2 pt-3 border-t">
         <button class="btn btn-outline btn-sm" onclick="document.getElementById('officer-defect-modal').classList.add('hidden')">Cancel</button>
-        <button id="btn-submit-officer-defect" class="btn btn-primary btn-sm">Flag & Alert Student</button>
+        <button id="btn-submit-officer-defect" class="btn btn-warning btn-sm">Flag Defect & Notify Scholar</button>
       </div>
     </div>
   </div>
 
-  <!-- Firebase SDK (Compat) -->
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
-  <script src="./scripts/firebase-config.js"></script>
-
-  <!-- Core Scripts -->
-  <script src="./scripts/data.js"></script>
-  <script src="./scripts/gemini.js"></script>
-  <script src="./scripts/scanner.js"></script>
-  <script src="./scripts/eligibility.js"></script>
-  <script src="./scripts/timeline.js"></script>
-  <script src="./scripts/jago.js"></script>
-  <script src="./scripts/officer.js"></script>
-  <script src="./scripts/app.js"></script>
+  <!-- Scripts with Cache Busting -->
+  <script src="./scripts/data.js?v=3.1"></script>
+  <script src="./scripts/firebase-config.js?v=3.1"></script>
+  <script src="./scripts/officer.js?v=3.1"></script>
+  <script src="./scripts/app.js?v=3.1"></script>
 </body>
 </html>

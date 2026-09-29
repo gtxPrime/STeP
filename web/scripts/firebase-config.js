@@ -153,6 +153,85 @@ window.STePFirebase = (function() {
     });
   }
 
+  /**
+   * Listen to all registered student profiles across all users
+   */
+  function listenRegisteredStudents(callback) {
+    if (!db) return;
+    try {
+      return db.collectionGroup("profile").onSnapshot(snapshot => {
+        const students = [];
+        const seenUids = new Set();
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          let uid = data.uid || doc.id;
+          try {
+            if (doc.ref.parent && doc.ref.parent.parent) {
+              uid = doc.ref.parent.parent.id;
+            }
+          } catch (_) {}
+
+          // Filter out duplicates by uid or email
+          const key = (data.email || uid).toLowerCase().trim();
+          if (!seenUids.has(key)) {
+            seenUids.add(key);
+            students.push({
+              id: doc.id,
+              uid: uid,
+              ...data
+            });
+          }
+        });
+        callback(students);
+      }, err => {
+        console.warn("[STeP Firebase] Error listening to profile collectionGroup:", err);
+      });
+    } catch (e) {
+      console.warn("[STeP Firebase] collectionGroup profile failed:", e);
+    }
+  }
+
+  /**
+   * Listen to all uploaded / DigiLocker documents across all users
+   */
+  function listenAllDocuments(callback) {
+    if (!db) return;
+    try {
+      return db.collectionGroup("documents").onSnapshot(snapshot => {
+        const docs = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          let uid = "usr_scholar";
+          try {
+            if (doc.ref.parent && doc.ref.parent.parent) {
+              uid = doc.ref.parent.parent.id;
+            }
+          } catch (_) {}
+
+          docs.push({
+            id: doc.id,
+            docPath: doc.ref.path,
+            userId: uid,
+            ...data
+          });
+        });
+        callback(docs);
+      }, err => {
+        console.warn("[STeP Firebase] Error listening to documents collectionGroup:", err);
+      });
+    } catch (e) {
+      console.warn("[STeP Firebase] collectionGroup documents failed:", e);
+    }
+  }
+
+  /**
+   * Delete a scholarship scheme from Firestore
+   */
+  async function deleteScheme(schemeId) {
+    if (!db) throw new Error("Firestore not initialized");
+    await db.collection("schemes").doc(schemeId).delete();
+  }
+
   // -------------------------------------------------------------
   // 2. UPDATE OPERATIONS
   // -------------------------------------------------------------
@@ -390,12 +469,14 @@ window.STePFirebase = (function() {
     listenApplications,
     listenSchemes,
     listenDirectives,
+    listenRegisteredStudents,
+    listenAllDocuments,
+    deleteScheme,
     updateApplicationStatus,
     updateApplicationDeficiency,
     addScheme,
     addApplication,
     addDirective,
-    seedSchemesIfEmpty,
-    seedDemoDataIfEmpty
+    seedSchemesIfEmpty
   };
 })();

@@ -1,69 +1,55 @@
 /**
- * STeP MoTA Unified Portal - Core Application Controller
- * Handles Navigation, Mode Switching, Phone Frame Toggle, Toast, and Offline PWA Sync
+ * STeP MoTA Sovereign Portal - Core Application Controller (Admin Suite)
+ * Dedicated to Ministry of Tribal Affairs (MoTA) Officers & Sovereign Nodal Authorities
  */
 
 window.STePApp = window.EduconApp = (function() {
-  let currentMode = 'officer'; // default to Ministry Admin Panel
-  let currentTab = 'timeline';
-  let isPhoneFrameActive = false;
+  let currentTab = 'schemes';
 
   function init() {
     registerServiceWorker();
-    setupGlobalNavigation();
-    setupModeToggle();
-    setupPhoneFrameToggle();
+    setupAdminNavigation();
     setupAccessibilityToggles();
-    setupApiKeyModal();
     setupNetworkListeners();
-    setupRenewalAction();
 
-    // Initialize submodules
-    if (window.EduconScanner) EduconScanner.init();
-    if (window.EduconEligibility) EduconEligibility.init();
-    if (window.EduconTimeline) EduconTimeline.init();
-    if (window.EduconJago) EduconJago.init();
-    if (window.EduconOfficer) EduconOfficer.init();
-
-    // Default to Officer / Admin View
-    const studentShell = document.getElementById('student-portal-shell');
-    const officerShell = document.getElementById('officer-portal-shell');
-    const studentModeBtn = document.getElementById('btn-mode-student');
-    const officerModeBtn = document.getElementById('btn-mode-officer');
-
-    if (studentShell && officerShell && studentModeBtn && officerModeBtn) {
-      studentShell.classList.add('hidden');
-      officerShell.classList.remove('hidden');
-      studentModeBtn.classList.remove('active');
-      officerModeBtn.classList.add('active');
-      switchOfficerTab('heatmap');
+    // Initialize Admin Module
+    if (window.EduconOfficer) {
+      EduconOfficer.init();
     }
+
+    // Default to Schemes tab
+    switchTab('schemes');
   }
 
   function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // On localhost, ensure we unregister stale workers and wipe old caches
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          for (let reg of regs) {
+            reg.unregister();
+          }
+        });
+        if ('caches' in window) {
+          caches.keys().then(keys => {
+            keys.forEach(k => caches.delete(k));
+          });
+        }
+        return;
+      }
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('[STeP PWA] Service Worker registered successfully', reg.scope))
-          .catch(err => console.warn('[STeP PWA] Service Worker registration failed', err));
+          .then(reg => console.log('[STeP PWA] Service Worker registered', reg.scope))
+          .catch(err => console.warn('[STeP PWA] Service Worker failed', err));
       });
     }
   }
 
-  function setupGlobalNavigation() {
-    // Student bottom / top nav tabs
-    document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+  function setupAdminNavigation() {
+    document.querySelectorAll('.admin-nav-tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const tab = e.currentTarget.dataset.tab;
         if (tab) switchTab(tab);
-      });
-    });
-
-    // Officer nav tabs
-    document.querySelectorAll('.officer-tab-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const tab = e.currentTarget.dataset.tab;
-        if (tab) switchOfficerTab(tab);
       });
     });
   }
@@ -71,73 +57,15 @@ window.STePApp = window.EduconApp = (function() {
   function switchTab(tabId) {
     currentTab = tabId;
 
-    // Update active nav button
-    document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+    document.querySelectorAll('.admin-nav-tab-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tabId);
     });
 
-    // Update tab view panels
-    document.querySelectorAll('.tab-content-panel').forEach(panel => {
-      panel.classList.toggle('hidden', panel.id !== `tab-panel-${tabId}`);
+    document.querySelectorAll('.admin-panel').forEach(panel => {
+      panel.classList.toggle('hidden', panel.id !== `admin-panel-${tabId}`);
     });
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function switchOfficerTab(tabId) {
-    document.querySelectorAll('.officer-tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tabId);
-    });
-
-    document.querySelectorAll('.officer-panel').forEach(panel => {
-      panel.classList.toggle('hidden', panel.id !== `officer-panel-${tabId}`);
-    });
-  }
-
-  function setupModeToggle() {
-    const studentModeBtn = document.getElementById('btn-mode-student');
-    const officerModeBtn = document.getElementById('btn-mode-officer');
-    const studentShell = document.getElementById('student-portal-shell');
-    const officerShell = document.getElementById('officer-portal-shell');
-
-    if (studentModeBtn && officerModeBtn && studentShell && officerShell) {
-      studentModeBtn.addEventListener('click', () => {
-        currentMode = 'student';
-        studentModeBtn.classList.add('active');
-        officerModeBtn.classList.remove('active');
-        studentShell.classList.remove('hidden');
-        officerShell.classList.add('hidden');
-        switchTab(currentTab);
-        showToast("Switched to Student Self-Service Experience ");
-      });
-
-      officerModeBtn.addEventListener('click', () => {
-        currentMode = 'officer';
-        officerModeBtn.classList.add('active');
-        studentModeBtn.classList.remove('active');
-        officerShell.classList.remove('hidden');
-        studentShell.classList.add('hidden');
-        if (window.EduconOfficer) EduconOfficer.init();
-        showToast("Switched to Ministry / Nodal Officer Portal ️");
-      });
-    }
-  }
-
-  function setupPhoneFrameToggle() {
-    const toggleBtn = document.getElementById('btn-toggle-phone-frame');
-    const appContainer = document.getElementById('app-main-viewport');
-
-    if (toggleBtn && appContainer) {
-      toggleBtn.addEventListener('click', () => {
-        isPhoneFrameActive = !isPhoneFrameActive;
-        appContainer.classList.toggle('phone-frame-mode', isPhoneFrameActive);
-        toggleBtn.classList.toggle('active', isPhoneFrameActive);
-        toggleBtn.innerHTML = isPhoneFrameActive 
-          ? ` Phone Frame: <strong>ON</strong>` 
-          : `️ Fullscreen View`;
-        showToast(isPhoneFrameActive ? "Viewing in Mobile Frame simulator" : "Viewing in Full Responsive Mode");
-      });
-    }
   }
 
   function setupAccessibilityToggles() {
@@ -145,94 +73,31 @@ window.STePApp = window.EduconApp = (function() {
     if (contrastBtn) {
       contrastBtn.addEventListener('click', () => {
         document.body.classList.toggle('high-contrast-mode');
-        const active = document.body.classList.contains('high-contrast-mode');
-        contrastBtn.classList.toggle('active', active);
-        showToast(active ? "High-Contrast Accessibility Mode Enabled (WCAG AAA)" : "Standard Tribal Theme Restored");
-      });
-    }
-
-    // Global Language Selector
-    const langSelect = document.getElementById('global-language-select');
-    if (langSelect) {
-      langSelect.addEventListener('change', (e) => {
-        const lang = e.target.value;
-        const labels = {
-          en: "English",
-          hi: "हिन्दी (Hindi)",
-          or: "ଓଡ଼ିଆ (Odia)",
-          mr: "मराठी (Marathi)",
-          te: "తెలుగు (Telugu)",
-          ta: "தமிழ் (Tamil)"
-        };
-        showToast(`Interface switched to ${labels[lang] || lang}`);
-      });
-    }
-  }
-
-  function setupApiKeyModal() {
-    const apiKeyBtn = document.getElementById('btn-config-api-key');
-    const modal = document.getElementById('api-key-modal');
-    const closeBtn = document.getElementById('btn-close-api-key-modal');
-    const saveBtn = document.getElementById('btn-save-api-key');
-    const input = document.getElementById('input-gemini-key');
-
-    if (apiKeyBtn && modal) {
-      apiKeyBtn.addEventListener('click', () => {
-        if (input) input.value = EduconMoTa AI.getApiKey();
-        modal.classList.remove('hidden');
-      });
-    }
-
-    if (closeBtn && modal) {
-      closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
-    }
-
-    if (saveBtn && input && modal) {
-      saveBtn.addEventListener('click', () => {
-        const val = input.value.trim();
-        EduconMoTa AI.setApiKey(val);
-        modal.classList.add('hidden');
-        showToast(val ? " MoTa AI API Key saved! Live MoTa AI 1.5 Flash activated." : "MoTa AI API Key removed. Using smart offline simulation.");
+        const isActive = document.body.classList.contains('high-contrast-mode');
+        contrastBtn.classList.toggle('active', isActive);
+        showToast(isActive ? "WCAG AAA High-Contrast Mode Activated" : "Standard Sovereign Color Palette Restored");
       });
     }
   }
 
   function setupNetworkListeners() {
-    const banner = document.getElementById('network-status-indicator');
-    
-    function updateNetworkStatus() {
-      if (!banner) return;
-      if (navigator.onLine) {
-        banner.className = "network-banner online";
-        banner.innerHTML = `<span class="status-indicator-dot online"></span> <strong>Online</strong> • Real-time DigiLocker & PFMS sync active`;
-        setTimeout(() => banner.classList.add('faded'), 4000);
-      } else {
-        banner.className = "network-banner offline";
-        banner.innerHTML = `<span class="status-indicator-dot offline"></span> <strong>Offline PWA Mode</strong> • Tribal village cache active. Changes will auto-sync on reconnect.`;
-        banner.classList.remove('faded');
-      }
-    }
+    const indicator = document.getElementById('network-status-indicator');
+    if (!indicator) return;
 
-    window.addEventListener('online', updateNetworkStatus);
-    window.addEventListener('offline', updateNetworkStatus);
-    updateNetworkStatus();
-  }
+    window.addEventListener('online', () => {
+      indicator.className = 'network-banner online';
+      indicator.innerHTML = '<span class="status-indicator-dot online"></span><span><strong>Live Synced</strong> • NeGD DigiLocker Sandbox & PFMS Live</span>';
+      setTimeout(() => indicator.classList.add('faded'), 3500);
+    });
 
-  function setupRenewalAction() {
-    const renewBtn = document.getElementById('btn-one-tap-renewal');
-    if (renewBtn) {
-      renewBtn.addEventListener('click', () => {
-        renewBtn.disabled = true;
-        renewBtn.innerHTML = `<span class="spinner-ring"></span> Syncing APAAR Academic Progression...`;
+    window.addEventListener('offline', () => {
+      indicator.className = 'network-banner offline';
+      indicator.innerHTML = '<span class="status-indicator-dot offline"></span><span><strong>Offline Mode</strong> • Changes queued locally for sync</span>';
+    });
 
-        setTimeout(() => {
-          renewBtn.disabled = false;
-          renewBtn.innerHTML = ` Renewal Application Submitted!`;
-          showToast(" 1-Tap Renewal Complete! Class 12 marksheet auto-fetched from APAAR ID 9842-1084-2026. Forwarded to Institute Verification.");
-          switchTab('timeline');
-        }, 1200);
-      });
-    }
+    setTimeout(() => {
+      if (navigator.onLine && indicator) indicator.classList.add('faded');
+    }, 3000);
   }
 
   function showToast(message, duration = 3500) {
@@ -246,7 +111,7 @@ window.STePApp = window.EduconApp = (function() {
 
     const toast = document.createElement('div');
     toast.className = 'toast-message';
-    toast.innerHTML = message;
+    toast.textContent = message;
     container.appendChild(toast);
 
     setTimeout(() => {
@@ -258,12 +123,10 @@ window.STePApp = window.EduconApp = (function() {
   return {
     init,
     switchTab,
-    switchOfficerTab,
     showToast
   };
 })();
 
-// Auto-boot on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-  STePApp.init();
+  window.EduconApp.init();
 });
