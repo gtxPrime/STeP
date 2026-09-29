@@ -55,8 +55,13 @@ object FirebaseManager {
     // Stored in Firebase Firestore: metadata + Shared Hosting URLs
     val firestoreDocuments = mutableStateListOf<FirestoreDocumentLink>()
 
-    private var isSyncInitialized = false
-    private var hasSeededDemoApps = false
+    private var isSchemesSyncInitialized = false
+    private var currentActiveSyncUserId: String? = null
+    private var appsListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
+    private var actionsListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
+    private var notifsListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
+    private var docsListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
+    private var profileListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
 
     /**
      * Initializes bidirectional dynamic Firestore synchronization.
@@ -64,59 +69,70 @@ object FirebaseManager {
      * and app actions save directly to Firebase.
      */
     fun initDynamicFirestore(userId: String = currentUser?.uid ?: "usr_guest") {
-        if (isSyncInitialized) return
-        isSyncInitialized = true
+        // 1. DYNAMIC SCHEMES SYNC (Firestore Collection: "schemes" - Global)
+        if (!isSchemesSyncInitialized) {
+            isSchemesSyncInitialized = true
+            ensureSchemesSeededToFirestore()
+
+            firestore.collection("schemes")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        Log.e(TAG, "Error listening to schemes in Firestore", error)
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot == null || snapshot.isEmpty) {
+                        seedSchemesToFirestore()
+                    } else {
+                        val remoteSchemes = snapshot.documents.mapNotNull { doc ->
+                            try {
+                                Scheme(
+                                    id = doc.getString("id") ?: doc.id,
+                                    code = doc.getString("code") ?: "SCH-00",
+                                    title = doc.getString("title") ?: "",
+                                    hindiTitle = doc.getString("hindiTitle") ?: "",
+                                    portal = doc.getString("portal") ?: "NSP",
+                                    targetClass = doc.getString("targetClass") ?: "",
+                                    incomeCeiling = doc.getLong("incomeCeiling"),
+                                    benefitSummary = doc.getString("benefitSummary") ?: "",
+                                    maxBenefitAmount = doc.getLong("maxBenefitAmount") ?: 0L,
+                                    benefitAmountFormatted = doc.getString("benefitAmountFormatted") ?: "",
+                                    deadlineFormatted = doc.getString("deadlineFormatted") ?: "",
+                                    eligibilityTag = doc.getString("eligibilityTag") ?: "Eligible",
+                                    description = doc.getString("description") ?: "",
+                                    documentsNeeded = (doc.get("documentsNeeded") as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList(),
+                                    rules = (doc.get("rules") as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
+                                )
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Failed to parse scheme document ${doc.id}", e)
+                                null
+                            }
+                        }
+
+                        if (remoteSchemes.isNotEmpty()) {
+                            MoTaRepository.schemes.clear()
+                            MoTaRepository.schemes.addAll(remoteSchemes)
+                            Log.d(TAG, "Loaded ${remoteSchemes.size} dynamic schemes from Firebase Firestore")
+                        }
+                    }
+                }
+        }
+
+        if (currentActiveSyncUserId == userId) return
+        currentActiveSyncUserId = userId
+
+        // Detach prior user-scoped listeners if switching accounts
+        appsListenerRegistration?.remove()
+        actionsListenerRegistration?.remove()
+        notifsListenerRegistration?.remove()
+        docsListenerRegistration?.remove()
+        profileListenerRegistration?.remove()
 
         Log.d(TAG, "Initializing dynamic Firestore real-time synchronization for user: $userId")
 
-        // 1. DYNAMIC SCHEMES SYNC (Firestore Collection: "schemes")
-        firestore.collection("schemes")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Log.e(TAG, "Error listening to schemes in Firestore", error)
-                    return@addSnapshotListener
-                }
-
-                if (snapshot == null || snapshot.isEmpty) {
-                    // Seed initial schemes into Firebase Firestore
-                    seedSchemesToFirestore()
-                } else {
-                    val remoteSchemes = snapshot.documents.mapNotNull { doc ->
-                        try {
-                            Scheme(
-                                id = doc.getString("id") ?: doc.id,
-                                code = doc.getString("code") ?: "SCH-00",
-                                title = doc.getString("title") ?: "",
-                                hindiTitle = doc.getString("hindiTitle") ?: "",
-                                portal = doc.getString("portal") ?: "NSP",
-                                targetClass = doc.getString("targetClass") ?: "",
-                                incomeCeiling = doc.getLong("incomeCeiling"),
-                                benefitSummary = doc.getString("benefitSummary") ?: "",
-                                maxBenefitAmount = doc.getLong("maxBenefitAmount") ?: 0L,
-                                benefitAmountFormatted = doc.getString("benefitAmountFormatted") ?: "",
-                                deadlineFormatted = doc.getString("deadlineFormatted") ?: "",
-                                eligibilityTag = doc.getString("eligibilityTag") ?: "Eligible",
-                                description = doc.getString("description") ?: "",
-                                documentsNeeded = (doc.get("documentsNeeded") as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList(),
-                                rules = (doc.get("rules") as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
-                            )
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Failed to parse scheme document ${doc.id}", e)
-                            null
-                        }
-                    }
-
-                    if (remoteSchemes.isNotEmpty()) {
-                        MoTaRepository.schemes.clear()
-                        MoTaRepository.schemes.addAll(remoteSchemes)
-                        Log.d(TAG, "Loaded ${remoteSchemes.size} dynamic schemes from Firebase Firestore")
-                    }
-                }
-            }
-
         // 2. DYNAMIC APPLICATIONS SYNC (Firestore Collection: "users/{userId}/applications")
         val userAppsRef = firestore.collection("users").document(userId).collection("applications")
-        userAppsRef.addSnapshotListener { snapshot, error ->
+        appsListenerRegistration = userAppsRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.e(TAG, "Error listening to applications in Firestore", error)
                 return@addSnapshotListener
@@ -125,19 +141,7 @@ object FirebaseManager {
             if (snapshot == null || snapshot.isEmpty) {
                 MoTaRepository.applications.clear()
             } else {
-                val demoAppIds = setOf("NSP-2025-PMS-74921", "SFMP-2026-TC-09312", "NOS-2027-INT-0042")
-                val realDocs = snapshot.documents.filter { doc ->
-                    val appId = doc.getString("applicationId") ?: doc.id
-                    if (demoAppIds.contains(appId) || demoAppIds.contains(doc.id)) {
-                        // Clean up legacy seeded dummy applications from user's account
-                        userAppsRef.document(doc.id).delete()
-                        false
-                    } else {
-                        true
-                    }
-                }
-
-                val remoteApps = realDocs.mapNotNull { doc ->
+                val remoteApps = snapshot.documents.mapNotNull { doc ->
                     try {
                         val stepsRaw = doc.get("steps") as? List<Map<String, Any>>
                         val steps = stepsRaw?.map { stepMap ->
@@ -203,7 +207,7 @@ object FirebaseManager {
 
         // 3. DYNAMIC PENDING ACTIONS SYNC (Firestore Collection: "users/{userId}/pending_actions")
         val userActionsRef = firestore.collection("users").document(userId).collection("pending_actions")
-        userActionsRef.addSnapshotListener { snapshot, error ->
+        actionsListenerRegistration = userActionsRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.e(TAG, "Error listening to pending actions in Firestore", error)
                 return@addSnapshotListener
@@ -212,14 +216,7 @@ object FirebaseManager {
             if (snapshot == null || snapshot.isEmpty) {
                 MoTaRepository.pendingActions.clear()
             } else {
-                val dummyActionIds = setOf("act_income_expiring", "act_bank_npci_fix", "act_photo_rescan")
-                val realDocs = snapshot.documents.filter { doc ->
-                    if (dummyActionIds.contains(doc.id)) {
-                        userActionsRef.document(doc.id).delete()
-                        false
-                    } else true
-                }
-                val remoteActions = realDocs.mapNotNull { doc ->
+                val remoteActions = snapshot.documents.mapNotNull { doc ->
                     try {
                         PendingAction(
                             id = doc.getString("id") ?: doc.id,
@@ -240,7 +237,7 @@ object FirebaseManager {
 
         // 4. DYNAMIC NOTIFICATIONS SYNC (Firestore Collection: "users/{userId}/notifications")
         val userNotifsRef = firestore.collection("users").document(userId).collection("notifications")
-        userNotifsRef.addSnapshotListener { snapshot, error ->
+        notifsListenerRegistration = userNotifsRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.e(TAG, "Error listening to notifications in Firestore", error)
                 return@addSnapshotListener
@@ -249,14 +246,7 @@ object FirebaseManager {
             if (snapshot == null || snapshot.isEmpty) {
                 MoTaRepository.notifications.clear()
             } else {
-                val dummyNotifIds = setOf("notif_dbt_credit_01", "notif_income_expiring_02", "notif_offer_cure_03")
-                val realDocs = snapshot.documents.filter { doc ->
-                    if (dummyNotifIds.contains(doc.id)) {
-                        userNotifsRef.document(doc.id).delete()
-                        false
-                    } else true
-                }
-                val remoteNotifs = realDocs.mapNotNull { doc ->
+                val remoteNotifs = snapshot.documents.mapNotNull { doc ->
                     try {
                         NotificationItem(
                             id = doc.getString("id") ?: doc.id,
@@ -277,7 +267,7 @@ object FirebaseManager {
 
         // 5. DYNAMIC DOCUMENTS SYNC (Firestore Collection: "users/{userId}/documents")
         val userDocsRef = firestore.collection("users").document(userId).collection("documents")
-        userDocsRef.addSnapshotListener { snapshot, error ->
+        docsListenerRegistration = userDocsRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.e(TAG, "Error listening to documents in Firestore", error)
                 return@addSnapshotListener
@@ -485,6 +475,9 @@ object FirebaseManager {
             "schemeTitle" to app.schemeTitle,
             "academicYear" to app.academicYear,
             "sourcePortal" to app.sourcePortal,
+            "studentName" to MoTaRepository.currentStudent.fullName,
+            "candidateName" to MoTaRepository.currentStudent.fullName,
+            "district" to "${MoTaRepository.currentStudent.subTribe}, ${MoTaRepository.currentStudent.state}",
             "stage" to app.stage,
             "stageText" to app.stageText,
             "currentStepIndex" to app.currentStepIndex,
@@ -571,7 +564,11 @@ object FirebaseManager {
 
     // --- SEED INITIAL DATA TO CLOUD FIRESTORE IF EMPTY ---
 
-    private fun seedSchemesToFirestore() {
+    fun ensureSchemesSeededToFirestore() {
+        seedSchemesToFirestore()
+    }
+
+    fun seedSchemesToFirestore() {
         Log.d(TAG, "Seeding schemes to Firebase Firestore...")
         MoTaDefaults.schemes.forEach { scheme ->
             val data = hashMapOf(
@@ -814,7 +811,12 @@ object FirebaseManager {
     fun logout() {
         currentUser = null
         isGoogleLoggedIn = false
-        isSyncInitialized = false
+        currentActiveSyncUserId = null
+        appsListenerRegistration?.remove()
+        actionsListenerRegistration?.remove()
+        notifsListenerRegistration?.remove()
+        docsListenerRegistration?.remove()
+        profileListenerRegistration?.remove()
         MoTaRepository.applications.clear()
         MoTaRepository.pendingActions.clear()
         MoTaRepository.notifications.clear()
