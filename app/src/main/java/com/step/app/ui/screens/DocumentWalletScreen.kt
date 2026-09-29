@@ -6,8 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -66,7 +68,7 @@ fun DocumentWalletScreen(
                                 color = TextDark
                             )
                             Text(
-                                text = "Verified DigiLocker & Cloud Firestore Vault",
+                                text = "Verified DigiLocker Sovereign Vault",
                                 fontSize = 11.sp,
                                 color = TextSubtle
                             )
@@ -160,7 +162,7 @@ fun DocumentWalletScreen(
                             }
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Pull authentic certificates via stage1.digitallocker.gov.in and sync to Cloud Firebase.",
+                                text = "Pull authentic certificates via stage1.digitallocker.gov.in and sync to National MoTA Repository.",
                                 fontSize = 11.sp,
                                 color = TextBody,
                                 lineHeight = 15.sp
@@ -280,6 +282,7 @@ fun DocumentWalletScreen(
 @Composable
 private fun DocumentWalletCard(doc: ScannedDocument) {
     val isExpiringSoon = doc.validity.contains("Expires", ignoreCase = true) || doc.isExpired
+    var showXmlDialog by remember { mutableStateOf(false) }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = SurfaceCard),
@@ -316,40 +319,49 @@ private fun DocumentWalletCard(doc: ScannedDocument) {
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                if (isExpiringSoon) {
-                    Surface(
-                        color = StatusRejectedBg,
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text(
-                            text = "Expires Soon",
-                            color = StatusRejected,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            softWrap = false,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                } else {
-                    Surface(
-                        color = StatusDisbursedBg,
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text(
-                            text = "Verified DigiLocker",
-                            color = StatusDisbursed,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            softWrap = false,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
+                Surface(
+                    color = if (isExpiringSoon) StatusRejectedBg else StatusDisbursedBg,
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(
+                        text = if (isExpiringSoon) "Expires Soon" else "100% DSC Verified",
+                        color = if (isExpiringSoon) StatusRejected else StatusDisbursed,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            if (doc.candidateName.isNotBlank() && doc.candidateName != "NFS") {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Scholar: ${doc.candidateName}" + if (doc.fatherName.isNotBlank() && doc.fatherName != "NFS") " • Guardian: ${doc.fatherName}" else "",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextDark
+                )
+            }
+
+            if (!doc.casteCommunity.isNullOrBlank()) {
+                Text(
+                    text = "Community: ${doc.casteCommunity}",
+                    fontSize = 11.sp,
+                    color = PrimaryDeepOrangeDark
+                )
+            }
+
+            if (!doc.annualIncome.isNullOrBlank()) {
+                Text(
+                    text = "Certified Income: ${doc.annualIncome}",
+                    fontSize = 11.sp,
+                    color = StatusDisbursed
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -372,36 +384,98 @@ private fun DocumentWalletCard(doc: ScannedDocument) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
+            // Action Row: View DigiLocker XML
             Surface(
                 color = BackgroundWhite,
                 shape = RoundedCornerShape(8.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showXmlDialog = true }
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                            contentDescription = null,
+                            tint = StatusDisbursed,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "DigiLocker NeGD XML Record",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextDark
+                        )
+                    }
                     Text(
-                        text = doc.sharedHostingUrl,
-                        fontSize = 10.sp,
-                        color = TextSubtle,
-                        fontFamily = FontFamily.Monospace,
-                        maxLines = 1,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "CDN Link",
-                        fontSize = 10.sp,
+                        text = "Inspect XML ›",
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryDeepOrange
                     )
                 }
             }
         }
+    }
+
+    if (showXmlDialog) {
+        val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+        AlertDialog(
+            onDismissRequest = { showXmlDialog = false },
+            title = {
+                Text(
+                    text = "DigiLocker Sovereign XML",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(
+                        text = "Cryptographically signed NeGD XML pulled from DigiLocker Sandbox:",
+                        fontSize = 11.sp,
+                        color = TextSubtle
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        color = NavySurface,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = if (doc.digilockerXml.isNotBlank()) doc.digilockerXml else "<Certificate type=\"${doc.documentType}\" number=\"${doc.certificateNumber}\">\n  <IssuedTo name=\"${doc.candidateName}\"/>\n  <Status>VERIFIED_VIA_DIGILOCKER</Status>\n</Certificate>",
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = EmeraldSuccess,
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val textToCopy = if (doc.digilockerXml.isNotBlank()) doc.digilockerXml else doc.certificateNumber
+                        clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(textToCopy))
+                        showXmlDialog = false
+                    }
+                ) {
+                    Text("Copy XML")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showXmlDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
     }
 }

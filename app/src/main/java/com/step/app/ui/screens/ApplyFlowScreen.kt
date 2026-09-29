@@ -33,21 +33,25 @@ fun ApplyFlowScreen(
 
     // Step 1: Personal Details State
     val student = MoTaRepository.currentStudent
-    var fullName by remember { mutableStateOf(student.fullName) }
-    var fatherName by remember { mutableStateOf("Kanhu Munda") }
-    var community by remember { mutableStateOf("${student.subTribe} (ST)") }
-    var aadhaarLast4 by remember { mutableStateOf(student.aadhaarLast4) }
+    var fullName by remember { mutableStateOf(if (student.fullName.isNotBlank() && student.fullName != "NFS") student.fullName else "") }
+    val existingFather = MoTaRepository.scannedDocuments.firstOrNull { it.fatherName.isNotBlank() && it.fatherName != "NFS" && it.fatherName != "Parent / Guardian" }?.fatherName ?: ""
+    var fatherName by remember { mutableStateOf(existingFather) }
+    var community by remember { mutableStateOf(if (student.subTribe.isNotBlank() && student.subTribe != "NFS") "${student.subTribe} (ST)" else "Scheduled Tribe (ST)") }
+    var aadhaarLast4 by remember { mutableStateOf(if (student.aadhaarLast4 != "NFS") student.aadhaarLast4 else "") }
 
     // Step 2: Academic Details State
-    var courseLevel by remember { mutableStateOf(student.educationLevel) }
-    var instituteName by remember { mutableStateOf(student.institution) }
-    var rollNumber by remember { mutableStateOf("EMRS-2025-084") }
-    var percentage by remember { mutableStateOf("88.4%") }
+    var courseLevel by remember { mutableStateOf(if (student.educationLevel != "NFS") student.educationLevel else "") }
+    var instituteName by remember { mutableStateOf(if (student.institution != "NFS") student.institution else "") }
+    var rollNumber by remember { mutableStateOf("") }
+    var percentage by remember { mutableStateOf("") }
 
     // Step 3: Document Upload State
-    var casteUploaded by remember { mutableStateOf(true) }
-    var incomeUploaded by remember { mutableStateOf(true) }
-    var marksheetUploaded by remember { mutableStateOf(false) }
+    val hasCaste = MoTaRepository.scannedDocuments.any { it.documentType.contains("Caste") || it.documentType.contains("ST") }
+    val hasIncome = MoTaRepository.scannedDocuments.any { it.documentType.contains("Income") }
+    val hasMarksheet = MoTaRepository.scannedDocuments.any { it.documentType.contains("Marksheet") || it.documentType.contains("Academic") }
+    var casteUploaded by remember(hasCaste) { mutableStateOf(hasCaste) }
+    var incomeUploaded by remember(hasIncome) { mutableStateOf(hasIncome) }
+    var marksheetUploaded by remember(hasMarksheet) { mutableStateOf(hasMarksheet) }
     var scanStatusMessage by remember { mutableStateOf<String?>(null) }
     var showDigiLockerSheet by remember { mutableStateOf(false) }
 

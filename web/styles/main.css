@@ -484,6 +484,16 @@ html, body {
 .btn-warning:hover {
   background: #b45309;
 }
+.btn-danger {
+  background: #dc2626;
+  color: #ffffff;
+  border: 1px solid #b91c1c;
+}
+.btn-danger:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
 .btn-ghost {
   background: transparent;
   color: var(--text-muted);
@@ -493,7 +503,28 @@ html, body {
   background: var(--bg-surface);
 }
 .btn-sm { padding: 7px 14px; font-size: 12px; border-radius: var(--radius-sm); }
-.btn-xs { padding: 4px 10px; font-size: 11px; border-radius: 6px; }
+.btn-xs { padding: 5px 12px; font-size: 11px; border-radius: 6px; font-weight: 600; }
+
+.student-pfp-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--saffron-primary);
+  background: var(--bg-surface);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+.student-pfp-large {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--saffron-primary);
+  background: var(--bg-surface);
+  box-shadow: 0 4px 16px rgba(217, 72, 15, 0.25);
+  flex-shrink: 0;
+}
 
 /* 1. Single Unified Timeline Styles */
 .timeline-app-card {
@@ -1363,3 +1394,32 @@ tr:hover td {
     bottom: 12px;
   }
 }
+
+/* ============================================================== */
+/* SOVEREIGN DIGILOCKER XML & INSPECTION STYLES                   */
+/* ============================================================== */
+.xml-viewer-code-block {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: #090d16;
+  color: #38bdf8;
+  overflow-x: auto;
+  max-height: 240px;
+  white-space: pre;
+  border: 1px solid #1e293b;
+  margin: 6px 0 0 0;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.dsc-seal-card {
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
+  transition: var(--transition);
+}
+
+.dsc-seal-card:hover {
+  border-color: #059669;
+}
+

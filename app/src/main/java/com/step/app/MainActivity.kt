@@ -333,7 +333,7 @@ fun STePMainApp(
                             activeSchemeForDetail = null
                             selectedTab = MainTab.TRACK
                             scope.launch {
-                                snackbarHostState.showSnackbar("Application submitted and saved to Firebase Cloud!")
+                                snackbarHostState.showSnackbar("Application submitted and registered successfully!")
                             }
                         }
                     )

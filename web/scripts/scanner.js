@@ -215,23 +215,23 @@ window.EduconScanner = (function() {
         </div>
         <div class="field-card">
           <span class="field-label">Candidate Name</span>
-          <span class="field-value text-accent font-bold">${data.candidateName || EduconData.currentStudent.fullName}</span>
+          <span class="field-value text-accent font-bold">${data.candidateName || (EduconData.currentStudent && EduconData.currentStudent.fullName) || 'Scholar'}</span>
         </div>
         <div class="field-card">
           <span class="field-label">Father / Guardian Name</span>
-          <span class="field-value">${data.fatherName || 'Sukram Munda'}</span>
+          <span class="field-value">${data.fatherName || 'Not Specified'}</span>
         </div>
         <div class="field-card">
           <span class="field-label">Certificate / Registration No.</span>
-          <span class="field-value font-mono">${data.certificateNumber || 'OD/ST/2022/49201'}</span>
+          <span class="field-value font-mono">${data.certificateNumber || 'Not Detected'}</span>
         </div>
         <div class="field-card">
           <span class="field-label">Issuing Authority</span>
-          <span class="field-value">${data.issuingAuthority || 'Tehsildar, Baripada'}</span>
+          <span class="field-value">${data.issuingAuthority || 'Digital Authority'}</span>
         </div>
         <div class="field-card">
           <span class="field-label">Date of Issue</span>
-          <span class="field-value">${data.issueDate || '2022-06-14'}</span>
+          <span class="field-value">${data.issueDate || 'Permanent / Undated'}</span>
         </div>
         <div class="field-card">
           <span class="field-label">Validity</span>

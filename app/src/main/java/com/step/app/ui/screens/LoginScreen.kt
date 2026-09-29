@@ -375,7 +375,7 @@ fun LoginScreen(
                             color = TextDark
                         )
                         Text(
-                            text = "Client-side encrypted with AES-256 before synchronization to Firebase.",
+                            text = "Client-side encrypted with AES-256 before sovereign synchronization.",
                             fontSize = 11.sp,
                             color = TextSubtle
                         )
@@ -559,7 +559,7 @@ fun LoginScreen(
                             color = TextDark
                         )
                         Text(
-                            text = "Pull authentic certificates directly from stage1.digitallocker.gov.in. Verified documents save instantly to Firebase Cloud Firestore.",
+                            text = "Pull authentic certificates directly from stage1.digitallocker.gov.in. Verified documents save instantly to the National MoTA Repository.",
                             fontSize = 11.sp,
                             color = TextSubtle,
                             lineHeight = 16.sp

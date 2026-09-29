@@ -33,6 +33,9 @@ fun DigiLockerSandboxBottomSheet(
     val testCerts = remember { DigiLockerSandboxManager.getSandboxTestCertificates() }
     var selectedDocType by remember { mutableStateOf("CASTC") }
     var certNumber by remember { mutableStateOf("OD/ST/2022/49201") }
+    val currentStudent = com.step.app.data.MoTaRepository.currentStudent
+    var candidateName by remember { mutableStateOf(if (currentStudent.fullName.isNotBlank() && currentStudent.fullName != "NFS") currentStudent.fullName else "Scholar") }
+    var fatherName by remember { mutableStateOf(if (currentStudent.subTribe.isNotBlank() && currentStudent.subTribe != "NFS") "Parent (${currentStudent.subTribe})" else "Parent / Guardian") }
     var isPulling by remember { mutableStateOf(false) }
     var pullResult by remember { mutableStateOf<DigiLockerSandboxResult?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -98,7 +101,7 @@ fun DigiLockerSandboxBottomSheet(
                 color = TextDark
             )
             Text(
-                text = "Connects to stage1.digitallocker.gov.in using MoTA Pull URI API. Verified certificates are saved directly to Cloud Firebase Firestore.",
+                text = "Connects to stage1.digitallocker.gov.in using MoTA Pull URI API. Verified certificates are saved directly to the National MoTA Repository.",
                 fontSize = 11.sp,
                 color = TextSubtle,
                 lineHeight = 16.sp
@@ -203,10 +206,57 @@ fun DigiLockerSandboxBottomSheet(
                 )
             )
 
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Candidate Name Field (User Entered or Pre-filled)
+            Text(
+                text = "Scholar / Candidate Name (As on Certificate):",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextDark
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = candidateName,
+                onValueChange = { candidateName = it },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
+                shape = RoundedCornerShape(10.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PrimaryDeepOrange,
+                    unfocusedBorderColor = BorderMedium
+                )
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Father Name Field
+            Text(
+                text = "Father / Guardian Name:",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextDark
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = fatherName,
+                onValueChange = { fatherName = it },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
+                shape = RoundedCornerShape(10.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PrimaryDeepOrange,
+                    unfocusedBorderColor = BorderMedium
+                )
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Success Card if pulled
             if (pullResult != null) {
+                var showXml by remember { mutableStateOf(false) }
                 Card(
                     colors = CardDefaults.cardColors(containerColor = StatusDisbursedBg),
                     shape = RoundedCornerShape(12.dp),
@@ -222,7 +272,7 @@ fun DigiLockerSandboxBottomSheet(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "100% Cryptographic DSC Verified!",
+                                text = "100% Cryptographic DSC Verified via DigiLocker XML!",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = StatusDisbursed
@@ -236,11 +286,40 @@ fun DigiLockerSandboxBottomSheet(
                             color = TextDark
                         )
                         Text(
-                            text = "Saved to Cloud Firebase Firestore collection: users/documents",
+                            text = "Signer: ${pullResult!!.signerCn}",
+                            fontSize = 9.sp,
+                            color = TextSubtle
+                        )
+                        Text(
+                            text = "Saved to National MoTA Repository (DigiLocker Verified)",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = StatusDisbursed
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = { showXml = !showXml },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (showXml) "Hide DigiLocker XML" else "Inspect Sovereign DigiLocker XML", fontSize = 11.sp)
+                        }
+                        if (showXml && pullResult!!.xmlPayload.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Surface(
+                                color = NavySurface,
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = pullResult!!.xmlPayload,
+                                    fontSize = 9.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = EmeraldSuccess,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(14.dp))
@@ -258,7 +337,9 @@ fun DigiLockerSandboxBottomSheet(
                         scope.launch {
                             val res = DigiLockerSandboxManager.pullCertificateFromSandbox(
                                 docType = selectedDocType,
-                                certificateNumber = certNumber
+                                certificateNumber = certNumber,
+                                candidateName = candidateName,
+                                fatherName = fatherName
                             )
                             isPulling = false
                             if (res.success) {

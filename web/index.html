@@ -33,7 +33,7 @@
             <h1 class="brand-title">
               STeP <span class="title-accent">Sovereign Admin Suite</span>
               <span class="badge badge-success text-xs font-mono">MoTA Central Authority</span>
-              <span id="firebase-sync-badge" class="badge badge-success text-xs font-mono">Firestore: Live Synced (step-sih)</span>
+              <span id="mota-sync-badge" class="badge badge-success text-xs font-mono">MoTA System: Active Synced</span>
               <span class="badge badge-outline text-xs font-mono">DigiLocker & PFMS Active</span>
             </h1>
             <p class="brand-subtitle">Ministry of Tribal Affairs • जनजातीय कार्य मंत्रालय | Government of India</p>
@@ -76,7 +76,7 @@
             <div>
               <span class="text-xs text-muted font-bold tracking-wider uppercase">Registered Scholars</span>
               <div class="text-2xl font-bold text-main mt-1" id="kpi-total-students">--</div>
-              <span class="text-xs text-emerald font-semibold mt-1 block">Live from Cloud Firestore</span>
+              <span class="text-xs text-emerald font-semibold mt-1 block">Live from National MoTA Registry</span>
             </div>
             <div class="avatar-badge" style="width: 36px; height: 36px;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -164,11 +164,11 @@
         <div>
           <span class="badge badge-outline mb-1">SOVEREIGN CATALOG</span>
           <h2 class="text-2xl font-bold text-main">MoTA Scholarship Schemes Master</h2>
-          <p class="text-xs text-muted">Create, edit, or retire central and state scholarship guidelines. Synced live to the Firebase Cloud Firestore catalog.</p>
+          <p class="text-xs text-muted">Create, edit, or retire central and state scholarship guidelines. Synced live across National & State scholarship databases.</p>
         </div>
         <button class="btn btn-primary btn-sm" onclick="EduconOfficer.openAddSchemeModal()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          + Create New Scholarship (Cloud)
+          + Create New Scholarship Scheme
         </button>
       </div>
 
@@ -182,9 +182,9 @@
     <section id="admin-panel-students" class="tab-content-panel admin-panel hidden">
       <div class="mb-6 flex justify-between items-end flex-wrap gap-4">
         <div>
-          <span class="badge badge-success mb-1">LIVE CLOUD FIRESTORE DIRECTORY</span>
+          <span class="badge badge-success mb-1">NATIONAL SCHOLARS DIRECTORY</span>
           <h2 class="text-2xl font-bold text-main">Registered Tribal Scholars Directory</h2>
-          <p class="text-xs text-muted">Real-time enrolment roster of students authenticated via Google, DigiLocker, or Facilitation Desks with APAAR and Bank verification.</p>
+          <p class="text-xs text-muted">Real-time enrolment roster of students authenticated via DigiLocker, APAAR, or Facilitation Desks with verified DBT bank accounts.</p>
         </div>
         <div class="flex gap-2">
           <input type="text" id="student-search-input" class="input-text" style="width: 280px; padding: 7px 12px; font-size: 13px;" placeholder="Search by name, tribe, APAAR..." />
@@ -222,6 +222,10 @@
           <p class="text-xs text-muted">All ST Caste, Family Income, and Academic Marksheets fetched via NeGD DigiLocker Sandbox API or AI Vision OCR with cryptographic DSC signatures.</p>
         </div>
         <div class="flex items-center gap-2">
+          <button class="btn btn-primary btn-sm" onclick="EduconOfficer.openPullDigiLockerModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            + Pull from DigiLocker Sandbox (NeGD XML)
+          </button>
           <span class="text-xs text-muted">Filter Document:</span>
           <select id="doc-type-filter-select" class="select-clean">
             <option value="ALL">All Documents</option>
@@ -284,7 +288,7 @@
       </div>
 
       <div class="mt-6">
-        <h3 class="text-sm font-bold text-main mb-3">Directives & Outreach Dispatch Log (Cloud Firestore)</h3>
+        <h3 class="text-sm font-bold text-main mb-3">Directives & Outreach Dispatch Log (National MoTA Registry)</h3>
         <div id="officer-directives-table"></div>
       </div>
     </section>
@@ -351,7 +355,7 @@
 
       <div class="mt-5 pt-3 border-t flex justify-end gap-2">
         <button class="btn btn-outline btn-sm" onclick="document.getElementById('add-scheme-modal').classList.add('hidden')">Cancel</button>
-        <button id="btn-save-new-scheme" class="btn btn-primary btn-sm">Save Scheme to Cloud Firestore</button>
+        <button id="btn-save-new-scheme" class="btn btn-primary btn-sm">Save & Publish Scheme</button>
       </div>
     </div>
   </div>
@@ -415,6 +419,73 @@
       <div class="flex justify-end gap-2 pt-3 border-t">
         <button class="btn btn-outline btn-sm" onclick="document.getElementById('officer-defect-modal').classList.add('hidden')">Cancel</button>
         <button id="btn-submit-officer-defect" class="btn btn-warning btn-sm">Flag Defect & Notify Scholar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 5: PULL FROM DIGILOCKER SANDBOX (NeGD XML)               -->
+  <!-- ============================================================== -->
+  <div id="pull-digilocker-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 580px;">
+      <div class="flex justify-between items-center border-b pb-3 mb-3">
+        <div>
+          <h3 class="font-bold text-lg text-main">Pull from DigiLocker Sandbox (NeGD)</h3>
+          <p class="text-xs text-muted">Fetches authentic XML certificate with X.509 cryptographic DSC signatures.</p>
+        </div>
+        <button class="btn btn-ghost btn-xs text-lg" onclick="document.getElementById('pull-digilocker-modal').classList.add('hidden')">&times;</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <div class="md:col-span-2">
+          <label class="font-bold block mb-1">Target Scholar / User ID *</label>
+          <input type="text" id="dl-pull-userid" class="input-text w-full" value="usr_scholar" placeholder="usr_scholar" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="font-bold block mb-1">Certificate Type *</label>
+          <select id="dl-pull-type" class="select-clean w-full" onchange="EduconOfficer.handlePullTypeChange()">
+            <option value="CASTC">Scheduled Tribe (ST) Certificate</option>
+            <option value="INCMC">Annual Family Income Certificate</option>
+            <option value="HSCER">Class 12 Higher Secondary Marksheet</option>
+            <option value="DOMCR">Permanent Resident / Domicile Certificate</option>
+            <option value="DISCR">Divyangjan Disability Certificate</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Candidate Full Name *</label>
+          <input type="text" id="dl-pull-name" class="input-text w-full" placeholder="Enter Scholar Name" />
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Father / Guardian Name *</label>
+          <input type="text" id="dl-pull-father" class="input-text w-full" placeholder="Father or Guardian Name" />
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Certificate Registration Number *</label>
+          <input type="text" id="dl-pull-certnum" class="input-text w-full" placeholder="OD/ST/2025/49201" />
+        </div>
+        <div>
+          <label class="font-bold block mb-1">State / Jurisdiction *</label>
+          <select id="dl-pull-state" class="select-clean w-full">
+            <option value="Odisha">Odisha</option>
+            <option value="Jharkhand">Jharkhand</option>
+            <option value="Madhya Pradesh">Madhya Pradesh</option>
+            <option value="Maharashtra">Maharashtra</option>
+            <option value="Chhattisgarh">Chhattisgarh</option>
+            <option value="Rajasthan">Rajasthan</option>
+            <option value="Assam">Assam</option>
+          </select>
+        </div>
+        <div class="md:col-span-2">
+          <label class="font-bold block mb-1">Issuing Authority *</label>
+          <input type="text" id="dl-pull-authority" class="input-text w-full" value="Office of the Tehsildar (e-District)" />
+        </div>
+        <div class="md:col-span-2" id="dl-pull-extra-container">
+          <label class="font-bold block mb-1">ST Sub-Tribe Community *</label>
+          <input type="text" id="dl-pull-extra" class="input-text w-full" value="SANTHAL (Scheduled Tribe)" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-3 mt-4 border-t">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('pull-digilocker-modal').classList.add('hidden')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="EduconOfficer.executeDigiLockerPull()">Pull & Save Sovereign XML</button>
       </div>
     </div>
   </div>

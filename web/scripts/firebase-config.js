@@ -59,10 +59,10 @@ window.STePFirebase = (function() {
   }
 
   function updateSyncBadge(online, text) {
-    const badge = document.getElementById("firebase-sync-badge");
+    const badge = document.getElementById("mota-sync-badge") || document.getElementById("firebase-sync-badge");
     if (badge) {
       badge.className = online ? "badge badge-success text-xs font-mono" : "badge badge-neutral text-xs font-mono";
-      badge.textContent = "Firestore: " + text;
+      badge.textContent = "MoTA Network: " + text;
     }
   }
 
@@ -90,7 +90,7 @@ window.STePFirebase = (function() {
         const apps = [];
         snapshot.forEach(doc => {
           const data = doc.data();
-          let userId = "usr_birsa_munda";
+          let userId = "usr_scholar";
           try {
             if (doc.ref.parent && doc.ref.parent.parent) {
               userId = doc.ref.parent.parent.id;
@@ -439,26 +439,8 @@ window.STePFirebase = (function() {
    * Seed demo applications for scholarships if empty so first-time users can see rich data
    */
   async function seedDemoDataIfEmpty() {
-    if (!db) return;
-    try {
-      const snap = await db.collectionGroup("applications").limit(1).get();
-      if (snap.empty && window.EduconData && window.EduconData.applicationsTimeline) {
-        console.log("[STeP Firebase] Seeding demo applications to Firestore for first time user...");
-        const demoUserId = "usr_birsa_munda_demo";
-        for (const app of EduconData.applicationsTimeline) {
-          await db.collection("users").doc(demoUserId).collection("applications").doc(app.applicationId).set({
-            ...app,
-            studentName: "Birsa Munda",
-            district: "Mayurbhanj, Odisha",
-            verificationConfidence: app.stage === "DISBURSED" ? 98 : (app.stage === "SANCTIONED" ? 94 : 76),
-            createdAt: new Date().toISOString()
-          }, { merge: true });
-        }
-        console.log("[STeP Firebase] Demo applications successfully seeded to Firestore.");
-      }
-    } catch (e) {
-      console.warn("[STeP Firebase] Demo applications check/seed:", e.message);
-    }
+    // Zero hardcoded demo applications: all data must come from user applications or DigiLocker
+    return;
   }
 
   return {

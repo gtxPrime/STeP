@@ -105,7 +105,7 @@ data class NotificationItem(
 )
 
 data class ScannedDocument(
-    val id: String = "doc_caste_01",
+    val id: String = "",
     val documentType: String,
     val candidateName: String,
     val fatherName: String,
@@ -118,8 +118,12 @@ data class ScannedDocument(
     val annualIncome: String? = null,
     val confidenceScore: Int,
     val autoApproveEligible: Boolean,
-    val sharedHostingUrl: String = "https://dhaaga.thecoolestportfolio.site/uploads/caste_OD_ST_2022_49201.jpg",
-    val syncedToFirebase: Boolean = true
+    val sharedHostingUrl: String = "",
+    val syncedToFirebase: Boolean = true,
+    val digilockerXml: String = "",
+    val signerCn: String = "",
+    val dscSerialNumber: String = "",
+    val pkiTimestamp: String = ""
 )
 
 object MoTaDefaults {
@@ -271,55 +275,6 @@ object MoTaDefaults {
     // 0 demo applications — applications are fetched dynamically from Firebase Cloud Firestore
     val applications = emptyList<ApplicationRecord>()
 
-    val sampleCasteDoc = ScannedDocument(
-        id = "doc_st_01",
-        documentType = "Scheduled Tribe (ST) Certificate",
-        candidateName = "NFS*",
-        fatherName = "NFS*",
-        certificateNumber = "OD/ST/2022/49201*",
-        issuingAuthority = "Tehsildar Baripada, Mayurbhanj, Odisha*",
-        issueDate = "14-Jun-2022",
-        validity = "Permanent / Lifetime*",
-        casteCommunity = "ST (Scheduled Tribe)*",
-        annualIncome = null,
-        confidenceScore = 98,
-        autoApproveEligible = true,
-        sharedHostingUrl = "https://dhaaga.thecoolestportfolio.site/uploads/caste_OD_ST_2022_49201.jpg",
-        syncedToFirebase = true
-    )
-
-    val sampleIncomeDoc = ScannedDocument(
-        id = "doc_inc_02",
-        documentType = "Annual Family Income Certificate",
-        candidateName = "NFS*",
-        fatherName = "NFS*",
-        certificateNumber = "OD/INC/2025/11093*",
-        issuingAuthority = "Revenue Officer, Baripada, Odisha*",
-        issueDate = "25-Oct-2025",
-        validity = "Expires in 28 Days*",
-        isExpired = false,
-        casteCommunity = null,
-        annualIncome = "₹ 0*",
-        confidenceScore = 95,
-        autoApproveEligible = true,
-        sharedHostingUrl = "https://dhaaga.thecoolestportfolio.site/uploads/income_OD_INC_2025_11093.jpg",
-        syncedToFirebase = true
-    )
-
-    val sampleMarksheetDoc = ScannedDocument(
-        id = "doc_mark_03",
-        documentType = "Class 12 Board Marksheet",
-        candidateName = "NFS*",
-        fatherName = "NFS*",
-        certificateNumber = "CHSE-2025-881924*",
-        issuingAuthority = "Council of Higher Secondary Education, Odisha*",
-        issueDate = "28-May-2025",
-        validity = "Permanent*",
-        confidenceScore = 99,
-        autoApproveEligible = true,
-        sharedHostingUrl = "https://dhaaga.thecoolestportfolio.site/uploads/marksheet_chse_881924.jpg",
-        syncedToFirebase = true
-    )
 }
 
 object MoTaRepository {
@@ -337,7 +292,8 @@ object MoTaRepository {
 
     val scannedDocuments = mutableStateListOf<ScannedDocument>()
 
-    val sampleCasteDoc get() = MoTaDefaults.sampleCasteDoc
-    val sampleIncomeDoc get() = MoTaDefaults.sampleIncomeDoc
-    val sampleMarksheetDoc get() = MoTaDefaults.sampleMarksheetDoc
+    val sampleCasteDoc get() = scannedDocuments.firstOrNull { it.documentType.contains("Caste") || it.documentType.contains("ST") }
+    val sampleIncomeDoc get() = scannedDocuments.firstOrNull { it.documentType.contains("Income") }
+    val sampleMarksheetDoc get() = scannedDocuments.firstOrNull { it.documentType.contains("Marksheet") || it.documentType.contains("Academic") }
 }
+

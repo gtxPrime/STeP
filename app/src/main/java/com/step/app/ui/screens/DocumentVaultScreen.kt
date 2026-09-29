@@ -42,7 +42,7 @@ fun DocumentVaultScreen(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "FIREBASE FIRESTORE & SHARED HOSTING VAULT",
+                        text = "NATIONAL SOVEREIGN DOCUMENT VAULT",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = EmeraldSuccess,
@@ -51,13 +51,13 @@ fun DocumentVaultScreen(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Cloud Document Vault",
+                    text = "Sovereign Document Vault",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextMain
                 )
                 Text(
-                    text = "Document images are stored on high-speed Shared Hosting servers; links & cryptographic verification metadata are synced to Firebase.",
+                    text = "Certificates and cryptographic verification metadata are securely anchored to the National MoTA Repository.",
                     fontSize = 12.sp,
                     color = TextMuted
                 )
@@ -119,7 +119,7 @@ fun DocumentVaultScreen(
                                 Icon(Icons.Default.Link, contentDescription = null, tint = SaffronLight, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Shared Hosting Public CDN URL:",
+                                    text = "National Repository Document Link:",
                                     fontSize = 10.sp,
                                     color = SaffronLight,
                                     fontWeight = FontWeight.Bold

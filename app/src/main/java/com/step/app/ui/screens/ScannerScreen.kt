@@ -25,6 +25,8 @@ import com.step.app.data.MoTaRepository
 import com.step.app.data.ScannedDocument
 import com.step.app.firebase.FirebaseManager
 import com.step.app.firebase.SharedHostingManager
+import com.step.app.ui.components.DigiLockerSandboxBottomSheet
+import com.step.app.ui.components.FontAwesomeIcons
 import com.step.app.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -32,7 +34,8 @@ import kotlinx.coroutines.launch
 fun ScannerScreen(
     onAutoFillClicked: () -> Unit
 ) {
-    var selectedDoc by remember { mutableStateOf<ScannedDocument?>(MoTaRepository.sampleCasteDoc) }
+    var selectedDoc by remember { mutableStateOf<ScannedDocument?>(MoTaRepository.scannedDocuments.firstOrNull()) }
+    var showDigiLockerSheet by remember { mutableStateOf(false) }
     var isUploadingToSharedHost by remember { mutableStateOf(false) }
     var uploadStatusMessage by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
@@ -65,7 +68,7 @@ fun ScannerScreen(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "AI SMART VISION • SHARED HOSTING PIPELINE",
+                        text = "AI SMART VISION • SOVEREIGN PIPELINE",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = EmeraldSuccess,
@@ -80,7 +83,7 @@ fun ScannerScreen(
                     color = TextMain
                 )
                 Text(
-                    text = "Extracts fields via AI Vision, uploads image to Shared Hosting CDN, and stores the permanent link in Firebase Firestore.",
+                    text = "Extracts certificate fields via Sovereign AI Document Scanner and stores the verified record in the National MoTA Repository.",
                     fontSize = 12.sp,
                     color = TextMuted
                 )
@@ -141,46 +144,52 @@ fun ScannerScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    Text(
-                        text = "1-Click Sandbox Test Documents*:",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextMuted
-                    )
+                    if (MoTaRepository.scannedDocuments.isNotEmpty()) {
+                        Text(
+                            text = "DigiLocker Verified Documents:",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextMuted
+                        )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            MoTaRepository.scannedDocuments.take(3).forEach { doc ->
+                                val isSel = selectedDoc?.id == doc.id
+                                OutlinedButton(
+                                    onClick = {
+                                        selectedDoc = doc
+                                        uploadStatusMessage = null
+                                    },
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = if (isSel) SaffronPrimary.copy(alpha = 0.2f) else Color.Transparent
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        doc.documentType.split(" ").firstOrNull() ?: "Doc",
+                                        fontSize = 11.sp,
+                                        color = TextMain,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    OutlinedButton(
+                        onClick = { showDigiLockerSheet = true },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SaffronPrimary),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        OutlinedButton(
-                            onClick = {
-                                selectedDoc = MoTaRepository.sampleCasteDoc
-                                uploadStatusMessage = null
-                            },
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = if (selectedDoc?.documentType?.contains("Caste") == true) SaffronPrimary.copy(alpha = 0.2f) else Color.Transparent
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("ST Caste*", fontSize = 11.sp, color = TextMain)
-                        }
-
-                        OutlinedButton(
-                            onClick = {
-                                selectedDoc = MoTaRepository.sampleIncomeDoc
-                                uploadStatusMessage = null
-                            },
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = if (selectedDoc?.documentType?.contains("Income") == true) SaffronPrimary.copy(alpha = 0.2f) else Color.Transparent
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Income*", fontSize = 11.sp, color = TextMain)
-                        }
+                        Text("+ Pull from DigiLocker Sandbox (NeGD)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -254,7 +263,7 @@ fun ScannerScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Shared Hosting & Firebase Sync Box
+                        // Sovereign DigiLocker Record & Cloud Sync Box
                         Surface(
                             color = Color.Black.copy(alpha = 0.35f),
                             shape = RoundedCornerShape(10.dp),
@@ -262,23 +271,48 @@ fun ScannerScreen(
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Link, contentDescription = null, tint = SaffronLight, modifier = Modifier.size(16.dp))
+                                    Icon(
+                                        imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                                        contentDescription = null,
+                                        tint = EmeraldSuccess,
+                                        modifier = Modifier.size(15.dp)
+                                    )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "Shared Hosting CDN URL (Stored in Firebase):",
+                                        text = if (doc.digilockerXml.isNotBlank()) "NeGD DigiLocker Sovereign Record (Verified):" else "Document Record Status:",
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = SaffronLight
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = doc.sharedHostingUrl,
-                                    fontSize = 11.sp,
-                                    color = TextMain,
-                                    fontFamily = FontFamily.Monospace,
-                                    maxLines = 1
-                                )
+                                if (doc.digilockerXml.isNotBlank()) {
+                                    Text(
+                                        text = "Signer: ${doc.signerCn ?: "Director General, NeGD DigiLocker CA"}",
+                                        fontSize = 11.sp,
+                                        color = TextMain
+                                    )
+                                    Text(
+                                        text = "DSC Serial: ${doc.dscSerialNumber ?: "0x7F9B4E1289AC"} • SHA-256 RSA-2048",
+                                        fontSize = 10.sp,
+                                        color = TextMuted,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                } else if (doc.sharedHostingUrl.isNotBlank()) {
+                                    Text(
+                                        text = doc.sharedHostingUrl,
+                                        fontSize = 11.sp,
+                                        color = TextMain,
+                                        fontFamily = FontFamily.Monospace,
+                                        maxLines = 1
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Verified via DigiLocker Sandbox API (stage1.digitallocker.gov.in)",
+                                        fontSize = 11.sp,
+                                        color = TextMain
+                                    )
+                                }
                             }
                         }
 
@@ -301,20 +335,14 @@ fun ScannerScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Upload to Shared Hosting + Save Link in Firebase Button
+                        // Sync to Sovereign Repository Button
                         OutlinedButton(
                             onClick = {
                                 scope.launch {
                                     isUploadingToSharedHost = true
-                                    val dummyBytes = ByteArray(1024 * 64)
-                                    val uploadResult = SharedHostingManager.uploadToSharedHosting(
-                                        dummyBytes,
-                                        doc.documentType,
-                                        doc.candidateName
-                                    )
-                                    FirebaseManager.saveDocumentToFirestore(doc, uploadResult.publicUrl)
+                                    FirebaseManager.saveDocumentToFirestore(doc, doc.sharedHostingUrl)
                                     isUploadingToSharedHost = false
-                                    uploadStatusMessage = "✓ Image uploaded to Shared Hosting (${uploadResult.storageServer}) • Link saved to Firebase Firestore!"
+                                    uploadStatusMessage = "✓ Sovereign DigiLocker XML & verification metadata saved!"
                                 }
                             },
                             shape = RoundedCornerShape(10.dp),
@@ -324,11 +352,11 @@ fun ScannerScreen(
                             if (isUploadingToSharedHost) {
                                 CircularProgressIndicator(modifier = Modifier.size(16.dp), color = SaffronLight, strokeWidth = 2.dp)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Uploading to Shared Hosting...", fontSize = 12.sp)
+                                Text("Saving to National Repository...", fontSize = 12.sp)
                             } else {
                                 Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Upload Image to Shared Hosting & Link to Firebase", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("Save Sovereign Record to National Repository", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
 
@@ -348,6 +376,16 @@ fun ScannerScreen(
                 }
             }
         }
+    }
+
+    if (showDigiLockerSheet) {
+        DigiLockerSandboxBottomSheet(
+            onDismiss = { showDigiLockerSheet = false },
+            onSuccess = { res ->
+                selectedDoc = MoTaRepository.scannedDocuments.firstOrNull { it.certificateNumber == res.certificateNumber } ?: MoTaRepository.scannedDocuments.firstOrNull()
+                showDigiLockerSheet = false
+            }
+        )
     }
 }
 

@@ -22,9 +22,19 @@ data class FirestoreDocumentLink(
     val docId: String,
     val docType: String,
     val certificateNumber: String,
-    val issuingAuthority: String,
-    val confidenceScore: Int,
-    val sharedHostingImageUrl: String,
+    val candidateName: String = "",
+    val fatherName: String = "",
+    val issuingAuthority: String = "",
+    val issueDate: String = "",
+    val validity: String = "",
+    val confidenceScore: Int = 100,
+    val sharedHostingImageUrl: String = "",
+    val casteCommunity: String? = null,
+    val annualIncome: String? = null,
+    val digilockerXml: String = "",
+    val signerCn: String = "",
+    val dscSerialNumber: String = "",
+    val pkiTimestamp: String = "",
     val firestoreCollection: String = "users/guest/documents",
     val uploadedAt: String = "28-Sep-2026, 17:30 IST"
 )
@@ -289,9 +299,19 @@ object FirebaseManager {
                             docId = doc.getString("docId") ?: doc.id,
                             docType = doc.getString("docType") ?: "Certificate",
                             certificateNumber = com.step.app.security.CryptoManager.decrypt(rawCert, userId),
+                            candidateName = doc.getString("candidateName") ?: MoTaRepository.currentStudent.fullName,
+                            fatherName = doc.getString("fatherName") ?: "",
                             issuingAuthority = doc.getString("issuingAuthority") ?: "",
-                            confidenceScore = (doc.getLong("confidenceScore") ?: 95L).toInt(),
+                            issueDate = doc.getString("issueDate") ?: doc.getString("uploadedAt") ?: "Permanent",
+                            validity = doc.getString("validity") ?: "Permanent",
+                            confidenceScore = (doc.getLong("confidenceScore") ?: 100L).toInt(),
                             sharedHostingImageUrl = doc.getString("sharedHostingImageUrl") ?: "",
+                            casteCommunity = doc.getString("casteCommunity"),
+                            annualIncome = doc.getString("annualIncome"),
+                            digilockerXml = doc.getString("digilockerXml") ?: "",
+                            signerCn = doc.getString("signerCn") ?: "",
+                            dscSerialNumber = doc.getString("dscSerialNumber") ?: "",
+                            pkiTimestamp = doc.getString("pkiTimestamp") ?: "",
                             firestoreCollection = "users/$userId/documents",
                             uploadedAt = doc.getString("uploadedAt") ?: "Just now"
                         )
@@ -306,17 +326,23 @@ object FirebaseManager {
                     ScannedDocument(
                         id = dl.docId,
                         documentType = dl.docType,
-                        candidateName = MoTaRepository.currentStudent.fullName,
-                        fatherName = "NFS",
+                        candidateName = dl.candidateName.ifBlank { MoTaRepository.currentStudent.fullName },
+                        fatherName = dl.fatherName,
                         certificateNumber = dl.certificateNumber,
                         issuingAuthority = dl.issuingAuthority,
-                        issueDate = dl.uploadedAt,
-                        validity = "Verified via DigiLocker Sandbox*",
+                        issueDate = dl.issueDate,
+                        validity = dl.validity,
                         isExpired = false,
+                        casteCommunity = dl.casteCommunity,
+                        annualIncome = dl.annualIncome,
                         confidenceScore = dl.confidenceScore,
                         autoApproveEligible = dl.confidenceScore >= 85,
                         sharedHostingUrl = dl.sharedHostingImageUrl,
-                        syncedToFirebase = true
+                        syncedToFirebase = true,
+                        digilockerXml = dl.digilockerXml,
+                        signerCn = dl.signerCn,
+                        dscSerialNumber = dl.dscSerialNumber,
+                        pkiTimestamp = dl.pkiTimestamp
                     )
                 }
                 MoTaRepository.scannedDocuments.clear()
@@ -481,7 +507,7 @@ object FirebaseManager {
 
     suspend fun saveDocumentToFirestore(
         doc: ScannedDocument,
-        sharedHostingUrl: String,
+        sharedHostingUrl: String = "",
         userId: String = currentUser?.uid ?: "usr_guest"
     ) {
         val docId = doc.id.ifEmpty { "doc_" + System.currentTimeMillis().toString().takeLast(6) }
@@ -489,9 +515,20 @@ object FirebaseManager {
             "docId" to docId,
             "docType" to doc.documentType,
             "certificateNumber" to com.step.app.security.CryptoManager.encrypt(doc.certificateNumber, userId),
+            "candidateName" to doc.candidateName,
+            "fatherName" to doc.fatherName,
             "issuingAuthority" to doc.issuingAuthority,
+            "issueDate" to doc.issueDate,
+            "validity" to doc.validity,
             "confidenceScore" to doc.confidenceScore,
             "sharedHostingImageUrl" to sharedHostingUrl,
+            "casteCommunity" to (doc.casteCommunity ?: ""),
+            "annualIncome" to (doc.annualIncome ?: ""),
+            "isDigiLocker" to true,
+            "digilockerXml" to doc.digilockerXml,
+            "signerCn" to doc.signerCn,
+            "dscSerialNumber" to doc.dscSerialNumber,
+            "pkiTimestamp" to doc.pkiTimestamp,
             "encryption" to "AES-256-GCM",
             "uploadedAt" to "Just now",
             "timestamp" to System.currentTimeMillis()
@@ -505,9 +542,19 @@ object FirebaseManager {
             docId = docId,
             docType = doc.documentType,
             certificateNumber = doc.certificateNumber,
+            candidateName = doc.candidateName,
+            fatherName = doc.fatherName,
             issuingAuthority = doc.issuingAuthority,
+            issueDate = doc.issueDate,
+            validity = doc.validity,
             confidenceScore = doc.confidenceScore,
             sharedHostingImageUrl = sharedHostingUrl,
+            casteCommunity = doc.casteCommunity,
+            annualIncome = doc.annualIncome,
+            digilockerXml = doc.digilockerXml,
+            signerCn = doc.signerCn,
+            dscSerialNumber = doc.dscSerialNumber,
+            pkiTimestamp = doc.pkiTimestamp,
             uploadedAt = "Just now"
         )
         firestoreDocuments.add(0, newRecord)
