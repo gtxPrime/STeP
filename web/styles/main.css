@@ -1104,3 +1104,106 @@ html, body {
 }
 .status-indicator-dot.online { background: #10b981; box-shadow: 0 0 8px #10b981; }
 .status-indicator-dot.offline { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+/* =====================================================================
+ * RESPONSIVE ADAPTATIONS (Mobile, Tablet, Foldable & Desktop Viewports)
+ * ===================================================================== */
+
+@media (max-width: 1024px) {
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .heatmap-grid-layout {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+  .officer-nav-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .officer-nav-bar > div {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .header-actions {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 8px;
+  }
+  .student-strip-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+  .student-nav-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px;
+    gap: 6px;
+  }
+  .nav-tab-btn {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+  .officer-panel {
+    padding: 12px !important;
+  }
+  .tab-content-panel {
+    padding: 12px 10px;
+  }
+  .modal-content {
+    max-width: 95vw;
+    margin: 10px;
+    padding: 16px;
+  }
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-title {
+    font-size: 16px;
+    flex-wrap: wrap;
+  }
+  .brand-subtitle {
+    font-size: 10px;
+  }
+  .btn-xs {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  .text-xl {
+    font-size: 17px;
+  }
+  .text-2xl {
+    font-size: 20px;
+  }
+  .text-3xl {
+    font-size: 24px;
+  }
+  .toast-container {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+}
+

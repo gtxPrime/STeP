@@ -164,15 +164,18 @@ fun HomeScreen(
                         tint = TextBody,
                         modifier = Modifier.size(18.dp)
                     )
-                    // Unread Red Dot
-                    Box(
-                        modifier = Modifier
-                            .size(9.dp)
-                            .align(Alignment.TopEnd)
-                            .offset(x = (-8).dp, y = 8.dp)
-                            .clip(CircleShape)
-                            .background(StatusRejected)
-                    )
+                    // Unread Red Dot (only if unread notifications exist)
+                    val hasUnreadNotifs = MoTaRepository.notifications.any { it.isUnread }
+                    if (hasUnreadNotifs) {
+                        Box(
+                            modifier = Modifier
+                                .size(9.dp)
+                                .align(Alignment.TopEnd)
+                                .offset(x = (-8).dp, y = 8.dp)
+                                .clip(CircleShape)
+                                .background(StatusRejected)
+                        )
+                    }
                 }
             }
         }
@@ -556,65 +559,75 @@ private fun SchemeCardItem(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .width(280.dp)
+            .height(210.dp)
             .border(1.dp, BorderLight, RoundedCornerShape(16.dp))
             .clickable { onClick() }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = application.academicYear,
-                    fontSize = 11.sp,
-                    color = TextSubtle,
-                    fontWeight = FontWeight.Medium
-                )
-
-                Surface(
-                    color = statusBg,
-                    shape = RoundedCornerShape(12.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = statusLabel,
-                        color = statusColor,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        text = application.academicYear,
+                        fontSize = 11.sp,
+                        color = TextSubtle,
+                        fontWeight = FontWeight.Medium
                     )
+
+                    Surface(
+                        color = statusBg,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = statusLabel,
+                            color = statusColor,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = application.schemeTitle,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark,
+                    minLines = 2,
+                    maxLines = 2,
+                    lineHeight = 18.sp,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Next Action:",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextSubtle
+                )
+                Text(
+                    text = application.nextActionText.ifBlank { "Application in progress" },
+                    fontSize = 11.sp,
+                    color = TextBody,
+                    fontWeight = FontWeight.Medium,
+                    minLines = 2,
+                    maxLines = 2,
+                    lineHeight = 15.sp,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
             }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = application.schemeTitle,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextDark,
-                maxLines = 2,
-                lineHeight = 18.sp
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Next Action:",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = TextSubtle
-            )
-            Text(
-                text = application.nextActionText,
-                fontSize = 11.sp,
-                color = TextBody,
-                fontWeight = FontWeight.Medium,
-                maxLines = 2,
-                lineHeight = 15.sp
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

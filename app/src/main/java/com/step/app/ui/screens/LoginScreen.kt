@@ -66,14 +66,14 @@ fun LoginScreen(
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var photoUrl by remember { mutableStateOf("") }
-    var selectedCommunity by remember { mutableStateOf("Santhal") }
-    var homeState by remember { mutableStateOf("Odisha") }
-    var institutionName by remember { mutableStateOf("EMRS Baripada, Mayurbhanj, Odisha") }
-    var educationLevel by remember { mutableStateOf("Class 12 (Science)") }
-    var bankName by remember { mutableStateOf("State Bank of India") }
-    var maskedAccount by remember { mutableStateOf("•••• •••• 4920") }
-    var aadhaarLast4 by remember { mutableStateOf("9842") }
-    var annualIncome by remember { mutableStateOf("145000") }
+    var selectedCommunity by remember { mutableStateOf("") }
+    var homeState by remember { mutableStateOf("") }
+    var institutionName by remember { mutableStateOf("") }
+    var educationLevel by remember { mutableStateOf("") }
+    var bankName by remember { mutableStateOf("") }
+    var maskedAccount by remember { mutableStateOf("") }
+    var aadhaarLast4 by remember { mutableStateOf("") }
+    var annualIncome by remember { mutableStateOf("") }
 
     // DigiLocker Sandbox state
     val testCerts = remember { DigiLockerSandboxManager.getSandboxTestCertificates() }
@@ -262,8 +262,8 @@ fun LoginScreen(
                                         googleAuthLauncher.launch(googleSignInClient.signInIntent)
                                     }
                                 } else {
-                                    fullName = "Birsa Munda"
-                                    email = "birsa.munda@student.gov.in"
+                                    fullName = "NFS"
+                                    email = "NFS"
                                     currentStep = LoginStep.PROFILE_SETUP
                                 }
                             },
@@ -388,7 +388,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = fullName,
                             onValueChange = { fullName = it },
-                            placeholder = { Text("e.g. Birsa Munda") },
+                            placeholder = { Text("e.g. Student Name") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             shape = RoundedCornerShape(10.dp)
@@ -402,7 +402,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it },
-                            placeholder = { Text("e.g. birsa@student.gov.in") },
+                            placeholder = { Text("e.g. student@gov.in") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             shape = RoundedCornerShape(10.dp)
@@ -469,28 +469,28 @@ fun LoginScreen(
 
                         Button(
                             onClick = {
-                                if (fullName.isBlank()) fullName = "ST Scholar"
-                                if (email.isBlank()) email = "student@step.gov.in"
+                                if (fullName.isBlank()) fullName = "NFS"
+                                if (email.isBlank()) email = "NFS"
 
                                 val targetUid = FirebaseManager.currentUser?.uid ?: ("usr_" + email.lowercase().trim().replace(Regex("[^a-zA-Z0-9]"), "_"))
                                 val newProfile = StudentProfile(
                                     uid = targetUid,
-                                    apaarId = "9842-1084-2026",
-                                    digilockerId = "DL-ST-883921",
+                                    apaarId = "NFS",
+                                    digilockerId = "NFS",
                                     fullName = fullName,
                                     email = email,
                                     photoUrl = photoUrl,
                                     community = "Scheduled Tribe (ST)",
-                                    subTribe = selectedCommunity,
-                                    institution = institutionName,
-                                    educationLevel = educationLevel,
-                                    annualIncome = annualIncome.toLongOrNull() ?: 145000L,
-                                    bankName = bankName,
-                                    maskedAccount = maskedAccount,
-                                    ifsc = "SBIN0001234",
-                                    aadhaarLast4 = aadhaarLast4,
-                                    state = homeState,
-                                    npciAadhaarSeeded = true
+                                    subTribe = selectedCommunity.ifBlank { "NFS" },
+                                    institution = institutionName.ifBlank { "NFS" },
+                                    educationLevel = educationLevel.ifBlank { "NFS" },
+                                    annualIncome = annualIncome.toLongOrNull() ?: 0L,
+                                    bankName = bankName.ifBlank { "NFS" },
+                                    maskedAccount = maskedAccount.ifBlank { "NFS" },
+                                    ifsc = "NFS",
+                                    aadhaarLast4 = aadhaarLast4.ifBlank { "NFS" },
+                                    state = homeState.ifBlank { "NFS" },
+                                    npciAadhaarSeeded = false
                                 )
                                 MoTaRepository.currentStudent = newProfile
                                 FirebaseManager.saveStudentProfileToFirestore(newProfile, targetUid, context)
@@ -539,7 +539,7 @@ fun LoginScreen(
                                 shape = RoundedCornerShape(6.dp)
                             ) {
                                 Text(
-                                    text = "STAGE 1 SANDBOX",
+                                    text = "STAGE 1 SANDBOX*",
                                     color = StatusDisbursed,
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold,
@@ -664,7 +664,7 @@ fun LoginScreen(
                                     val res = DigiLockerSandboxManager.pullCertificateFromSandbox(
                                         docType = selectedDocType,
                                         certificateNumber = certNumber,
-                                        candidateName = fullName.ifBlank { "Birsa Munda" }
+                                        candidateName = fullName.ifBlank { "NFS" }
                                     )
                                     isPullingDoc = false
                                     if (res.success) {

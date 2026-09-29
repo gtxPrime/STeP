@@ -16,6 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -129,6 +132,11 @@ fun STePMainApp(
                             .height(64.dp)
                     ) {
                         // TAB 1: HOME
+                        val homeScale by animateFloatAsState(
+                            targetValue = if (selectedTab == MainTab.HOME) 1.15f else 1.0f,
+                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+                            label = "homeScale"
+                        )
                         NavigationBarItem(
                             selected = selectedTab == MainTab.HOME,
                             onClick = { selectedTab = MainTab.HOME },
@@ -136,7 +144,9 @@ fun STePMainApp(
                                 Icon(
                                     imageVector = FontAwesomeIcons.Solid.House,
                                     contentDescription = "Home",
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .graphicsLayer(scaleX = homeScale, scaleY = homeScale)
                                 )
                             },
                             label = {
@@ -156,6 +166,11 @@ fun STePMainApp(
                         )
 
                         // TAB 2: APPLY
+                        val applyScale by animateFloatAsState(
+                            targetValue = if (selectedTab == MainTab.APPLY) 1.15f else 1.0f,
+                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+                            label = "applyScale"
+                        )
                         NavigationBarItem(
                             selected = selectedTab == MainTab.APPLY,
                             onClick = { selectedTab = MainTab.APPLY },
@@ -163,7 +178,9 @@ fun STePMainApp(
                                 Icon(
                                     imageVector = FontAwesomeIcons.Solid.FilePen,
                                     contentDescription = "Apply",
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .graphicsLayer(scaleX = applyScale, scaleY = applyScale)
                                 )
                             },
                             label = {
@@ -183,6 +200,11 @@ fun STePMainApp(
                         )
 
                         // TAB 3: TRACK
+                        val trackScale by animateFloatAsState(
+                            targetValue = if (selectedTab == MainTab.TRACK) 1.15f else 1.0f,
+                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+                            label = "trackScale"
+                        )
                         NavigationBarItem(
                             selected = selectedTab == MainTab.TRACK,
                             onClick = { selectedTab = MainTab.TRACK },
@@ -190,7 +212,9 @@ fun STePMainApp(
                                 Icon(
                                     imageVector = FontAwesomeIcons.Solid.Timeline,
                                     contentDescription = "Track",
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .graphicsLayer(scaleX = trackScale, scaleY = trackScale)
                                 )
                             },
                             label = {
@@ -210,6 +234,11 @@ fun STePMainApp(
                         )
 
                         // TAB 4: HELP
+                        val helpScale by animateFloatAsState(
+                            targetValue = if (selectedTab == MainTab.HELP) 1.15f else 1.0f,
+                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+                            label = "helpScale"
+                        )
                         NavigationBarItem(
                             selected = selectedTab == MainTab.HELP,
                             onClick = { selectedTab = MainTab.HELP },
@@ -217,7 +246,9 @@ fun STePMainApp(
                                 Icon(
                                     imageVector = FontAwesomeIcons.Solid.Headset,
                                     contentDescription = "Help",
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .graphicsLayer(scaleX = helpScale, scaleY = helpScale)
                                 )
                             },
                             label = {
@@ -245,6 +276,29 @@ fun STePMainApp(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            val currentScreenKey = when {
+                activeSchemeForApply != null -> "APPLY_${activeSchemeForApply!!.id}"
+                activeSchemeForDetail != null -> "SCHEME_DETAIL_${activeSchemeForDetail!!.id}"
+                activeAppForDetail != null -> "APP_DETAIL_${activeAppForDetail!!.applicationId}"
+                showDocumentWallet -> "WALLET"
+                showProfile -> "PROFILE"
+                showNotifications -> "NOTIFICATIONS"
+                showWizard -> "WIZARD"
+                else -> "TAB_${selectedTab.name}"
+            }
+
+            AnimatedContent(
+                targetState = currentScreenKey,
+                transitionSpec = {
+                    (fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
+                            slideInHorizontally(animationSpec = tween(220, easing = FastOutSlowInEasing)) { fullWidth -> fullWidth / 6 })
+                        .togetherWith(
+                            fadeOut(animationSpec = tween(160, easing = FastOutLinearInEasing)) +
+                                    slideOutHorizontally(animationSpec = tween(160, easing = FastOutLinearInEasing)) { fullWidth -> -fullWidth / 6 }
+                        )
+                },
+                label = "ScreenAnimatedTransition"
+            ) { _ ->
             when {
                 // 1. Sub-screen: Apply Flow (4 Steps)
                 activeSchemeForApply != null -> {
@@ -385,6 +439,7 @@ fun STePMainApp(
                     }
                 }
             }
+        }
 
             // Interactive Dialogs
             if (showDeficiencyDialog) {

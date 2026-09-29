@@ -142,7 +142,7 @@ fun ScannerScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "1-Click Instant Test Documents:",
+                        text = "1-Click Sandbox Test Documents*:",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextMuted
@@ -165,7 +165,7 @@ fun ScannerScreen(
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("📜 ST Caste", fontSize = 11.sp, color = TextMain)
+                            Text("ST Caste*", fontSize = 11.sp, color = TextMain)
                         }
 
                         OutlinedButton(
@@ -179,7 +179,7 @@ fun ScannerScreen(
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("💰 Income", fontSize = 11.sp, color = TextMain)
+                            Text("Income*", fontSize = 11.sp, color = TextMain)
                         }
                     }
                 }

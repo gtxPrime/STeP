@@ -255,39 +255,39 @@ object DigiLockerSandboxManager {
         return listOf(
             DigiLockerSandboxDocInfo(
                 docType = "CASTC",
-                name = "Scheduled Tribe (ST) Certificate",
+                name = "Scheduled Tribe (ST) Certificate*",
                 uri = "in.gov.edistrict.odisha-CASTC-OD/ST/2022/49201",
                 orgId = "002165",
                 defaultCertNumber = "OD/ST/2022/49201",
-                issuerName = "Tehsildar Baripada, Mayurbhanj",
-                department = "Revenue & Disaster Management Department, Odisha"
+                issuerName = "Tehsildar Baripada, Mayurbhanj*",
+                department = "Revenue & Disaster Management Department, Odisha*"
             ),
             DigiLockerSandboxDocInfo(
                 docType = "INCMC",
-                name = "Annual Family Income Certificate",
+                name = "Annual Family Income Certificate*",
                 uri = "in.gov.edistrict.odisha-INCMC-OD/INC/2025/11093",
                 orgId = "002165",
                 defaultCertNumber = "OD/INC/2025/11093",
-                issuerName = "Revenue Officer, Baripada",
-                department = "Revenue & Disaster Management Department, Odisha"
+                issuerName = "Revenue Officer, Baripada*",
+                department = "Revenue & Disaster Management Department, Odisha*"
             ),
             DigiLockerSandboxDocInfo(
                 docType = "HSCER",
-                name = "Class 12 Higher Secondary Marksheet",
+                name = "Class 12 Higher Secondary Marksheet*",
                 uri = "in.gov.chseodisha-HSCER-CHSE-2025-881924",
                 orgId = "001892",
                 defaultCertNumber = "CHSE-2025-881924",
-                issuerName = "Council of Higher Secondary Education, Odisha",
-                department = "Department of School & Mass Education"
+                issuerName = "Council of Higher Secondary Education, Odisha*",
+                department = "Department of School & Mass Education*"
             ),
             DigiLockerSandboxDocInfo(
                 docType = "DOMCR",
-                name = "Resident / Domicile Certificate",
+                name = "Resident / Domicile Certificate*",
                 uri = "in.gov.edistrict.odisha-DOMCR-OD/RES/2023/55102",
                 orgId = "002165",
                 defaultCertNumber = "OD/RES/2023/55102",
-                issuerName = "Additional Sub-Collector, Baripada",
-                department = "Revenue & Disaster Management Department, Odisha"
+                issuerName = "Additional Sub-Collector, Baripada*",
+                department = "Revenue & Disaster Management Department, Odisha*"
             )
         )
     }

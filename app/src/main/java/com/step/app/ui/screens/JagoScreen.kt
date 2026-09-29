@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.step.app.data.MoTaRepository
 import com.step.app.ui.theme.*
 
 data class ChatMessage(
@@ -34,7 +35,7 @@ fun JagoScreen() {
         mutableStateListOf(
             ChatMessage(
                 isUser = false,
-                text = "Johar Birsa! I am JAGO, your Ministry of Tribal Affairs (MoTA) AI Assistant on the STeP portal. You can speak to me or ask any question about the 5 MoTA scholarship schemes, eligibility criteria, document defects, or DBT bank credits. How can I assist you today?",
+                text = "Johar ${MoTaRepository.currentStudent.fullName.takeIf { it != "NFS" && it.isNotBlank() } ?: "Scholar"}! I am JAGO, your Ministry of Tribal Affairs (MoTA) AI Assistant on the STeP portal. You can speak to me or ask any question about the 5 MoTA scholarship schemes, eligibility criteria, document defects, or DBT bank credits. How can I assist you today?",
                 source = "STeP MoTA Knowledge Core"
             )
         )
@@ -198,7 +199,7 @@ fun sendJagoMessage(text: String, messages: MutableList<ChatMessage>) {
         text.contains("pvtg", ignoreCase = true) ->
             "Yes! MoTA gives high priority to Particularly Vulnerable Tribal Groups (PVTGs). Under the National Overseas Scheme (NOS), 3 out of 20 slots are exclusively ring-fenced for PVTG candidates. Document verification is expedited under PM-JANMAN mission."
         else ->
-            "Your Post-Matric DBT of ₹24,500 was credited to your State Bank of India A/C (*4920) on 12-Feb-2026 under UTR: RBI492810488219. Your Top Class grant is at the PFMS token stage."
+            "I am connected to the MoTA Knowledge Base. Please ask any question regarding eligibility guidelines, document requirements, or portal applications. You can also view real-time application updates under the Track tab."
     }
 
     messages.add(ChatMessage(isUser = false, text = reply, source = "MoTA Sovereign AI (Grounded RAG)"))

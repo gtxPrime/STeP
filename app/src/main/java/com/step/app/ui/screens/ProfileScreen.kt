@@ -230,9 +230,15 @@ fun ProfileScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        ProfileInfoRow(label = "Category / Community", value = "${student.subTribe} (${student.community})")
+                        ProfileInfoRow(
+                            label = "Category / Community",
+                            value = if (student.subTribe == "NFS" && student.community == "NFS") "NFS" else if (student.subTribe == "NFS") student.community else "${student.subTribe} (${student.community})"
+                        )
                         HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 0.8.dp)
-                        ProfileInfoRow(label = "Aadhaar Number", value = "•••• •••• ${student.aadhaarLast4}")
+                        ProfileInfoRow(
+                            label = "Aadhaar Number",
+                            value = if (student.aadhaarLast4 != "NFS" && student.aadhaarLast4.isNotBlank()) "•••• •••• ${student.aadhaarLast4}" else "NFS"
+                        )
                         HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 0.8.dp)
                         ProfileInfoRow(label = "Bank Name", value = student.bankName)
                         HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 0.8.dp)
@@ -242,7 +248,10 @@ fun ProfileScreen(
                         HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 0.8.dp)
                         ProfileInfoRow(label = "Enrolled School", value = student.institution)
                         HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 0.8.dp)
-                        ProfileInfoRow(label = "NPCI Aadhaar Bridge", value = "Active & Seeded")
+                        ProfileInfoRow(
+                            label = "NPCI Aadhaar Bridge",
+                            value = if (student.npciAadhaarSeeded) "Active & Seeded" else "NFS"
+                        )
                     }
                 }
             }

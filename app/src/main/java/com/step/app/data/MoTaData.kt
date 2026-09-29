@@ -6,24 +6,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 data class StudentProfile(
-    val uid: String = "usr_google_894120",
-    val apaarId: String = "9842-1084-2026",
-    val digilockerId: String = "DL-ST-883921",
-    val fullName: String = "Birsa Munda",
-    val email: String = "birsa.munda@student.gov.in",
+    val uid: String = "",
+    val apaarId: String = "NFS",
+    val digilockerId: String = "NFS",
+    val fullName: String = "NFS",
+    val email: String = "NFS",
     val photoUrl: String = "",
     val community: String = "Scheduled Tribe (ST)",
-    val subTribe: String = "Santhal",
-    val institution: String = "EMRS Baripada, Mayurbhanj, Odisha",
-    val educationLevel: String = "Class 12 (Science)",
-    val annualIncome: Long = 145000,
-    val incomeCertExpiryDays: Int = 28,
-    val bankName: String = "State Bank of India",
-    val maskedAccount: String = "•••• •••• 4920",
-    val ifsc: String = "SBIN0001234",
-    val aadhaarLast4: String = "9842",
-    val state: String = "Odisha",
-    val npciAadhaarSeeded: Boolean = true
+    val subTribe: String = "NFS",
+    val institution: String = "NFS",
+    val educationLevel: String = "NFS",
+    val annualIncome: Long = 0L,
+    val incomeCertExpiryDays: Int = 0,
+    val bankName: String = "NFS",
+    val maskedAccount: String = "NFS",
+    val ifsc: String = "NFS",
+    val aadhaarLast4: String = "NFS",
+    val state: String = "NFS",
+    val npciAadhaarSeeded: Boolean = false
 )
 
 data class Scheme(
@@ -125,59 +125,10 @@ data class ScannedDocument(
 object MoTaDefaults {
     var currentStudent = StudentProfile()
 
-    val pendingActions = listOf(
-        PendingAction(
-            id = "act_inc_renew",
-            title = "Upload renewed income certificate",
-            scheme = "Pre-Matric Scholarship (NSP)",
-            reason = "Income certificate expires in 28 days — application on hold.",
-            isUrgent = true,
-            actionText = "Renew Certificate"
-        ),
-        PendingAction(
-            id = "act_nos_defect",
-            title = "Resolve admission letter condition",
-            scheme = "National Overseas Scholarship (NOS)",
-            reason = "Clause 7(ii)(b) requires unconditional offer or language waiver proof.",
-            isUrgent = true,
-            actionText = "Fix Deficiency"
-        )
-    )
+    // 0 demo data — all live data fetched from Firebase Firestore and DigiLocker
+    val pendingActions = emptyList<PendingAction>()
 
-    val notifications = listOf(
-        NotificationItem(
-            id = "notif_01",
-            title = "Scholarship Payment Disbursed",
-            body = "₹24,500 successfully credited to SBI A/c •••• 4920 via PFMS APB for PMS-ST.",
-            time = "2 hours ago",
-            isUnread = true,
-            type = "PAYMENT"
-        ),
-        NotificationItem(
-            id = "notif_02",
-            title = "Document Expiry Warning",
-            body = "Your Annual Income Certificate OD/INC/2025/11093 will expire in 28 days.",
-            time = "Yesterday",
-            isUnread = true,
-            type = "EXPIRY"
-        ),
-        NotificationItem(
-            id = "notif_03",
-            title = "State Nodal Verification Complete",
-            body = "Top Class Education application verified with 96% DigiLocker match score.",
-            time = "3 days ago",
-            isUnread = false,
-            type = "VERIFICATION"
-        ),
-        NotificationItem(
-            id = "notif_04",
-            title = "NOS Deficiency Flagged",
-            body = "Scrutiny team issued Defect Code D-402 for National Overseas Scholarship.",
-            time = "1 week ago",
-            isUnread = false,
-            type = "DEFICIENCY"
-        )
-    )
+    val notifications = emptyList<NotificationItem>()
 
     val schemes = listOf(
         Scheme(
@@ -317,105 +268,19 @@ object MoTaDefaults {
         )
     )
 
-    val applications = listOf(
-        ApplicationRecord(
-            applicationId = "NSP-2025-PMS-74921",
-            schemeId = "POST_MATRIC",
-            schemeTitle = "Post-Matric Scholarship for ST",
-            academicYear = "2025-26",
-            sourcePortal = "NSP (National Scholarship Portal)",
-            stage = "DISBURSED",
-            stageText = "Disbursed via DBT",
-            currentStepIndex = 3,
-            sanctionAmount = 24500,
-            nextActionText = "Auto-Renewal active for 2026-27",
-            verificationConfidence = 96,
-            steps = listOf(
-                TimelineStep("Submitted", "12-Aug-2025", true, "Applied via STeP Unified Portal"),
-                TimelineStep("Verified", "24-Aug-2025", true, "Institute & State Nodal verified (96% DigiLocker match)"),
-                TimelineStep("Sanctioned", "15-Dec-2025", true, "Order: MoTA/PMS/25-26/1842"),
-                TimelineStep("Disbursed", "12-Feb-2026", true, "UTR: RBI492810488219 (SBI Bank)")
-            ),
-            dbtDetails = DbtDetails(
-                utr = "RBI492810488219",
-                paymentMode = "Aadhaar Payment Bridge (APB / PFMS)",
-                disbursedDate = "12-Feb-2026",
-                bankName = "State Bank of India",
-                accountNo = "•••• •••• 4920",
-                centralShare = "₹18,375 (75%)",
-                stateShare = "₹6,125 (25%)",
-                status = "CREDITED_SUCCESSFULLY"
-            ),
-            deficiency = null
-        ),
-        ApplicationRecord(
-            applicationId = "SFMP-2026-TC-09312",
-            schemeId = "TOP_CLASS",
-            schemeTitle = "Top Class Education (Premier Institutes)",
-            academicYear = "2026-27",
-            sourcePortal = "SFMP (Canara Bank / MoTA)",
-            stage = "SANCTIONED",
-            stageText = "Sanctioned - In PFMS Queue",
-            currentStepIndex = 2,
-            sanctionAmount = 185000,
-            nextActionText = "PFMS token released, awaiting bank clearing",
-            verificationConfidence = 94,
-            steps = listOf(
-                TimelineStep("Submitted", "10-Jul-2026", true, "Auto-filled via DigiLocker + JEE"),
-                TimelineStep("Verified", "18-Jul-2026", true, "Dean, IIT Bhubaneswar & Nodal Officer"),
-                TimelineStep("Sanctioned", "02-Sep-2026", true, "Sanction Order MoTA/TC/0894"),
-                TimelineStep("Disbursed", "Est. 10-Oct-2026", false, "PFMS token released, bank clearing")
-            ),
-            dbtDetails = DbtDetails(
-                utr = "PFMS_BATCH_621_PENDING",
-                paymentMode = "PFMS Direct Benefit Transfer",
-                disbursedDate = "Pending Bank Clearing",
-                bankName = "State Bank of India",
-                accountNo = "•••• •••• 4920",
-                centralShare = "₹1,85,000 (100%)",
-                stateShare = "₹0 (0%)",
-                status = "IN_PFMS_QUEUE"
-            ),
-            deficiency = null
-        ),
-        ApplicationRecord(
-            applicationId = "NOS-2027-INT-0042",
-            schemeId = "NOS",
-            schemeTitle = "National Overseas Scholarship (NOS)",
-            academicYear = "2027-28",
-            sourcePortal = "Standalone NOS Portal",
-            stage = "DEFICIENCY_FLAGGED",
-            stageText = "Pending Action (Deficiency)",
-            currentStepIndex = 1,
-            sanctionAmount = 2200000,
-            nextActionText = "Upload unconditional offer or English waiver",
-            verificationConfidence = 78,
-            steps = listOf(
-                TimelineStep("Submitted", "20-Aug-2026", true, "Uploaded IELTS 7.5 & Offer"),
-                TimelineStep("Verified", "28-Aug-2026", false, "Flagged with Defect Code D-402 (Conditional Offer)"),
-                TimelineStep("Sanctioned", "Pending Cure", false, "Selection Committee review"),
-                TimelineStep("Disbursed", "Pending", false, "Direct foreign bank transfer")
-            ),
-            dbtDetails = null,
-            deficiency = DeficiencyInfo(
-                code = "D-402",
-                bureaucraticReason = "Conditional admission offer letter submitted. Under MoTA NOS Guidelines Clause 7(ii)(b), scholarship cannot be sanctioned on conditional admission offers lacking tuition deposit proof.",
-                deadlineDate = "15-Oct-2026",
-                daysRemaining = 16
-            )
-        )
-    )
+    // 0 demo applications — applications are fetched dynamically from Firebase Cloud Firestore
+    val applications = emptyList<ApplicationRecord>()
 
     val sampleCasteDoc = ScannedDocument(
         id = "doc_st_01",
         documentType = "Scheduled Tribe (ST) Certificate",
-        candidateName = "Birsa Munda",
-        fatherName = "Kanhu Munda",
-        certificateNumber = "OD/ST/2022/49201",
-        issuingAuthority = "Tehsildar Baripada, Mayurbhanj, Odisha",
+        candidateName = "NFS*",
+        fatherName = "NFS*",
+        certificateNumber = "OD/ST/2022/49201*",
+        issuingAuthority = "Tehsildar Baripada, Mayurbhanj, Odisha*",
         issueDate = "14-Jun-2022",
-        validity = "Permanent / Lifetime",
-        casteCommunity = "Santhal (Scheduled Tribe)",
+        validity = "Permanent / Lifetime*",
+        casteCommunity = "ST (Scheduled Tribe)*",
         annualIncome = null,
         confidenceScore = 98,
         autoApproveEligible = true,
@@ -426,15 +291,15 @@ object MoTaDefaults {
     val sampleIncomeDoc = ScannedDocument(
         id = "doc_inc_02",
         documentType = "Annual Family Income Certificate",
-        candidateName = "Birsa Munda",
-        fatherName = "Kanhu Munda",
-        certificateNumber = "OD/INC/2025/11093",
-        issuingAuthority = "Revenue Officer, Baripada, Odisha",
+        candidateName = "NFS*",
+        fatherName = "NFS*",
+        certificateNumber = "OD/INC/2025/11093*",
+        issuingAuthority = "Revenue Officer, Baripada, Odisha*",
         issueDate = "25-Oct-2025",
-        validity = "Expires in 28 Days (25-Oct-2026)",
+        validity = "Expires in 28 Days*",
         isExpired = false,
         casteCommunity = null,
-        annualIncome = "₹ 1,45,000 / annum",
+        annualIncome = "₹ 0*",
         confidenceScore = 95,
         autoApproveEligible = true,
         sharedHostingUrl = "https://dhaaga.thecoolestportfolio.site/uploads/income_OD_INC_2025_11093.jpg",
@@ -444,12 +309,12 @@ object MoTaDefaults {
     val sampleMarksheetDoc = ScannedDocument(
         id = "doc_mark_03",
         documentType = "Class 12 Board Marksheet",
-        candidateName = "Birsa Munda",
-        fatherName = "Kanhu Munda",
-        certificateNumber = "CHSE-2025-881924",
-        issuingAuthority = "Council of Higher Secondary Education, Odisha",
+        candidateName = "NFS*",
+        fatherName = "NFS*",
+        certificateNumber = "CHSE-2025-881924*",
+        issuingAuthority = "Council of Higher Secondary Education, Odisha*",
         issueDate = "28-May-2025",
-        validity = "Permanent",
+        validity = "Permanent*",
         confidenceScore = 99,
         autoApproveEligible = true,
         sharedHostingUrl = "https://dhaaga.thecoolestportfolio.site/uploads/marksheet_chse_881924.jpg",

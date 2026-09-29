@@ -400,7 +400,8 @@ fun ApplyFlowScreen(
                                 isUploaded = casteUploaded,
                                 onScanClick = {
                                     casteUploaded = true
-                                    scanStatusMessage = "AI OCR matched ST Certificate OD/ST/2022/49201 with 98% confidence!"
+                                    val docNum = MoTaRepository.scannedDocuments.firstOrNull { it.documentType.contains("caste", true) }?.certificateNumber ?: "OD/ST/2026/001*"
+                                    scanStatusMessage = "AI OCR matched ST Certificate $docNum with 98% confidence!*"
                                 }
                             )
                         }
@@ -411,7 +412,8 @@ fun ApplyFlowScreen(
                                 isUploaded = incomeUploaded,
                                 onScanClick = {
                                     incomeUploaded = true
-                                    scanStatusMessage = "AI OCR verified Income Certificate (₹1,45,000/yr) with 95% confidence!"
+                                    val inc = if (MoTaRepository.currentStudent.annualIncome > 0) "₹${MoTaRepository.currentStudent.annualIncome}/yr" else "Within Limit*"
+                                    scanStatusMessage = "AI OCR verified Income Certificate ($inc) with 95% confidence!*"
                                 }
                             )
                         }
