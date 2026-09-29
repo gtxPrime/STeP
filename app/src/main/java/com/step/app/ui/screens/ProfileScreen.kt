@@ -82,7 +82,7 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .background(BackgroundWhite)
                 .padding(padding),
-            contentPadding = PaddingValues(20.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             // Profile Card
@@ -98,63 +98,87 @@ fun ProfileScreen(
                         modifier = Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // Unclipped container so the camera badge overlaps cleanly
                         Box(
-                            modifier = Modifier
-                                .size(76.dp)
-                                .clip(CircleShape)
-                                .background(PrimarySurfaceLight)
-                                .border(2.dp, PrimaryDeepOrange, CircleShape)
-                                .clickable { photoPickerLauncher.launch("image/*") },
+                            modifier = Modifier.size(92.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (student.photoUrl.isNotBlank()) {
-                                AsyncImage(
-                                    model = student.photoUrl,
-                                    contentDescription = "Profile Photo",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(CircleShape)
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = FontAwesomeIcons.Solid.User,
-                                    contentDescription = null,
-                                    tint = PrimaryDeepOrange,
-                                    modifier = Modifier.size(34.dp)
-                                )
-                            }
-
-                            // Camera badge overlay
+                            // Circular Avatar
                             Box(
                                 modifier = Modifier
-                                    .size(24.dp)
+                                    .size(82.dp)
+                                    .clip(CircleShape)
+                                    .background(PrimarySurfaceLight)
+                                    .border(2.5.dp, PrimaryDeepOrange, CircleShape)
+                                    .clickable { photoPickerLauncher.launch("image/*") },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (student.photoUrl.isNotBlank()) {
+                                    AsyncImage(
+                                        model = student.photoUrl,
+                                        contentDescription = "Profile Photo",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = FontAwesomeIcons.Solid.User,
+                                        contentDescription = null,
+                                        tint = PrimaryDeepOrange,
+                                        modifier = Modifier.size(38.dp)
+                                    )
+                                }
+                            }
+
+                            // Camera badge overlay - NOT clipped!
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
                                     .align(Alignment.BottomEnd)
                                     .clip(CircleShape)
                                     .background(PrimaryDeepOrange)
-                                    .border(1.5.dp, Color.White, CircleShape),
+                                    .border(2.dp, Color.White, CircleShape)
+                                    .clickable { photoPickerLauncher.launch("image/*") },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = FontAwesomeIcons.Solid.Camera,
                                     contentDescription = "Upload custom photo",
                                     tint = Color.White,
-                                    modifier = Modifier.size(11.dp)
+                                    modifier = Modifier.size(13.dp)
                                 )
                             }
                         }
 
-                        Text(
-                            text = "Tap avatar to change photo",
-                            fontSize = 10.sp,
-                            color = PrimaryDeepOrange,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier
-                                .padding(top = 6.dp)
-                                .clickable { photoPickerLauncher.launch("image/*") }
-                        )
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = PrimarySurfaceLight,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryDeepOrange.copy(alpha = 0.35f)),
+                            modifier = Modifier.clickable { photoPickerLauncher.launch("image/*") }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = FontAwesomeIcons.Solid.Camera,
+                                    contentDescription = null,
+                                    tint = PrimaryDeepOrange,
+                                    modifier = Modifier.size(11.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Change Photo",
+                                    fontSize = 11.sp,
+                                    color = PrimaryDeepOrange,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
                             text = student.fullName,
@@ -452,25 +476,51 @@ private fun ProfileInfoRow(label: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 5.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
             fontSize = 12.sp,
             color = TextSubtle,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(0.40f)
+            modifier = Modifier.weight(0.42f)
         )
         Spacer(modifier = Modifier.width(10.dp))
-        Text(
-            text = value,
-            fontSize = 12.sp,
-            color = TextDark,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(0.60f)
-        )
+        if (value == "Active & Seeded") {
+            Surface(
+                color = StatusDisbursedBg,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.CircleCheck,
+                        contentDescription = null,
+                        tint = StatusDisbursed,
+                        modifier = Modifier.size(11.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = value,
+                        fontSize = 11.sp,
+                        color = StatusDisbursed,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        } else {
+            Text(
+                text = value,
+                fontSize = 12.sp,
+                color = TextDark,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.End,
+                modifier = Modifier.weight(0.58f)
+            )
+        }
     }
 }

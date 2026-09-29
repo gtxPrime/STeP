@@ -113,18 +113,21 @@ object FirebaseManager {
             }
 
             if (snapshot == null || snapshot.isEmpty) {
-                if (!hasSeededDemoApps) {
-                    hasSeededDemoApps = true
-                    Log.d(TAG, "First-time user or empty applications in Firestore: seeding demo scholarship applications...")
-                    seedApplicationsToFirestore(userId)
-                    seedPendingActionsToFirestore(userId)
-                    seedNotificationsToFirestore(userId)
-                    seedDocumentsToFirestore(userId)
-                } else {
-                    MoTaRepository.applications.clear()
-                }
+                MoTaRepository.applications.clear()
             } else {
-                val remoteApps = snapshot.documents.mapNotNull { doc ->
+                val demoAppIds = setOf("NSP-2025-PMS-74921", "SFMP-2026-TC-09312", "NOS-2027-INT-0042")
+                val realDocs = snapshot.documents.filter { doc ->
+                    val appId = doc.getString("applicationId") ?: doc.id
+                    if (demoAppIds.contains(appId) || demoAppIds.contains(doc.id)) {
+                        // Clean up legacy seeded dummy applications from user's account
+                        userAppsRef.document(doc.id).delete()
+                        false
+                    } else {
+                        true
+                    }
+                }
+
+                val remoteApps = realDocs.mapNotNull { doc ->
                     try {
                         val stepsRaw = doc.get("steps") as? List<Map<String, Any>>
                         val steps = stepsRaw?.map { stepMap ->
@@ -199,7 +202,14 @@ object FirebaseManager {
             if (snapshot == null || snapshot.isEmpty) {
                 MoTaRepository.pendingActions.clear()
             } else {
-                val remoteActions = snapshot.documents.mapNotNull { doc ->
+                val dummyActionIds = setOf("act_income_expiring", "act_bank_npci_fix", "act_photo_rescan")
+                val realDocs = snapshot.documents.filter { doc ->
+                    if (dummyActionIds.contains(doc.id)) {
+                        userActionsRef.document(doc.id).delete()
+                        false
+                    } else true
+                }
+                val remoteActions = realDocs.mapNotNull { doc ->
                     try {
                         PendingAction(
                             id = doc.getString("id") ?: doc.id,
@@ -338,7 +348,12 @@ object FirebaseManager {
 
     // --- WRITE OPERATIONS TO FIREBASE FIRESTORE ---
 
-    fun saveStudentProfileToFirestore(profile: StudentProfile, userId: String = currentUser?.uid ?: "usr_google_birsa_984") {
+    fun saveStudentProfileToFirestore(
+        profile: StudentProfile,
+        userId: String = currentUser?.uid ?: "usr_google_birsa_984",
+        context: android.content.Context? = null
+    ) {
+        val normalizedEmailUid = "usr_" + profile.email.lowercase().trim().replace(Regex("[^a-zA-Z0-9]"), "_")
         val data = hashMapOf(
             "uid" to userId,
             "apaarId" to profile.apaarId,
@@ -360,9 +375,35 @@ object FirebaseManager {
             "encryption" to "AES-256-GCM",
             "lastSyncedAt" to System.currentTimeMillis()
         )
+        // 1. Save to primary document
         firestore.collection("users").document(userId)
             .collection("profile").document("info")
             .set(data, SetOptions.merge())
+
+        // 2. Also save to normalized email document so returning users are always found
+        if (userId != normalizedEmailUid && profile.email.isNotBlank()) {
+            firestore.collection("users").document(normalizedEmailUid)
+                .collection("profile").document("info")
+                .set(data, SetOptions.merge())
+        }
+
+        // 3. Save to local SharedPreferences
+        if (context != null && profile.email.isNotBlank()) {
+            try {
+                val prefs = context.getSharedPreferences("step_user_prefs", android.content.Context.MODE_PRIVATE)
+                prefs.edit()
+                    .putBoolean("reg_${profile.email.lowercase().trim()}", true)
+                    .putString("uid_${profile.email.lowercase().trim()}", userId)
+                    .putString("name_${profile.email.lowercase().trim()}", profile.fullName)
+                    .putString("subTribe_${profile.email.lowercase().trim()}", profile.subTribe)
+                    .putString("school_${profile.email.lowercase().trim()}", profile.institution)
+                    .putString("state_${profile.email.lowercase().trim()}", profile.state)
+                    .putString("photo_${profile.email.lowercase().trim()}", profile.photoUrl)
+                    .apply()
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to save local preferences", e)
+            }
+        }
     }
 
     fun submitApplicationToFirestore(app: ApplicationRecord, userId: String = currentUser?.uid ?: "usr_google_birsa_984") {
@@ -578,45 +619,134 @@ object FirebaseManager {
         }
     }
 
+    private fun parseProfileFromDoc(doc: com.google.firebase.firestore.DocumentSnapshot, uid: String, emailFallback: String): StudentProfile {
+        val encIncome = doc.get("annualIncome")?.toString() ?: "145000"
+        val encAccount = doc.getString("maskedAccount") ?: "•••• •••• 4920"
+        val encIfsc = doc.getString("ifsc") ?: "SBIN0001234"
+        val encAadhaar = doc.getString("aadhaarLast4") ?: "9842"
+
+        return StudentProfile(
+            uid = uid,
+            apaarId = doc.getString("apaarId") ?: "9842-1084-2026",
+            digilockerId = doc.getString("digilockerId") ?: "DL-ST-${uid.takeLast(6)}",
+            fullName = doc.getString("fullName") ?: "ST Scholar",
+            email = doc.getString("email") ?: emailFallback,
+            photoUrl = doc.getString("photoUrl") ?: "",
+            community = doc.getString("community") ?: "Scheduled Tribe (ST)",
+            subTribe = doc.getString("subTribe") ?: "ST",
+            institution = doc.getString("institution") ?: "",
+            educationLevel = doc.getString("educationLevel") ?: "Class 12",
+            annualIncome = com.step.app.security.CryptoManager.decrypt(encIncome, uid).toLongOrNull() ?: 145000L,
+            bankName = doc.getString("bankName") ?: "State Bank of India",
+            maskedAccount = com.step.app.security.CryptoManager.decrypt(encAccount, uid).ifEmpty { "•••• •••• 4920" },
+            ifsc = com.step.app.security.CryptoManager.decrypt(encIfsc, uid).ifEmpty { "SBIN0001234" },
+            aadhaarLast4 = com.step.app.security.CryptoManager.decrypt(encAadhaar, uid).ifEmpty { "9842" },
+            state = doc.getString("state") ?: "Odisha",
+            npciAadhaarSeeded = doc.getBoolean("npciAadhaarSeeded") ?: true
+        )
+    }
+
+    private fun saveLocalPrefs(context: android.content.Context, profile: StudentProfile) {
+        try {
+            val prefs = context.getSharedPreferences("step_user_prefs", android.content.Context.MODE_PRIVATE)
+            prefs.edit()
+                .putBoolean("reg_${profile.email.lowercase().trim()}", true)
+                .putString("uid_${profile.email.lowercase().trim()}", profile.uid)
+                .putString("name_${profile.email.lowercase().trim()}", profile.fullName)
+                .putString("subTribe_${profile.email.lowercase().trim()}", profile.subTribe)
+                .putString("school_${profile.email.lowercase().trim()}", profile.institution)
+                .putString("state_${profile.email.lowercase().trim()}", profile.state)
+                .putString("photo_${profile.email.lowercase().trim()}", profile.photoUrl)
+                .apply()
+        } catch (_: Exception) {}
+    }
+
     fun checkExistingProfile(
+        context: android.content.Context? = null,
         uid: String,
+        email: String = "",
         onExisting: (StudentProfile) -> Unit,
         onNewUser: () -> Unit
     ) {
+        val normalizedEmailUid = if (email.isNotBlank()) "usr_" + email.lowercase().trim().replace(Regex("[^a-zA-Z0-9]"), "_") else uid
+
+        // 1. Instant check in local SharedPreferences for fast, offline-safe returning user recognition
+        if (context != null && email.isNotBlank()) {
+            try {
+                val prefs = context.getSharedPreferences("step_user_prefs", android.content.Context.MODE_PRIVATE)
+                val isReg = prefs.getBoolean("reg_${email.lowercase().trim()}", false)
+                if (isReg) {
+                    val cachedName = prefs.getString("name_${email.lowercase().trim()}", "") ?: ""
+                    if (cachedName.isNotBlank()) {
+                        val cachedUid = prefs.getString("uid_${email.lowercase().trim()}", uid) ?: uid
+                        val cached = MoTaRepository.currentStudent.copy(
+                            uid = cachedUid,
+                            fullName = cachedName,
+                            email = email,
+                            subTribe = prefs.getString("subTribe_${email.lowercase().trim()}", "Santhal") ?: "Santhal",
+                            institution = prefs.getString("school_${email.lowercase().trim()}", "") ?: "",
+                            state = prefs.getString("state_${email.lowercase().trim()}", "Odisha") ?: "Odisha",
+                            photoUrl = prefs.getString("photo_${email.lowercase().trim()}", "") ?: ""
+                        )
+                        MoTaRepository.currentStudent = cached
+                        initDynamicFirestore(cachedUid)
+                        isGoogleLoggedIn = true
+                        onExisting(cached)
+                        return
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Local cache lookup exception", e)
+            }
+        }
+
+        // 2. Query Firestore primary UID
         firestore.collection("users").document(uid).collection("profile").document("info")
             .get()
             .addOnSuccessListener { doc ->
                 if (doc != null && doc.exists()) {
-                    val encIncome = doc.get("annualIncome")?.toString() ?: "145000"
-                    val encAccount = doc.getString("maskedAccount") ?: "•••• •••• 4920"
-                    val encIfsc = doc.getString("ifsc") ?: "SBIN0001234"
-                    val encAadhaar = doc.getString("aadhaarLast4") ?: "9842"
-
-                    val p = StudentProfile(
-                        uid = uid,
-                        apaarId = doc.getString("apaarId") ?: "9842-1084-2026",
-                        digilockerId = doc.getString("digilockerId") ?: "DL-ST-${uid.takeLast(6)}",
-                        fullName = doc.getString("fullName") ?: "ST Scholar",
-                        email = doc.getString("email") ?: "",
-                        photoUrl = doc.getString("photoUrl") ?: "",
-                        community = doc.getString("community") ?: "Scheduled Tribe (ST)",
-                        subTribe = doc.getString("subTribe") ?: "ST",
-                        institution = doc.getString("institution") ?: "",
-                        educationLevel = doc.getString("educationLevel") ?: "Class 12",
-                        annualIncome = com.step.app.security.CryptoManager.decrypt(encIncome, uid).toLongOrNull() ?: 145000L,
-                        bankName = doc.getString("bankName") ?: "State Bank of India",
-                        maskedAccount = com.step.app.security.CryptoManager.decrypt(encAccount, uid).ifEmpty { "•••• •••• 4920" },
-                        ifsc = com.step.app.security.CryptoManager.decrypt(encIfsc, uid).ifEmpty { "SBIN0001234" },
-                        aadhaarLast4 = com.step.app.security.CryptoManager.decrypt(encAadhaar, uid).ifEmpty { "9842" },
-                        state = doc.getString("state") ?: "Odisha",
-                        npciAadhaarSeeded = doc.getBoolean("npciAadhaarSeeded") ?: true
-                    )
+                    val p = parseProfileFromDoc(doc, uid, email)
                     MoTaRepository.currentStudent = p
                     initDynamicFirestore(uid)
                     isGoogleLoggedIn = true
+                    if (context != null) saveLocalPrefs(context, p)
                     onExisting(p)
                 } else {
-                    onNewUser()
+                    // 3. Query Firestore normalized email UID
+                    firestore.collection("users").document(normalizedEmailUid).collection("profile").document("info")
+                        .get()
+                        .addOnSuccessListener { doc2 ->
+                            if (doc2 != null && doc2.exists()) {
+                                val p2 = parseProfileFromDoc(doc2, normalizedEmailUid, email)
+                                MoTaRepository.currentStudent = p2
+                                initDynamicFirestore(normalizedEmailUid)
+                                isGoogleLoggedIn = true
+                                if (context != null) saveLocalPrefs(context, p2)
+                                onExisting(p2)
+                            } else if (email.isNotBlank()) {
+                                // 4. Query profile collectionGroup by email
+                                firestore.collectionGroup("profile").whereEqualTo("email", email).limit(1)
+                                    .get()
+                                    .addOnSuccessListener { snap ->
+                                        if (snap != null && !snap.isEmpty) {
+                                            val doc3 = snap.documents.first()
+                                            val foundUid = doc3.getString("uid") ?: normalizedEmailUid
+                                            val p3 = parseProfileFromDoc(doc3, foundUid, email)
+                                            MoTaRepository.currentStudent = p3
+                                            initDynamicFirestore(foundUid)
+                                            isGoogleLoggedIn = true
+                                            if (context != null) saveLocalPrefs(context, p3)
+                                            onExisting(p3)
+                                        } else {
+                                            onNewUser()
+                                        }
+                                    }
+                                    .addOnFailureListener { onNewUser() }
+                            } else {
+                                onNewUser()
+                            }
+                        }
+                        .addOnFailureListener { onNewUser() }
                 }
             }
             .addOnFailureListener {
@@ -624,19 +754,24 @@ object FirebaseManager {
             }
     }
 
-    fun completeRegistration(profile: StudentProfile) {
+    fun completeRegistration(profile: StudentProfile, context: android.content.Context? = null) {
         MoTaRepository.currentStudent = profile
-        saveStudentProfileToFirestore(profile, profile.uid)
+        saveStudentProfileToFirestore(profile, profile.uid, context)
         initDynamicFirestore(profile.uid)
         isGoogleLoggedIn = true
     }
 
-    fun loginWithGoogleAccount(account: GoogleSignInAccount, onReady: (isNewUser: Boolean) -> Unit) {
+    fun loginWithGoogleAccount(
+        context: android.content.Context? = null,
+        account: GoogleSignInAccount,
+        onReady: (isNewUser: Boolean) -> Unit
+    ) {
         val name = account.displayName ?: account.givenName ?: "ST Scholar"
         val email = account.email ?: "student@step.gov.in"
         val photo = account.photoUrl?.toString().orEmpty()
         val idToken = account.idToken.orEmpty()
-        val uid = account.id ?: ("usr_" + email.replace(Regex("[^a-zA-Z0-9]"), "_"))
+        val normalizedEmailUid = "usr_" + email.lowercase().trim().replace(Regex("[^a-zA-Z0-9]"), "_")
+        val uid = account.id ?: normalizedEmailUid
 
         val user = GoogleUser(
             uid = uid,
@@ -648,7 +783,9 @@ object FirebaseManager {
         currentUser = user
 
         checkExistingProfile(
+            context = context,
             uid = uid,
+            email = email,
             onExisting = {
                 onReady(false)
             },

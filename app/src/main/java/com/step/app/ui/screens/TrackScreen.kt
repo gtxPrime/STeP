@@ -91,12 +91,61 @@ fun TrackScreen(
             }
         }
 
-        // Application Cards
-        items(filteredApplications) { application ->
-            TrackApplicationCard(
-                application = application,
-                onClick = { onNavigateToApplicationDetail(application) }
-            )
+        if (filteredApplications.isEmpty()) {
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .border(1.dp, BorderLight, RoundedCornerShape(16.dp))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .clip(CircleShape)
+                                .background(PrimarySurfaceLight),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.GraduationCap,
+                                contentDescription = null,
+                                tint = PrimaryDeepOrange,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "No Applications Yet",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDark
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "You haven't applied for any scholarships yet. Explore available schemes from the Apply tab and submit your application.",
+                            fontSize = 12.sp,
+                            color = TextSubtle,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            lineHeight = 16.sp
+                        )
+                    }
+                }
+            }
+        } else {
+            items(filteredApplications) { application ->
+                TrackApplicationCard(
+                    application = application,
+                    onClick = { onNavigateToApplicationDetail(application) }
+                )
+            }
         }
     }
 }

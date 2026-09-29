@@ -116,7 +116,7 @@ fun LoginScreen(
                 email = account.email ?: "student@step.gov.in"
                 photoUrl = account.photoUrl?.toString().orEmpty()
 
-                FirebaseManager.loginWithGoogleAccount(account) { isNewUser ->
+                FirebaseManager.loginWithGoogleAccount(context, account) { isNewUser ->
                     if (isNewUser) {
                         currentStep = LoginStep.PROFILE_SETUP
                     } else {
@@ -472,8 +472,9 @@ fun LoginScreen(
                                 if (fullName.isBlank()) fullName = "ST Scholar"
                                 if (email.isBlank()) email = "student@step.gov.in"
 
+                                val targetUid = FirebaseManager.currentUser?.uid ?: ("usr_" + email.lowercase().trim().replace(Regex("[^a-zA-Z0-9]"), "_"))
                                 val newProfile = StudentProfile(
-                                    uid = FirebaseManager.currentUser?.uid ?: "usr_google_${System.currentTimeMillis().toString().takeLast(6)}",
+                                    uid = targetUid,
                                     apaarId = "9842-1084-2026",
                                     digilockerId = "DL-ST-883921",
                                     fullName = fullName,
@@ -492,7 +493,7 @@ fun LoginScreen(
                                     npciAadhaarSeeded = true
                                 )
                                 MoTaRepository.currentStudent = newProfile
-                                FirebaseManager.saveStudentProfileToFirestore(newProfile, newProfile.uid)
+                                FirebaseManager.saveStudentProfileToFirestore(newProfile, targetUid, context)
 
                                 currentStep = LoginStep.DIGILOCKER_SETUP
                             },
@@ -569,20 +570,20 @@ fun LoginScreen(
                         // Select Certificate
                         Text("Select Document to Pull:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
                         Spacer(modifier = Modifier.height(6.dp))
-
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             testCerts.forEach { cert ->
+                                val isVerified = pulledDocs.any { it.docType == cert.docType }
                                 val isSelected = selectedDocType == cert.docType
                                 Card(
                                     colors = CardDefaults.cardColors(
-                                        containerColor = if (isSelected) PrimarySurfaceLight else BackgroundWhite
+                                        containerColor = if (isVerified) StatusDisbursedBg else if (isSelected) PrimarySurfaceLight else BackgroundWhite
                                     ),
                                     shape = RoundedCornerShape(10.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .border(
                                             1.dp,
-                                            if (isSelected) PrimaryDeepOrange else BorderLight,
+                                            if (isVerified) StatusDisbursed else if (isSelected) PrimaryDeepOrange else BorderLight,
                                             RoundedCornerShape(10.dp)
                                         )
                                         .clickable {
@@ -591,19 +592,48 @@ fun LoginScreen(
                                         }
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(10.dp),
+                                        modifier = Modifier.padding(12.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Icon(
-                                            imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                                            imageVector = if (isVerified) FontAwesomeIcons.Solid.CircleCheck else FontAwesomeIcons.Solid.ShieldCheck,
                                             contentDescription = null,
-                                            tint = if (isSelected) PrimaryDeepOrange else TextSubtle,
-                                            modifier = Modifier.size(16.dp)
+                                            tint = if (isVerified) StatusDisbursed else if (isSelected) PrimaryDeepOrange else TextSubtle,
+                                            modifier = Modifier.size(18.dp)
                                         )
-                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Spacer(modifier = Modifier.width(12.dp))
                                         Column(modifier = Modifier.weight(1f)) {
-                                            Text(cert.name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
-                                            Text(cert.issuerName, fontSize = 10.sp, color = TextSubtle)
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = cert.name,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = if (isVerified) StatusDisbursed else TextDark
+                                                )
+                                                if (isVerified) {
+                                                    Surface(
+                                                        color = StatusDisbursed.copy(alpha = 0.15f),
+                                                        shape = RoundedCornerShape(4.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "VERIFIED",
+                                                            color = StatusDisbursed,
+                                                            fontSize = 9.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            Text(
+                                                text = if (isVerified) "Pulled & Verified via DigiLocker Sandbox" else cert.issuerName,
+                                                fontSize = 10.sp,
+                                                color = if (isVerified) StatusDisbursed.copy(alpha = 0.85f) else TextSubtle
+                                            )
                                         }
                                     }
                                 }
@@ -637,8 +667,16 @@ fun LoginScreen(
                                         candidateName = fullName.ifBlank { "Birsa Munda" }
                                     )
                                     isPullingDoc = false
-                                    if (res.success && pulledDocs.none { it.uri == res.uri }) {
-                                        pulledDocs.add(res)
+                                    if (res.success) {
+                                        if (pulledDocs.none { it.docType == res.docType }) {
+                                            pulledDocs.add(res)
+                                        }
+                                        // Auto-advance to next unverified certificate
+                                        val nextUnverified = testCerts.firstOrNull { c -> pulledDocs.none { it.docType == c.docType } }
+                                        if (nextUnverified != null) {
+                                            selectedDocType = nextUnverified.docType
+                                            certNumber = nextUnverified.defaultCertNumber
+                                        }
                                     }
                                 }
                             },
@@ -660,46 +698,13 @@ fun LoginScreen(
                             }
                         }
 
-                        // Pulled Documents List
-                        if (pulledDocs.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Text("Verified Sovereign Documents (${pulledDocs.size}):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = StatusDisbursed)
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            pulledDocs.forEach { doc ->
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = StatusDisbursedBg),
-                                    shape = RoundedCornerShape(10.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp)
-                                ) {
-                                    Column(modifier = Modifier.padding(10.dp)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = FontAwesomeIcons.Solid.CircleCheck,
-                                                contentDescription = null,
-                                                tint = StatusDisbursed,
-                                                modifier = Modifier.size(14.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(doc.docType, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = StatusDisbursed)
-                                        }
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text("URN: ${doc.uri}", fontSize = 9.sp, fontFamily = FontFamily.Monospace, color = TextDark)
-                                        Text("100% Cryptographic DSC Verified • Saved to Firestore", fontSize = 9.sp, color = StatusDisbursed)
-                                    }
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(18.dp))
 
                         // Complete Setup Button
                         Button(
                             onClick = {
                                 val currentStudent = MoTaRepository.currentStudent
-                                FirebaseManager.completeRegistration(currentStudent)
+                                FirebaseManager.completeRegistration(currentStudent, context)
                                 onLoginSuccess()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = StatusDisbursed),
@@ -718,12 +723,16 @@ fun LoginScreen(
                         TextButton(
                             onClick = {
                                 val currentStudent = MoTaRepository.currentStudent
-                                FirebaseManager.completeRegistration(currentStudent)
+                                FirebaseManager.completeRegistration(currentStudent, context)
                                 onLoginSuccess()
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Skip DigiLocker for now and enter portal", fontSize = 11.sp, color = TextSubtle)
+                            Text(
+                                "Skip DigiLocker for now and enter portal",
+                                fontSize = 11.sp,
+                                color = TextSubtle
+                            )
                         }
                     }
                 }
