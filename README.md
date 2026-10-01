@@ -3,53 +3,215 @@
 **Ministry of Tribal Affairs (MoTA) & National e-Governance Division (NeGD), Government of India**  
 **Category:** Sovereign Public Digital Infrastructure • **Theme:** Smart Automation & Direct Benefit Transfer (DBT)
 
----
-
-## 🏛️ Ecosystem Overview
-
-The **STeP (Scheduled Tribe e-Portal)** ecosystem is an end-to-end digital governance suite built for the Ministry of Tribal Affairs (MoTA). It collapses **5 historically fragmented tribal scholarship and fellowship schemes** across **3 disparate legacy portals** (*National Scholarship Portal [NSP]*, *Canara Bank SFMP*, and *Standalone NOS*) into a unified, transparent, and automated architecture.
-
-The platform provides a dual-tier mobile application suite for both students and central/state welfare administration, backed by sovereign data registries (DigiLocker, APAAR, NPCI Aadhaar Payment Bridge, and UDISE+):
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           STeP SOVEREIGN ECOSYSTEM                              │
-├───────────────────────────────────────┬─────────────────────────────────────────┤
-│    📱 Student Mobile Application      │     🏛️ Admin Mobile Suite & Web Panel   │
-│         (Package: com.step.app)       │        (Package: com.step.admin)        │
-│    • Google Sign-In + Firebase Auth   │    • Real-time Firebase Firestore Sync  │
-│    • DigiLocker Sandbox Auto-Fetch    │    • Executive KPI Overview             │
-│    • AI Scheme Entitlement Maximizer  │    • Application Scrutiny Queue         │
-│    • Unified Document Wallet          │    • ModalBottomSheet Scheme Creator    │
-│    • 30-Day DBT Statutory SLA Tracker │    • Student Digital Dossier Inspector  │
-└───────────────────────────────────────┴─────────────────────────────────────────┘
-```
+[![Student Android App](https://img.shields.io/badge/Student%20App-Native%20Android%20Jetpack%20Compose-green)](#-dual-android-mobile-applications)
+[![Admin Android Suite](https://img.shields.io/badge/Admin%20Suite-Native%20Jetpack%20Compose-orange)](#-step-admin-application-comstepadmin)
+[![Signed Release AAB](https://img.shields.io/badge/Release%20AAB-alphaKey.jks%20Signed-blue)](#-production-build-artifacts-aab--apk)
+[![DigiLocker NeGD](https://img.shields.io/badge/DigiLocker-NeGD%20X.509%20Verified-blueviolet)](#-digilocker-sandbox-data-fetching--cryptographic-verification)
+[![Gemini Vision AI](https://img.shields.io/badge/OCR-Gemini%201.5%20Flash%20Vision-red)](#-gemini-vision-ocr--document-scrutiny-engine)
+[![TTS Engine](https://img.shields.io/badge/Voice-On--Device%20Multilingual%20TTS-teal)](#-jago-voice-assistant--multilingual-text-to-speech-tts)
 
 ---
 
-## 📱 Dual Android Mobile Applications
+## 🏛️ Ecosystem Overview & Mission
 
-### 1. 🎓 STeP Student Application (`com.step.app`)
-Designed for tribal scholars across India, with special PVTG (Particularly Vulnerable Tribal Groups) accessibility features:
-- **Authentication:** Integrated Google Sign-In linked to Firebase Authentication (`FirebaseAuth.signInWithCredential`), supporting both Google OAuth and fallback credentials.
-- **DigiLocker Sandbox Integration:** Automated one-click verification of Caste Certificates, Income Certificates, Class 10/12 Marksheets, and APAAR IDs with cryptographic SHA-256 seal generation (`DigiLockerSandboxManager.kt`).
-- **Document Wallet (`DocumentWalletScreen.kt`):** Interactive digital wallet storing verified credentials with full-screen image previews, QR verification codes, and download mechanisms.
-- **5-Scheme Entitlement Wizard:** Analyzes student profile parameters (state, parental income, education level, stream) to recommend and rank eligible schemes by financial yield.
-- **DBT Ledger & Statutory SLA Tracker:** Live tracking of NPCI Aadhaar Payment Bridge (APB) disbursement status, UTR reference numbers, and a 30-day escalation countdown.
+The **STeP (Scheduled Tribe e-Portal)** ecosystem is an end-to-end digital governance platform built for the Ministry of Tribal Affairs (MoTA). It collapses **5 historically fragmented tribal scholarship and fellowship schemes** across **3 disparate legacy portals** (*National Scholarship Portal [NSP]*, *Canara Bank SFMP*, and *Standalone NOS*) into a unified, transparent, and automated architecture.
 
-### 2. 🏛️ STeP Admin Application (`com.step.admin`)
-Designed for MoTA Nodal Officers, State Tribal Welfare Officers, and Verification Scrutineers:
-- **Zero Mock / 100% Real Firebase Sync:** Direct real-time streaming from Cloud Firestore (`AdminFirebaseManager.kt` & `AdminRepository.kt`). Eradicated mock data; renders live registered students (e.g., `Garvit Sharma`, `gtx prime`), real scheme catalogs, and real application queues.
-- **Executive KPI Dashboard:** Real-time visibility into Total Registered Scholars, Active Central Schemes, DBT Sanctioned Volume (₹ Cr), and Scrutiny Queue load.
-- **Semi-Automated Scrutiny Queue (`ScrutinyQueueScreen.kt`):** Fast-track verification showing confidence scores (e.g., 96% Auto-Match), instant 1-Click Sanction, and comprehensive dossier inspection.
-- **Registered Scholars Directory (`StudentsDirectoryScreen.kt`):** Complete student database searchable by name, APAAR ID, or tribe. Opens full **Digital Dossiers** with embedded document viewing matching the student wallet experience.
-- **Scholarships Master & Scheme Creator (`SchemesMasterScreen.kt`):** Modern **`ModalBottomSheet`** interface (eliminating legacy dialogs) allowing administrators to publish new schemes directly to Cloud Firestore:
-  - Sovereign Ministry emblem and header styling.
-  - Auto-generated monospace scheme codes (`SCH-06`).
-  - Nodal portal selector chips (`NSP`, `SFMP`, `NOS`).
-  - Inputs for Scheme Title, Target Cohort, Income Ceilings, Annual Grants, Application Deadlines, and Eligibility Rules.
-  - Reactive instant launch from both the bottom navigation and Home dashboard quick actions.
-- **District Outreach Heatmap (`OutreachHeatmapScreen.kt`):** Geographic breakdown of tribal enrollment deficits across priority districts (Bastar, Gadchiroli, Mayurbhanj).
+By combining **DigiLocker NeGD integration**, **Gemini 1.5 Flash Multimodal OCR**, **on-device Text-to-Speech (TTS)**, and **real-time Firebase Cloud Firestore synchronisation**, STeP eliminates bureaucratic friction, enforces strict DPDP Act compliance, and provides sub-second verification for tribal scholars across India.
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              STeP SOVEREIGN ECOSYSTEM                                  │
+├──────────────────────────────────────────┬─────────────────────────────────────────────┤
+│      📱 Student Mobile Application       │         🏛️ Admin Mobile Suite & Web         │
+│          (Package: com.step.app)         │           (Package: com.step.admin)         │
+│  • Google Sign-In + Firebase Auth        │  • Real-time Firebase Firestore Sync        │
+│  • DigiLocker Sandbox Auto-Fetch         │  • Executive KPI Overview                   │
+│  • Explicit Consent Flow (DPDP Act 2023) │  • Application Scrutiny Queue               │
+│  • Gemini Vision OCR (JSON Extraction)   │  • ModalBottomSheet Scheme Creator          │
+│  • Unified Document Wallet & QR Codes    │  • Student Digital Dossier Inspector        │
+│  • JAGO Voice Assistant + On-Device TTS  │  • 1-Click Fast-Track Sanctions             │
+│  • 30-Day DBT Statutory SLA Tracker      │  • Tribal District Outreach Heatmap         │
+└──────────────────────────────────────────┴─────────────────────────────────────────────┘
+```
+
+---
+
+## 🔄 End-to-End System Pipeline
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Student as 🎓 Tribal Student
+    participant App as 📱 Student App (com.step.app)
+    participant DigiLocker as 🏛️ DigiLocker / NeGD Gateway
+    participant Gemini as 🧠 Gemini 1.5 Flash Vision
+    participant Storage as ☁️ Storage CDN + Firestore
+    participant Admin as 🏛️ Admin Suite (com.step.admin)
+    participant PFMS as 💳 NPCI / PFMS DBT Bridge
+
+    Student->>App: Sign in with Google / Mobile OTP
+    App->>App: Authenticate with Firebase Auth Backend
+    
+    rect rgb(240, 248, 255)
+        Note over Student, DigiLocker: 🔐 DigiLocker Consent & Auto-Fetch
+        Student->>App: Tap "Fetch from DigiLocker"
+        App->>Student: Present DPDP Statutory Consent Dialog
+        Student->>App: Grants Consent (consent: "Y")
+        App->>DigiLocker: OAuth 2.0 Auth Code + PKI Token Exchange
+        DigiLocker-->>App: X.509 Signed XML (Caste, Income, Marksheets, APAAR)
+        App->>App: Validate NeGD SHA-256 Digital Certificate Seal
+    end
+
+    rect rgb(255, 250, 240)
+        Note over Student, Gemini: 📸 Physical Upload & Gemini OCR Fallback
+        Student->>App: Capture / Upload Physical Certificate
+        App->>Student: Request Explicit AI Scrutiny Consent
+        Student->>App: Grants Consent
+        App->>Gemini: Base64 Image + Strict JSON Schema Prompt
+        Gemini-->>App: Extracted JSON (Name, Number, Authority, Confidence: 96%)
+    end
+
+    App->>Storage: Multipart upload image to CDN -> Store metadata & CDN URL in Firestore
+    Storage-->>Admin: Real-time Snapshot Update (Zero Mock Data)
+
+    rect rgb(245, 255, 245)
+        Note over Admin, PFMS: ⚖️ Scrutiny, Approval & Payout
+        Admin->>Admin: Scrutiny Queue flags Auto-Clear (Confidence >= 85%)
+        Admin->>Admin: Officer inspects Student Dossier & Verified Documents
+        Admin->>Admin: 1-Click Sanction
+        Admin->>Storage: Update application status to "SANCTIONED"
+        Storage->>PFMS: Trigger Aadhaar Payment Bridge (APB)
+        PFMS-->>Student: DBT Credit Notification + UTR Reference
+    end
+```
+
+---
+
+## 🏛️ DigiLocker Sandbox: Data Fetching & Cryptographic Verification
+
+The STeP ecosystem integrates directly with the **DigiLocker Sandbox and Production API Gateway** provided by the **National e-Governance Division (NeGD) / MeitY** (`DigiLockerSandboxManager.kt`):
+
+### 1. Credentials Auto-Fetched
+| Document Type | Source / Issuing Authority | Data Points Extracted | Security Seal |
+|:---|:---|:---|:---|
+| **ST Caste Certificate** | State e-District / Revenue Dept (e.g. Tehsildar, Baripada, Odisha) | Candidate Name, Father Name, Tribe (e.g. Santhal / Oraon), Category (ST/PVTG), Memo Number | X.509 DSC Signed |
+| **Annual Income Certificate** | State Revenue Authority | Annual Household Gross Income (₹), Financial Year, Validity Window | NeGD Timestamped |
+| **Class 10 & 12 Marksheets** | CBSE / ICSE / State Secondary Boards | Passing Year, Roll Number, Subjects, Aggregated Percentage / CGPA | Board DSC Validated |
+| **APAAR / One Nation ID** | Ministry of Education (Academic Bank of Credits) | 12-digit APAAR ID (`APAAR-2026-XXXX-XXXX`), Student Identity Hash | Central NeGD Match |
+
+### 2. Cryptographic Validation Pipeline
+1. **OAuth 2.0 PKCE Handshake:** The student initiates an authenticated session via `oauth2/1/authorize` with state protection.
+2. **Payload Parsing:** The response returns both machine-readable XML (`xmlPayload`) and human-readable metadata.
+3. **Digital Signature Verification:** The app verifies the Digital Signature Certificate (`signerCn`, `dscSerialNumber`, and `pkiTimestamp`).
+4. **Local Fallback Sandbox Provider:** For testing in low-connectivity or tribal sandbox environments, `DigiLockerMockProvider.kt` supplies authentic NeGD-structured mock records that perfectly simulate live production payloads.
+
+---
+
+## 🔐 Student Permission & DPDP Statutory Consent Flow
+
+STeP strictly adheres to the **Digital Personal Data Protection (DPDP) Act 2023** and the **Aadhaar Act 2016**:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                   SOVEREIGN STUDENT CONSENT MODAL                      │
+├────────────────────────────────────────────────────────────────────────┤
+│  🏛️ Ministry of Tribal Affairs (MoTA) AI Verification Consent          │
+│                                                                        │
+│  "You are consenting to upload this document for official AI OCR       │
+│  scrutiny and DigiLocker verification under the DPDP Act 2023.         │
+│  Your data is encrypted using AES-256 and used solely for scholarship  │
+│  eligibility determination and fraud prevention."                      │
+│                                                                        │
+│  [ Cancel / Decline ]                  [ Grant Consent & Verify ]      │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Explicit Opt-In:** No document is fetched, scanned, or transmitted without the student tapping **"Grant Consent"** (`showGeminiConsentDialog = true`).
+- **Data Minimization:** Only certificate fields directly tied to scheme eligibility criteria (income, tribe, marks, institution) are parsed.
+- **Audit Logging:** Every consent event logs a cryptographic timestamp and UID to Cloud Firestore for statutory compliance.
+
+---
+
+## 🧠 Gemini Vision OCR & Document Scrutiny Engine
+
+When a student uploads an offline paper certificate or scanned photo, the **Gemini 1.5 Flash Multimodal Vision API** (`GeminiService.kt`) executes intelligent OCR extraction:
+
+### 1. Dual-Pass JSON Extraction
+The image is base64 encoded and submitted with a strict system instruction requiring deterministic JSON output:
+```json
+{
+  "documentType": "ST Caste Certificate",
+  "candidateName": "Garvit Sharma",
+  "fatherName": "Ramesh Sharma",
+  "certificateNumber": "OD/ST/2022/49201",
+  "issuingAuthority": "Office of the Tehsildar, Baripada, Odisha",
+  "issueDate": "2022-07-15",
+  "isAuthentic": true,
+  "confidenceScore": 0.96,
+  "reasoning": "Official government emblem present, seal verified, text matches state revenue template"
+}
+```
+
+### 2. Auto-Approval Scrutiny Metric
+- **$\ge 85\%$ Confidence:** Flagged as **Auto-Clear Ready** in the Admin Scrutiny Queue for 1-Click Fast-Track Sanction.
+- **$< 85\%$ Confidence:** Routed to manual scrutiny with highlighted discrepancies for officer review.
+
+---
+
+## 🔊 JAGO Voice Assistant & Multilingual Text-to-Speech (TTS)
+
+To overcome regional literacy barriers and assist students in remote tribal hamlets, STeP incorporates **JAGO**, an AI voice and conversational assistant (`HelpScreen.kt` & `GeminiService.kt`):
+
+- **On-Device Android `TextToSpeech` Engine:** Initializes seamlessly on device boot (`TextToSpeech(context)`), managing voice synthesis queueing (`QUEUE_FLUSH`) and complete resource disposal (`shutdown()`).
+- **6 Supported Languages:**
+  - English
+  - हिन्दी (Hindi)
+  - मराठी (Marathi)
+  - ଓଡ଼ିଆ (Odia)
+  - తెలుగు (Telugu)
+  - தமிழ் (Tamil)
+- **Plain-Language Defect Explainer:** Bureaucratic rejection codes (e.g. *"Clause 4.2 Defect: Caste Validity Incomplete"*) are synthesized into clear spoken instructions explaining how to obtain the required document from the local Tehsil office.
+
+---
+
+## 📁 Document Wallet & Hybrid Storage Architecture
+
+STeP utilizes a high-performance **Hybrid Storage Pipeline** balancing binary asset delivery and lightweight real-time synchronization:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       HYBRID STORAGE ARCHITECTURE                       │
+├────────────────────────────────────┬────────────────────────────────────┤
+│  1. Binary Storage (CDN / Upload)  │  2. Metadata (Cloud Firestore)     │
+│  • Multipart HTTP POST /api/upload │  • Collection: users/{uid}/docs    │
+│  • Compressed JPG/PNG binaries     │  • Extracted OCR JSON payload      │
+│  • Returns persistent CDN URL      │  • DigiLocker X.509 hash & status  │
+│  • Instant thumbnail rendering     │  • Real-time snapshot listeners    │
+└────────────────────────────────────┴────────────────────────────────────┘
+```
+
+### Student Wallet Experience (`DocumentWalletScreen.kt`)
+- **Card-Based Repository:** Displays all retrieved certificates with official green `VERIFIED_DIGILOCKER` badges.
+- **Interactive Verification QR:** Clicking any document generates a verification QR code that nodal officers can scan during offline spot audits.
+- **Full-Screen Document Visualizer:** High-resolution zoom and pan inspection view.
+
+### Admin Dossier Inspector (`StudentsDirectoryScreen.kt` & `DocumentInspectionDialog.kt`)
+- Nodal officers can click **"Inspect Dossier"** on any registered student to view their exact uploaded documents, cross-reference DigiLocker seals against Gemini OCR data, and verify eligibility without switching windows.
+
+---
+
+## 🏛️ STeP Admin Suite & "Create Scheme" Modal Bottom Sheet
+
+The **STeP-Admin Native App** (`com.step.admin`) is built specifically for Ministry and State welfare administrators:
+
+- **100% Real Firebase Data:** Completely eradicated mock/demo data; streams live registered scholars, application queues, and schemes directly from Cloud Firestore.
+- **ModalBottomSheet Scheme Creator (`SchemesMasterScreen.kt`):** Replaced legacy dialog boxes with a sovereign bottom sheet:
+  - Official Ministry header with sovereign insignia and dismiss action.
+  - Monospace Scheme Code (`SCH-06`), Title, and Eligibility criteria inputs.
+  - Interactive Portal Selector Chips (`NSP`, `SFMP`, `NOS`).
+  - Side-by-side financial inputs (Income Ceiling & Annual Grant).
+  - One-click **"Publish & Sync to Cloud"** action that updates live Firestore instantly.
+- **Reactive Navigation:** Tapping `+ Create Scheme` from the Home Dashboard or the Schemes tab opens the bottom sheet with zero navigation latency.
 
 ---
 
@@ -65,14 +227,35 @@ Designed for MoTA Nodal Officers, State Tribal Welfare Officers, and Verificatio
 
 ---
 
-## 🔐 Release Signing & Key Architecture
+## 🔐 Production Build Artifacts (AAB & APK)
 
-Both applications are signed using the same unified sovereign keystore:
+Both applications are configured with release signing using the unified keystore (`alphaKey.jks`, alias `key0`). Sensitive credentials are kept out of source control via `key.properties` and `local.properties`:
 
-- **Keystore File:** `F:/MyAppKey/alphaKey.jks`
-- **Key Alias:** `key0`
-- **Configuration:** Managed via `key.properties` (gitignored for security) in both the root project and `STeP-Admin/`:
+| Application | Package Name | Release AAB (`bundleRelease`) | Release APK (`assembleRelease`) |
+|:---|:---|:---|:---|
+| **STeP Student App** | `com.step.app` | [`app/build/outputs/bundle/release/app-release.aab`](file:///f:/Source%20Codes/Educon/app/build/outputs/bundle/release/app-release.aab) *(16.58 MB)* | [`app/build/outputs/apk/release/app-release.apk`](file:///f:/Source%20Codes/Educon/app/build/outputs/apk/release/app-release.apk) *(17.04 MB)* |
+| **STeP Admin Suite** | `com.step.admin` | [`STeP-Admin/app/build/outputs/bundle/release/app-release.aab`](file:///f:/Source%20Codes/Educon/STeP-Admin/app/build/outputs/bundle/release/app-release.aab) *(16.25 MB)* | [`STeP-Admin/app/build/outputs/apk/release/app-release.apk`](file:///f:/Source%20Codes/Educon/STeP-Admin/app/build/outputs/apk/release/app-release.apk) *(16.71 MB)* |
 
+*(Standalone direct install copies are also available under `web/assets/step-student-release.apk` and `web/assets/step-admin-release.apk`)*.
+
+---
+
+## 🚀 Build & Installation Guide
+
+### Prerequisites
+- JDK 17+
+- Android SDK (compileSdk 37, minSdk 24)
+- PowerShell (Windows) or Terminal (macOS/Linux)
+- Connected Android Device or Emulator with Wireless/USB ADB enabled
+
+### 1. Configure Local Properties (Secret Management)
+Create or verify `local.properties` in your project root:
+```properties
+sdk.dir=C\:\\Users\\Garvit\\AppData\\Local\\Android\\Sdk
+gemini.api.key=YOUR_GEMINI_API_KEY
+```
+
+Create or verify `key.properties` for production release signing:
 ```properties
 storeFile=/path/to/your/alphaKey.jks
 storePassword=YOUR_STORE_PASSWORD
@@ -80,55 +263,25 @@ keyAlias=key0
 keyPassword=YOUR_KEY_PASSWORD
 ```
 
-### Production Build Outputs
-
-| Application | Artifact Type | Path | Size |
-|:---|:---|:---|:---|
-| **STeP Student App** (`com.step.app`) | Android App Bundle (`.aab`) | `app/build/outputs/bundle/release/app-release.aab` | ~16.58 MB |
-| **STeP Student App** (`com.step.app`) | Universal APK (`.apk`) | `app/build/outputs/apk/release/app-release.apk` | ~17.04 MB |
-| **STeP Admin App** (`com.step.admin`) | Android App Bundle (`.aab`) | `STeP-Admin/app/build/outputs/bundle/release/app-release.aab` | ~16.25 MB |
-| **STeP Admin App** (`com.step.admin`) | Universal APK (`.apk`) | `STeP-Admin/app/build/outputs/apk/release/app-release.apk` | ~16.71 MB |
-
-*(Direct release copies are also synced under `web/assets/step-student-release.apk` and `web/assets/step-admin-release.apk`)*.
-
----
-
-## 🚀 Building & Installing
-
-### Prerequisites
-- JDK 17+
-- Android SDK (compileSdk 37, minSdk 24)
-- PowerShell (Windows) or Bash (macOS/Linux)
-- Connected Android Device or Emulator with USB/Wireless Debugging enabled
-
-### 1. Build Signed Release AABs (for Google Play / Production)
+### 2. Build Release Bundles (AAB) & APKs
 ```powershell
-# Build Student App Release Bundle
+# Build Student App Release Artifacts
 .\gradlew.bat bundleRelease
-
-# Build Admin App Release Bundle
-cd STeP-Admin
-.\gradlew.bat bundleRelease
-cd ..
-```
-
-### 2. Build Signed Release APKs (for Direct Installation)
-```powershell
-# Build Student App Release APK
 .\gradlew.bat assembleRelease
 
-# Build Admin App Release APK
+# Build Admin App Release Artifacts
 cd STeP-Admin
+.\gradlew.bat bundleRelease
 .\gradlew.bat assembleRelease
 cd ..
 ```
 
 ### 3. Install on Connected Device via ADB
 ```powershell
-# Install Admin App
+# Install STeP Admin Suite
 adb install -r "STeP-Admin/app/build/outputs/apk/release/app-release.apk"
 
-# Install Student App
+# Install STeP Student App
 adb install -r "app/build/outputs/apk/release/app-release.apk"
 ```
 
@@ -140,25 +293,27 @@ adb install -r "app/build/outputs/apk/release/app-release.apk"
 Educon/
 ├── app/                                    # STeP Student Android App (com.step.app)
 │   ├── src/main/java/com/step/app/
-│   │   ├── digilocker/                     # DigiLocker Sandbox & mock provider
-│   │   ├── firebase/                       # FirebaseManager (Auth & Firestore)
-│   │   ├── storage/                        # Shared hosting upload client
-│   │   └── ui/screens/                     # Jetpack Compose Screens (Wallet, Schemes, Profile, etc.)
-│   └── build.gradle.kts                    # App Gradle configuration with alphaSigning
+│   │   ├── data/                           # Data models & GeminiService.kt (OCR/JAGO)
+│   │   ├── digilocker/                     # DigiLockerSandboxManager & Mock Provider
+│   │   ├── firebase/                       # FirebaseManager.kt (Auth & Firestore)
+│   │   ├── storage/                        # SharedHostingManager.kt (Multipart upload)
+│   │   └── ui/screens/                     # Compose Screens (Wallet, Scanner, Help/TTS, Profile)
+│   └── build.gradle.kts                    # App Gradle with alphaSigning & BuildConfig injection
 ├── STeP-Admin/                             # STeP Admin Android App (com.step.admin)
 │   ├── app/src/main/java/com/step/admin/
-│   │   ├── data/                           # AdminRepository & Data Models
-│   │   ├── firebase/                       # AdminFirebaseManager (Live cloud sync)
+│   │   ├── data/                           # AdminRepository & AdminGeminiService
+│   │   ├── firebase/                       # AdminFirebaseManager.kt (Live sync)
 │   │   ├── ui/screens/                     # Screens: Dashboard, Scrutiny, Schemes, Dossiers
-│   │   └── AdminMainActivity.kt            # Single-activity navigation & bottom bar
-│   └── app/build.gradle.kts                # Admin Gradle configuration with alphaSigning
-├── web/                                    # Admin Web Panel & Asset Distribution
-│   ├── assets/                             # Released APKs & media assets
-│   ├── index.html                          # Web Dashboard UI
-│   └── server.py                           # Python HTTP server
-├── key.properties                          # Signing configuration (alphaKey.jks)
-├── CHANGELOG.md                            # Comprehensive version and commit changelog
-└── README.md                               # Project documentation
+│   │   └── AdminMainActivity.kt            # Navigation & BottomBar handling
+│   └── app/build.gradle.kts                # Admin Gradle with alphaSigning & BuildConfig injection
+├── web/                                    # Admin Web Dashboard & Distribution
+│   ├── assets/                             # Mirror of signed release APKs
+│   ├── scripts/                            # Web Firebase sync & AI scripts
+│   └── index.html                          # Web Portal UI
+├── key.properties                          # Release signing credentials (gitignored)
+├── local.properties                        # Local SDK & Gemini API Key (gitignored)
+├── CHANGELOG.md                            # Detailed release notes & commit history
+└── README.md                               # Complete system documentation
 ```
 
 ---
