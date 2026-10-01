@@ -359,11 +359,13 @@ object FirebaseManager {
             }
             try {
                 val encIncome = doc.get("annualIncome")?.toString() ?: "0"
-                val encAccount = doc.getString("maskedAccount") ?: "NFS"
-                val encIfsc = doc.getString("ifsc") ?: "NFS"
-                val encAadhaar = doc.getString("aadhaarLast4") ?: "NFS"
+                val encAccount = doc.getString("maskedAccount") ?: "NAS"
+                val encIfsc = doc.getString("ifsc") ?: "NAS"
+                val encAadhaar = doc.getString("aadhaarLast4") ?: "NAS"
 
                 MoTaRepository.currentStudent = MoTaRepository.currentStudent.copy(
+                    apaarId = doc.getString("apaarId") ?: MoTaRepository.currentStudent.apaarId,
+                    digilockerId = doc.getString("digilockerId") ?: MoTaRepository.currentStudent.digilockerId,
                     fullName = doc.getString("fullName") ?: MoTaRepository.currentStudent.fullName,
                     email = doc.getString("email") ?: MoTaRepository.currentStudent.email,
                     photoUrl = doc.getString("photoUrl") ?: MoTaRepository.currentStudent.photoUrl,
@@ -373,9 +375,9 @@ object FirebaseManager {
                     subTribe = doc.getString("subTribe") ?: MoTaRepository.currentStudent.subTribe,
                     annualIncome = com.step.app.security.CryptoManager.decrypt(encIncome, userId).toLongOrNull() ?: 0L,
                     bankName = doc.getString("bankName") ?: MoTaRepository.currentStudent.bankName,
-                    maskedAccount = com.step.app.security.CryptoManager.decrypt(encAccount, userId).ifEmpty { "NFS" },
-                    ifsc = com.step.app.security.CryptoManager.decrypt(encIfsc, userId).ifEmpty { "NFS" },
-                    aadhaarLast4 = com.step.app.security.CryptoManager.decrypt(encAadhaar, userId).ifEmpty { "NFS" },
+                    maskedAccount = com.step.app.security.CryptoManager.decrypt(encAccount, userId).ifEmpty { "NAS" },
+                    ifsc = com.step.app.security.CryptoManager.decrypt(encIfsc, userId).ifEmpty { "NAS" },
+                    aadhaarLast4 = com.step.app.security.CryptoManager.decrypt(encAadhaar, userId).ifEmpty { "NAS" },
                     state = doc.getString("state") ?: MoTaRepository.currentStudent.state,
                     npciAadhaarSeeded = doc.getBoolean("npciAadhaarSeeded") ?: false
                 )
@@ -420,15 +422,21 @@ object FirebaseManager {
             "encryption" to "AES-256-GCM",
             "lastSyncedAt" to System.currentTimeMillis()
         )
-        // 1. Save to primary document
+        // 1. Save to primary user profile document
         firestore.collection("users").document(userId)
             .collection("profile").document("info")
             .set(data, SetOptions.merge())
 
-        // 2. Also save to normalized email document so returning users are always found
+        // 2. Save directly to top-level students collection for Admin / MoTA Officer portals
+        firestore.collection("students").document(userId)
+            .set(data, SetOptions.merge())
+
+        // 3. Also save to normalized email document so returning users are always found
         if (userId != normalizedEmailUid && profile.email.isNotBlank()) {
             firestore.collection("users").document(normalizedEmailUid)
                 .collection("profile").document("info")
+                .set(data, SetOptions.merge())
+            firestore.collection("students").document(normalizedEmailUid)
                 .set(data, SetOptions.merge())
         }
     }
@@ -517,6 +525,12 @@ object FirebaseManager {
             "sharedHostingImageUrl" to sharedHostingUrl,
             "casteCommunity" to (doc.casteCommunity ?: ""),
             "annualIncome" to (doc.annualIncome ?: ""),
+            "rollNumber" to (doc.rollNumber.ifBlank { doc.certificateNumber }),
+            "passingYear" to doc.passingYear,
+            "boardName" to doc.boardName,
+            "marksPercentage" to doc.marksPercentage,
+            "marksObtained" to doc.marksObtained,
+            "maxMarks" to doc.maxMarks,
             "isDigiLocker" to true,
             "digilockerXml" to doc.digilockerXml,
             "signerCn" to doc.signerCn,
@@ -605,27 +619,27 @@ object FirebaseManager {
 
     private fun parseProfileFromDoc(doc: com.google.firebase.firestore.DocumentSnapshot, uid: String, emailFallback: String): StudentProfile {
         val encIncome = doc.get("annualIncome")?.toString() ?: "0"
-        val encAccount = doc.getString("maskedAccount") ?: "NFS"
-        val encIfsc = doc.getString("ifsc") ?: "NFS"
-        val encAadhaar = doc.getString("aadhaarLast4") ?: "NFS"
+        val encAccount = doc.getString("maskedAccount") ?: "NAS"
+        val encIfsc = doc.getString("ifsc") ?: "NAS"
+        val encAadhaar = doc.getString("aadhaarLast4") ?: "NAS"
 
         return StudentProfile(
             uid = uid,
-            apaarId = doc.getString("apaarId") ?: "NFS",
-            digilockerId = doc.getString("digilockerId") ?: "NFS",
-            fullName = doc.getString("fullName") ?: "NFS",
-            email = doc.getString("email") ?: emailFallback.ifEmpty { "NFS" },
+            apaarId = doc.getString("apaarId") ?: "NAS",
+            digilockerId = doc.getString("digilockerId") ?: "NAS",
+            fullName = doc.getString("fullName") ?: "NAS",
+            email = doc.getString("email") ?: emailFallback.ifEmpty { "NAS" },
             photoUrl = doc.getString("photoUrl") ?: "",
-            community = doc.getString("community") ?: "NFS",
-            subTribe = doc.getString("subTribe") ?: "NFS",
-            institution = doc.getString("institution") ?: "NFS",
-            educationLevel = doc.getString("educationLevel") ?: "NFS",
+            community = doc.getString("community") ?: "NAS",
+            subTribe = doc.getString("subTribe") ?: "NAS",
+            institution = doc.getString("institution") ?: "NAS",
+            educationLevel = doc.getString("educationLevel") ?: "NAS",
             annualIncome = com.step.app.security.CryptoManager.decrypt(encIncome, uid).toLongOrNull() ?: 0L,
-            bankName = doc.getString("bankName") ?: "NFS",
-            maskedAccount = com.step.app.security.CryptoManager.decrypt(encAccount, uid).ifEmpty { "NFS" },
-            ifsc = com.step.app.security.CryptoManager.decrypt(encIfsc, uid).ifEmpty { "NFS" },
-            aadhaarLast4 = com.step.app.security.CryptoManager.decrypt(encAadhaar, uid).ifEmpty { "NFS" },
-            state = doc.getString("state") ?: "NFS",
+            bankName = doc.getString("bankName") ?: "NAS",
+            maskedAccount = com.step.app.security.CryptoManager.decrypt(encAccount, uid).ifEmpty { "NAS" },
+            ifsc = com.step.app.security.CryptoManager.decrypt(encIfsc, uid).ifEmpty { "NAS" },
+            aadhaarLast4 = com.step.app.security.CryptoManager.decrypt(encAadhaar, uid).ifEmpty { "NAS" },
+            state = doc.getString("state") ?: "NAS",
             npciAadhaarSeeded = doc.getBoolean("npciAadhaarSeeded") ?: false
         )
     }
@@ -680,21 +694,21 @@ object FirebaseManager {
 
             StudentProfile(
                 uid = prefs.getString("uid_$cleanKey", cleanKey) ?: cleanKey,
-                apaarId = prefs.getString("apaarId_$cleanKey", "NFS") ?: "NFS",
-                digilockerId = prefs.getString("digilockerId_$cleanKey", "NFS") ?: "NFS",
-                fullName = prefs.getString("name_$cleanKey", "ST Scholar") ?: "ST Scholar",
-                email = prefs.getString("email_$cleanKey", if (cleanKey.contains("@")) cleanKey else "NFS") ?: "NFS",
+                apaarId = prefs.getString("apaarId_$cleanKey", "NAS") ?: "NAS",
+                digilockerId = prefs.getString("digilockerId_$cleanKey", "NAS") ?: "NAS",
+                fullName = prefs.getString("name_$cleanKey", "NAS") ?: "NAS",
+                email = prefs.getString("email_$cleanKey", if (cleanKey.contains("@")) cleanKey else "NAS") ?: "NAS",
                 photoUrl = prefs.getString("photo_$cleanKey", "") ?: "",
-                community = prefs.getString("community_$cleanKey", "Scheduled Tribe (ST)") ?: "Scheduled Tribe (ST)",
-                subTribe = prefs.getString("subTribe_$cleanKey", "NFS") ?: "NFS",
-                institution = prefs.getString("school_$cleanKey", "NFS") ?: "NFS",
-                educationLevel = prefs.getString("educationLevel_$cleanKey", "NFS") ?: "NFS",
+                community = prefs.getString("community_$cleanKey", "NAS") ?: "NAS",
+                subTribe = prefs.getString("subTribe_$cleanKey", "NAS") ?: "NAS",
+                institution = prefs.getString("school_$cleanKey", "NAS") ?: "NAS",
+                educationLevel = prefs.getString("educationLevel_$cleanKey", "NAS") ?: "NAS",
                 annualIncome = prefs.getLong("annualIncome_$cleanKey", 0L),
-                bankName = prefs.getString("bankName_$cleanKey", "NFS") ?: "NFS",
-                maskedAccount = prefs.getString("maskedAccount_$cleanKey", "NFS") ?: "NFS",
-                ifsc = prefs.getString("ifsc_$cleanKey", "NFS") ?: "NFS",
-                aadhaarLast4 = prefs.getString("aadhaarLast4_$cleanKey", "NFS") ?: "NFS",
-                state = prefs.getString("state_$cleanKey", "NFS") ?: "NFS",
+                bankName = prefs.getString("bankName_$cleanKey", "NAS") ?: "NAS",
+                maskedAccount = prefs.getString("maskedAccount_$cleanKey", "NAS") ?: "NAS",
+                ifsc = prefs.getString("ifsc_$cleanKey", "NAS") ?: "NAS",
+                aadhaarLast4 = prefs.getString("aadhaarLast4_$cleanKey", "NAS") ?: "NAS",
+                state = prefs.getString("state_$cleanKey", "NAS") ?: "NAS",
                 npciAadhaarSeeded = prefs.getBoolean("npciAadhaarSeeded_$cleanKey", false)
             )
         } catch (e: Exception) {
