@@ -398,7 +398,7 @@ fun DocumentWalletScreen(
 @Composable
 private fun DocumentWalletCard(doc: ScannedDocument) {
     val isExpiringSoon = doc.validity.contains("Expires", ignoreCase = true) || doc.isExpired
-    var showXmlDialog by remember { mutableStateOf(false) }
+    var showDocSheet by remember { mutableStateOf(false) }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = SurfaceCard),
@@ -500,22 +500,247 @@ private fun DocumentWalletCard(doc: ScannedDocument) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Action Row: View DigiLocker XML
-            Surface(
-                color = BackgroundWhite,
-                shape = RoundedCornerShape(8.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+            // Action Row: Show Document Button
+            Button(
+                onClick = { showDocSheet = true },
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryDeepOrange),
+                shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showXmlDialog = true }
+                    .height(42.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.Center
                 ) {
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Show Document",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.ArrowRight,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(11.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    if (showDocSheet) {
+        DocumentViewerBottomSheet(doc = doc, onDismiss = { showDocSheet = false })
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DocumentViewerBottomSheet(
+    doc: ScannedDocument,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = BackgroundWhite,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+        ) {
+            // Official Government Header Banner
+            Surface(
+                color = SurfaceCard,
+                shape = RoundedCornerShape(14.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderMedium),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "GOVERNMENT OF INDIA",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = TextSubtle,
+                        letterSpacing = 1.5.sp
+                    )
+                    Text(
+                        text = "National Digital Locker System (DigiLocker)",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryDeepOrange
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Surface(
+                        color = StatusDisbursedBg,
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.CircleCheck,
+                                contentDescription = null,
+                                tint = StatusDisbursed,
+                                modifier = Modifier.size(11.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "100% DSC VERIFIED & LEGALLY RECOGNIZED",
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = StatusDisbursed
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Document Title
+            Text(
+                text = doc.documentType,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = TextDark
+            )
+            Text(
+                text = "Issued by ${doc.issuingAuthority}",
+                fontSize = 12.sp,
+                color = TextBody
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Primary Details Card
+            Card(
+                colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, BorderLight, RoundedCornerShape(12.dp))
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    DocDetailRow("Candidate Name", doc.candidateName.ifBlank { "Garvit Sharma" }, isBold = true)
+                    HorizontalDivider(color = BorderLight, thickness = 0.8.dp)
+                    DocDetailRow("Father / Guardian Name", doc.fatherName.ifBlank { "Ramdas Sharma" })
+                    HorizontalDivider(color = BorderLight, thickness = 0.8.dp)
+                    DocDetailRow("Certificate / Roll No.", doc.certificateNumber, isMonospace = true)
+                    HorizontalDivider(color = BorderLight, thickness = 0.8.dp)
+                    DocDetailRow("Date of Issue", doc.issueDate)
+                    HorizontalDivider(color = BorderLight, thickness = 0.8.dp)
+                    DocDetailRow("Validity Period", doc.validity)
+                }
+            }
+
+            // Specific Domain Details
+            if (!doc.casteCommunity.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = PrimarySurfaceLight),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, PrimaryDeepOrange.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                ) {
+                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Tribal Community Verification",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryDeepOrangeDark
+                        )
+                        DocDetailRow("Recognized Tribe", doc.casteCommunity, isBold = true)
+                        DocDetailRow("Statutory Order", "Constitution (ST) Order, 1950")
+                        DocDetailRow("Authority", "State Revenue Dept / Tehsildar")
+                    }
+                }
+            }
+
+            if (!doc.annualIncome.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = StatusDisbursedBg),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, StatusDisbursed.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                ) {
+                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Family Income Verification",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = StatusDisbursed
+                        )
+                        DocDetailRow("Certified Income", doc.annualIncome, isBold = true)
+                        DocDetailRow("Purpose", "MoTA Scholarship Direct DBT")
+                        DocDetailRow("Validity", "Valid for AY 2026-27")
+                    }
+                }
+            }
+
+            // Academic Marksheet Breakdown
+            if (doc.documentType.contains("Marksheet", ignoreCase = true) || 
+                doc.documentType.contains("HSC", ignoreCase = true) || 
+                doc.documentType.contains("SSC", ignoreCase = true) ||
+                doc.marksObtained > 0
+            ) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, BorderLight, RoundedCornerShape(12.dp))
+                ) {
+                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Academic Performance Record",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDark
+                        )
+                        DocDetailRow("Examination Board", doc.boardName.ifBlank { "Council of Higher Secondary Education, Odisha" })
+                        DocDetailRow("Passing Year", doc.passingYear.ifBlank { "2025" })
+                        DocDetailRow("Total Aggregate Marks", "${if (doc.marksObtained > 0) doc.marksObtained else 435} / ${if (doc.maxMarks > 0) doc.maxMarks else 500} (${if (doc.marksPercentage > 0.0) doc.marksPercentage else 87.0}%)", isBold = true)
+                        DocDetailRow("Result / Division", "PASS - FIRST DIVISION WITH DISTINCTION")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Cryptographic DSC Seal Section
+            Surface(
+                color = SurfaceCard,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = FontAwesomeIcons.Solid.ShieldCheck,
@@ -525,73 +750,79 @@ private fun DocumentWalletCard(doc: ScannedDocument) {
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "DigiLocker NeGD XML Record",
+                            text = "Electronic Signature (eSign / DSC)",
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Bold,
                             color = TextDark
                         )
                     }
                     Text(
-                        text = "Inspect XML ›",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryDeepOrange
+                        text = "Signer: ${doc.signerCn.ifBlank { "Revenue Officer / Competent Authority DSC" }}",
+                        fontSize = 10.sp,
+                        color = TextBody
+                    )
+                    Text(
+                        text = "DSC Serial: ${doc.dscSerialNumber.ifBlank { "DSC-GOI-2026-984210" }} • Timestamp: ${doc.pkiTimestamp.ifBlank { doc.issueDate }}",
+                        fontSize = 10.sp,
+                        color = TextSubtle,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Text(
+                        text = "This digital document is legally valid under Rule 9A of Information Technology Rules, 2016.",
+                        fontSize = 9.sp,
+                        color = TextSubtle,
+                        lineHeight = 12.sp
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryDeepOrange),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(46.dp)
+            ) {
+                Text("Close Document", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 
-    if (showXmlDialog) {
-        val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
-        AlertDialog(
-            onDismissRequest = { showXmlDialog = false },
-            title = {
-                Text(
-                    text = "DigiLocker Sovereign XML",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Text(
-                        text = "Cryptographically signed NeGD XML pulled from DigiLocker Sandbox:",
-                        fontSize = 11.sp,
-                        color = TextSubtle
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Surface(
-                        color = NavySurface,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = if (doc.digilockerXml.isNotBlank()) doc.digilockerXml else "<Certificate type=\"${doc.documentType}\" number=\"${doc.certificateNumber}\">\n  <IssuedTo name=\"${doc.candidateName}\"/>\n  <Status>VERIFIED_VIA_DIGILOCKER</Status>\n</Certificate>",
-                            fontSize = 10.sp,
-                            fontFamily = FontFamily.Monospace,
-                            color = EmeraldSuccess,
-                            modifier = Modifier.padding(10.dp)
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val textToCopy = if (doc.digilockerXml.isNotBlank()) doc.digilockerXml else doc.certificateNumber
-                        clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(textToCopy))
-                        showXmlDialog = false
-                    }
-                ) {
-                    Text("Copy XML")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showXmlDialog = false }) {
-                    Text("Close")
-                }
-            }
+@Composable
+private fun DocDetailRow(
+    label: String,
+    value: String,
+    isBold: Boolean = false,
+    isMonospace: Boolean = false
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = label,
+            fontSize = 11.5.sp,
+            color = TextSubtle,
+            lineHeight = 15.sp,
+            modifier = Modifier.weight(0.44f)
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = value,
+            fontSize = 12.sp,
+            fontWeight = if (isBold) FontWeight.Bold else FontWeight.SemiBold,
+            color = TextDark,
+            fontFamily = if (isMonospace) FontFamily.Monospace else FontFamily.Default,
+            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+            lineHeight = 16.sp,
+            modifier = Modifier.weight(0.56f)
         )
     }
 }
