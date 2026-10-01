@@ -7,7 +7,7 @@
 
 window.STePFirebase = (function() {
   const firebaseConfig = {
-    apiKey: "AIzaSyDOZGYoAEpkFkJgg3mXE4Id2Axp0XsDuKk",
+    apiKey: window.__FIREBASE_API_KEY__ || localStorage.getItem('step_firebase_api_key') || "",
     authDomain: "step-sih.firebaseapp.com",
     projectId: "step-sih",
     storageBucket: "step-sih.firebasestorage.app",

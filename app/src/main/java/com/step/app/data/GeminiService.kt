@@ -21,8 +21,8 @@ object GeminiService {
     private const val GEMINI_MODEL = "gemini-1.5-flash"
     private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
-    // Default API key can be set at runtime or provided from local secure storage
-    var apiKey: String = ""
+    // Default API key securely loaded from BuildConfig (local.properties)
+    var apiKey: String = com.step.app.BuildConfig.GEMINI_API_KEY
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(25, TimeUnit.SECONDS)
@@ -34,7 +34,7 @@ object GeminiService {
      * Query JAGO AI with grounding over MoTA guidelines and student context
      */
     suspend fun queryJago(userMessage: String, currentStudent: StudentProfile): String = withContext(Dispatchers.IO) {
-        val key = apiKey.takeIf { it.isNotBlank() } ?: "AIzaSyDOZGYoAEpkFkJgg3mXE4Id2Axp0XsDuKk" // fallback reference
+        val key = apiKey.takeIf { it.isNotBlank() } ?: com.step.app.BuildConfig.GEMINI_API_KEY
 
         val systemPrompt = """
             You are "JAGO", the intelligent AI Voice and Text Assistant of the Ministry of Tribal Affairs (MoTA), Government of India.
@@ -116,7 +116,7 @@ object GeminiService {
      */
     suspend fun extractDocumentJson(imageBytes: ByteArray, docTypeHint: String): ScannedDocument = withContext(Dispatchers.IO) {
         val base64Img = Base64.encodeToString(imageBytes, Base64.NO_WRAP)
-        val key = apiKey.takeIf { it.isNotBlank() } ?: "AIzaSyDOZGYoAEpkFkJgg3mXE4Id2Axp0XsDuKk"
+        val key = apiKey.takeIf { it.isNotBlank() } ?: com.step.app.BuildConfig.GEMINI_API_KEY
 
         val systemPrompt = """
             You are an expert official document OCR parser for the Ministry of Tribal Affairs (MoTA), Government of India.

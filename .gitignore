@@ -17,3 +17,6 @@ app/build
 .cxx
 *.jks
 *.keystore
+web/scripts/firebase-env.js
+STeP-Admin/key.properties
+STeP-Admin/local.properties

@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 object AdminGeminiService {
     private const val TAG = "AdminGemini"
     private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
-    var apiKey: String = "AIzaSyDOZGYoAEpkFkJgg3mXE4Id2Axp0XsDuKk"
+    var apiKey: String = com.step.admin.BuildConfig.GEMINI_API_KEY
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
