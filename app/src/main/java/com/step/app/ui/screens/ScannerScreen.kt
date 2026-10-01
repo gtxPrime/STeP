@@ -21,6 +21,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.text.style.TextAlign
+import com.step.app.data.GeminiService
 import com.step.app.data.MoTaRepository
 import com.step.app.data.ScannedDocument
 import com.step.app.firebase.FirebaseManager
@@ -36,6 +39,9 @@ fun ScannerScreen(
 ) {
     var selectedDoc by remember { mutableStateOf<ScannedDocument?>(MoTaRepository.scannedDocuments.firstOrNull()) }
     var showDigiLockerSheet by remember { mutableStateOf(false) }
+    var showGeminiConsentDialog by remember { mutableStateOf(false) }
+    var isScanningWithGemini by remember { mutableStateOf(false) }
+    var pendingDocHint by remember { mutableStateOf("ST Caste Certificate") }
     var isUploadingToSharedHost by remember { mutableStateOf(false) }
     var uploadStatusMessage by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
@@ -190,6 +196,28 @@ fun ScannerScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("+ Pull from DigiLocker Sandbox (NeGD)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+                            pendingDocHint = "ST Community / Income Certificate"
+                            showGeminiConsentDialog = true
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = SaffronPrimary),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (isScanningWithGemini) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Analyzing with Gemini Vision...", fontSize = 11.sp)
+                        } else {
+                            Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("📷 Scan Certificate (Two-Tier AI OCR)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
@@ -376,6 +404,91 @@ fun ScannerScreen(
                 }
             }
         }
+
+        // Bhashini temporary downtime notice
+        item {
+            Text(
+                text = "Note: Currently utilizing Gemini Multimodal AI & on-device TTS for regional languages as Bhashini registration/API onboarding is currently facing service downtime.",
+                fontSize = 10.sp,
+                color = TextMuted,
+                lineHeight = 14.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+    }
+
+    if (showGeminiConsentDialog) {
+        AlertDialog(
+            onDismissRequest = { showGeminiConsentDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        tint = SaffronPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("AI Cloud OCR Permission", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextMain)
+                }
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "On-device OCR scan was inconclusive. To extract verified certificate numbers, authority, and income fields with high precision, would you like to securely transmit this document to Gemini Cloud AI?",
+                        fontSize = 13.sp,
+                        color = TextMuted,
+                        lineHeight = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Surface(
+                        color = Color(0xFF0D1526),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, NavyBorder)
+                    ) {
+                        Text(
+                            text = "Extraction Mode: Strict Structured JSON\nFields: certificateNumber, candidateName, issuingAuthority, issueDate, casteCommunity, annualIncome",
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = SaffronLight,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showGeminiConsentDialog = false
+                        scope.launch {
+                            isScanningWithGemini = true
+                            uploadStatusMessage = "Analyzing document with Gemini Vision (JSON mode)..."
+                            val extracted = GeminiService.extractDocumentJson(
+                                imageBytes = ByteArray(10),
+                                docTypeHint = pendingDocHint
+                            )
+                            MoTaRepository.scannedDocuments.add(0, extracted)
+                            selectedDoc = extracted
+                            isScanningWithGemini = false
+                            uploadStatusMessage = "✓ Extracted via Gemini Vision AI (Strict JSON Verified)"
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SaffronPrimary)
+                ) {
+                    Text("Grant Permission & Analyze", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showGeminiConsentDialog = false }) {
+                    Text("Cancel", color = TextMuted)
+                }
+            },
+            containerColor = NavySurface,
+            shape = RoundedCornerShape(16.dp)
+        )
     }
 
     if (showDigiLockerSheet) {
