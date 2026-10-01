@@ -34,41 +34,76 @@ import com.step.app.data.ScannedDocument
 import com.step.app.ui.components.DigiLockerSandboxBottomSheet
 import com.step.app.ui.components.FontAwesomeIcons
 import com.step.app.ui.theme.*
+import java.io.ByteArrayOutputStream
+import android.graphics.Bitmap
+import com.step.app.data.GeminiService
+import com.step.app.intelligence.CrossDocumentConsistencyEngine
+import com.step.app.intelligence.ConsistencyResult
+import com.step.app.core.registry.VerificationRegistry
+import com.step.app.firebase.FirebaseManager
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DocumentWalletScreen(
     onBack: () -> Unit,
     onAddDocument: () -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val documents = MoTaRepository.scannedDocuments
+    val student = MoTaRepository.currentStudent
+
     var showDigiLockerSandboxSheet by remember { mutableStateOf(false) }
+    var showScanChoiceSheet by remember { mutableStateOf(false) }
+    var showAiConsentDialog by remember { mutableStateOf(false) }
+    var isAnalyzingWithAi by remember { mutableStateOf(false) }
+    var capturedImageBytes by remember { mutableStateOf<ByteArray?>(null) }
+    var isBlurryDetected by remember { mutableStateOf(false) }
+    var consistencyResult by remember { mutableStateOf<ConsistencyResult?>(null) }
+    var showConsistencyDialog by remember { mutableStateOf(false) }
     var scanNoticeMessage by remember { mutableStateOf<String?>(null) }
+    var pendingDocTypeHint by remember { mutableStateOf("ST Caste Community Certificate") }
 
     // Camera Capture Launcher
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
         if (bitmap != null) {
-            val timeStamp = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
-            val docId = "doc_${System.currentTimeMillis()}"
-            val newDoc = ScannedDocument(
-                id = docId,
-                documentType = "Scanned Income & Caste Certificate",
-                candidateName = MoTaRepository.currentStudent.fullName,
-                fatherName = "Verified Record",
-                certificateNumber = "SCN-${System.currentTimeMillis().toString().takeLast(6)}",
-                issuingAuthority = "Sovereign AI Camera Scanner",
-                issueDate = timeStamp,
-                validity = "Valid / Active",
-                confidenceScore = 98,
-                autoApproveEligible = true
-            )
-            MoTaRepository.scannedDocuments.add(0, newDoc)
-            scanNoticeMessage = "Certificate successfully captured & synced to Sovereign Document Wallet!"
+            val stream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream)
+            val bytes = stream.toByteArray()
+            capturedImageBytes = bytes
+
+            // Check if resolution is low or image appears blurry
+            val isLowRes = bitmap.width < 900 || bitmap.height < 900
+            isBlurryDetected = isLowRes
+
+            // Ask user permission for AI OCR extraction
+            showAiConsentDialog = true
+        }
+    }
+
+    // Gallery File Picker Launcher
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bytes = inputStream?.readBytes()
+                inputStream?.close()
+                if (bytes != null && bytes.isNotEmpty()) {
+                    capturedImageBytes = bytes
+                    isBlurryDetected = false
+                    showAiConsentDialog = true
+                }
+            } catch (e: Exception) {
+                scanNoticeMessage = "Failed to load document image: ${e.message}"
+            }
         }
     }
 
@@ -79,7 +114,7 @@ fun DocumentWalletScreen(
         if (isGranted) {
             takePictureLauncher.launch()
         } else {
-            scanNoticeMessage = "Camera permission is required to capture documents."
+            scanNoticeMessage = "Camera permission is required to capture certificates."
         }
     }
 
@@ -138,8 +173,7 @@ fun DocumentWalletScreen(
 
                     Button(
                         onClick = {
-                            triggerCameraScan()
-                            onAddDocument()
+                            showScanChoiceSheet = true
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryDeepOrange),
                         shape = RoundedCornerShape(8.dp),
@@ -390,6 +424,368 @@ fun DocumentWalletScreen(
                 onSuccess = { res ->
                     showDigiLockerSandboxSheet = false
                 }
+            )
+        }
+
+        // 1. Scan Mode Selection Bottom Sheet
+        if (showScanChoiceSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showScanChoiceSheet = false },
+                containerColor = BackgroundWhite,
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 12.dp)
+                ) {
+                    Surface(
+                        color = PrimarySurfaceLight,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "SOVEREIGN OCR PIPELINE",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryDeepOrangeDark,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Add Certificate to Wallet",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = TextDark
+                    )
+                    Text(
+                        text = "Choose your scanning mode. For blurry, faded, or handwritten certificates, Sovereign AI Vision reconstructs verified JSON.",
+                        fontSize = 12.sp,
+                        color = TextSubtle,
+                        lineHeight = 16.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Option A: Standard Camera Scan
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, BorderLight, RoundedCornerShape(14.dp))
+                            .clickable {
+                                showScanChoiceSheet = false
+                                pendingDocTypeHint = "Standard Physical Certificate"
+                                triggerCameraScan()
+                            }
+                    ) {
+                        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(StatusInProgressBg),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = FontAwesomeIcons.Solid.Camera,
+                                    contentDescription = null,
+                                    tint = StatusInProgress,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Standard Camera Scan", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                Text("On-device capture for crisp, high-contrast documents", fontSize = 11.sp, color = TextSubtle)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Option B: Sovereign AI Multimodal Vision (Gemini 1.5 Flash)
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = PrimarySurfaceLight),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.5.dp, PrimaryDeepOrange, RoundedCornerShape(14.dp))
+                            .clickable {
+                                showScanChoiceSheet = false
+                                pendingDocTypeHint = "ST Community / Income / Marksheet"
+                                pickImageLauncher.launch("image/*")
+                            }
+                    ) {
+                        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(PrimaryDeepOrange),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = FontAwesomeIcons.Solid.WandMagicSparkles,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Upload to AI Vision OCR", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = PrimaryDeepOrangeDark)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(color = PrimaryDeepOrange, shape = RoundedCornerShape(4.dp)) {
+                                        Text("RECOMMENDED", fontSize = 8.sp, fontWeight = FontWeight.ExtraBold, color = Color.White, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                                    }
+                                }
+                                Text("If doc is blurry, folded, or on-device OCR fails, Gemini AI reconstructs verified JSON", fontSize = 11.sp, color = TextBody)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Option C: DigiLocker Instant Pull
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, BorderLight, RoundedCornerShape(14.dp))
+                            .clickable {
+                                showScanChoiceSheet = false
+                                showDigiLockerSandboxSheet = true
+                            }
+                    ) {
+                        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(StatusDisbursedBg),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                                    contentDescription = null,
+                                    tint = StatusDisbursed,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Pull from DigiLocker Vault", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                Text("Import authentic X.509 signed certificates from State Revenue", fontSize = 11.sp, color = TextSubtle)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(28.dp))
+                }
+            }
+        }
+
+        // 2. DPDP Statutory AI Consent Dialog
+        if (showAiConsentDialog) {
+            AlertDialog(
+                onDismissRequest = { showAiConsentDialog = false },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                            contentDescription = null,
+                            tint = PrimaryDeepOrange,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (isBlurryDetected) "Blurry Image: AI Extraction Permission" else "DPDP Statutory AI Consent",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = TextDark
+                        )
+                    }
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (isBlurryDetected) {
+                            Surface(
+                                color = StatusPendingBg,
+                                shape = RoundedCornerShape(8.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, StatusPending.copy(alpha = 0.4f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(8.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Icon(
+                                        imageVector = FontAwesomeIcons.Solid.TriangleExclamation,
+                                        contentDescription = null,
+                                        tint = StatusPending,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Notice: Image resolution is low or blurry. Standard on-device OCR may fail to read memo numbers and tehsildar stamps.",
+                                        fontSize = 11.sp,
+                                        color = StatusPending,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                        Text(
+                            text = "Under the Digital Personal Data Protection (DPDP) Act 2023, STeP requests your explicit permission to transmit this document image to Sovereign Gemini 1.5 Flash Multimodal AI.",
+                            fontSize = 12.sp,
+                            color = TextBody,
+                            lineHeight = 16.sp
+                        )
+                        Surface(
+                            color = SurfaceCard,
+                            shape = RoundedCornerShape(8.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight)
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text("Strict JSON Output Schema:", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                Text(
+                                    text = "{\n  \"documentType\": \"ST Caste / Income / Marksheet\",\n  \"candidateName\": \"...\",\n  \"certificateNumber\": \"...\",\n  \"confidenceScore\": 96\n}",
+                                    fontSize = 9.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = TextSubtle
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showAiConsentDialog = false
+                            scope.launch {
+                                isAnalyzingWithAi = true
+                                scanNoticeMessage = "Analyzing document with Gemini Vision (Strict JSON mode)..."
+                                val bytes = capturedImageBytes ?: ByteArray(0)
+                                val extracted = GeminiService.extractDocumentJson(bytes, pendingDocTypeHint)
+
+                                // Cross-document consistency verification
+                                val consistency = CrossDocumentConsistencyEngine.evaluateNameConsistency(
+                                    nameA = extracted.candidateName,
+                                    sourceA = extracted.documentType,
+                                    nameB = student.fullName,
+                                    sourceB = "MoTa Student Profile",
+                                    fatherName = extracted.fatherName
+                                )
+                                consistencyResult = consistency
+
+                                // Register in VerificationRegistry ("Verify Once -> Reuse Everywhere")
+                                VerificationRegistry.registerVerifiedDocument(
+                                    docType = extracted.documentType,
+                                    docName = extracted.documentType,
+                                    candidateName = extracted.candidateName,
+                                    fatherName = extracted.fatherName,
+                                    certificateNumber = extracted.certificateNumber,
+                                    issuingAuthority = extracted.issuingAuthority,
+                                    issueDate = extracted.issueDate,
+                                    expiryDate = extracted.validity,
+                                    isPermanent = extracted.validity.contains("Permanent", ignoreCase = true),
+                                    rawPayloadToHash = "${extracted.certificateNumber}|${extracted.candidateName}|${extracted.issueDate}"
+                                )
+
+                                MoTaRepository.scannedDocuments.add(0, extracted)
+                                FirebaseManager.saveDocumentToFirestore(extracted)
+                                isAnalyzingWithAi = false
+                                scanNoticeMessage = "Verified via Gemini Vision AI: ${extracted.documentType} (Confidence: ${extracted.confidenceScore}%)"
+
+                                if (!consistency.isAutoReconciled) {
+                                    showConsistencyDialog = true
+                                }
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryDeepOrange),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Grant Permission & Analyze", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showAiConsentDialog = false }) {
+                        Text("Cancel / Decline", color = TextSubtle, fontSize = 12.sp)
+                    }
+                },
+                containerColor = BackgroundWhite,
+                shape = RoundedCornerShape(16.dp)
+            )
+        }
+
+        // 3. Name Discrepancy & Affidavit Dialog
+        if (showConsistencyDialog && consistencyResult != null) {
+            val res = consistencyResult!!
+            AlertDialog(
+                onDismissRequest = { showConsistencyDialog = false },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.TriangleExclamation,
+                            contentDescription = null,
+                            tint = StatusPending,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Name Discrepancy Detected",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = TextDark
+                        )
+                    }
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = res.discrepancyDescription,
+                            fontSize = 12.sp,
+                            color = TextBody
+                        )
+                        if (res.affidavitText != null) {
+                            Text(
+                                text = "MoTA Anti-Rejection Identity Affidavit Generated:",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextDark
+                            )
+                            Surface(
+                                color = SurfaceCard,
+                                shape = RoundedCornerShape(8.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 160.dp)
+                            ) {
+                                Text(
+                                    text = res.affidavitText,
+                                    fontSize = 9.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = TextSubtle,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { showConsistencyDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryDeepOrange),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Acknowledge & Save Affidavit", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                },
+                containerColor = BackgroundWhite,
+                shape = RoundedCornerShape(16.dp)
             )
         }
     }

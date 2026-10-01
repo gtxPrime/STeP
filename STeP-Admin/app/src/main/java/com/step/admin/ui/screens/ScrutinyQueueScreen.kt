@@ -21,6 +21,7 @@ import com.step.admin.data.AdminApplication
 import com.step.admin.data.AdminGeminiService
 import com.step.admin.data.AdminRepository
 import com.step.admin.firebase.AdminFirebaseManager
+import com.step.admin.ui.components.FontAwesomeIcons
 import com.step.admin.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -226,7 +227,11 @@ fun ScrutinyQueueScreen(
                         if (isDraftingWithAi) {
                             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
                         } else {
-                            Text("✨ Draft Student Notice with Gemini AI", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(FontAwesomeIcons.Solid.WandMagicSparkles, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Draft Student Notice with Gemini AI", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
                         }
                     }
 
@@ -356,7 +361,11 @@ fun ApplicationScrutinyCard(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("⚡ Issue Sanction", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(FontAwesomeIcons.Solid.Bolt, contentDescription = null, tint = Color.White, modifier = Modifier.size(11.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Issue Sanction", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
                     }
 
                     OutlinedButton(
@@ -366,7 +375,11 @@ fun ApplicationScrutinyCard(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("🚩 Flag Defect", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(FontAwesomeIcons.Solid.Flag, contentDescription = null, tint = StatusPending, modifier = Modifier.size(11.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Flag Defect", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 } else if (app.stage == "SANCTIONED") {
                     Button(
@@ -375,7 +388,11 @@ fun ApplicationScrutinyCard(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("💳 Execute PFMS APB Disbursement", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(FontAwesomeIcons.Solid.CreditCard, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Execute PFMS APB Disbursement", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
                     }
                 } else {
                     Surface(

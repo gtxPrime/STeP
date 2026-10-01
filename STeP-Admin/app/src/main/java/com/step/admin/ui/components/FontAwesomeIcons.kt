@@ -134,12 +134,75 @@ object FontAwesomeIcons {
             )
         }
 
+        val WandMagicSparkles: ImageVector by lazy {
+            buildIcon(
+                name = "fa-wand-magic-sparkles",
+                viewportWidth = 512f,
+                viewportHeight = 512f,
+                pathData = "M472.3 8.3c11.1-11.1 29.1-11.1 40.2 0s11.1 29.1 0 40.2l-40 40-40.2-40.2 40-40zm-128 128l40.2 40.2-40 40c-11.1 11.1-29.1 11.1-40.2 0s-11.1-29.1 0-40.2l40-40zm-80-80L368 160 160 368 56.3 264.3 264.3 56.3zm-176 352l64-64 40.2 40.2-64 64c-11.1 11.1-29.1 11.1-40.2 0s-11.1-29.1 0-40.2z"
+            )
+        }
+
         val ArrowRight: ImageVector by lazy {
             buildIcon(
                 name = "fa-arrow-right",
                 viewportWidth = 448f,
                 viewportHeight = 512f,
                 pathData = "M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0-105.5 105.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"
+            )
+        }
+
+        val Flag: ImageVector by lazy {
+            buildIcon(
+                name = "fa-flag",
+                viewportWidth = 448f,
+                viewportHeight = 512f,
+                pathData = "M64 32C64 14.3 49.7 0 32 0S0 14.3 0 32V64 368 480c0 17.7 14.3 32 32 32s32-14.3 32-32V352l64.3-16.1c41.1-10.3 84.6-5.5 122.5 13.4c44.2 22.1 95.5 24.8 141.7 7.4l34.7-13c12.5-4.7 20.8-16.6 20.8-30V66.8c0-21.2-20.7-36.4-40.8-29.8L375.4 50c-34.1 11.4-71.9 9.3-104.4-5.8c-44.2-22.1-95.5-24.8-141.7-7.4L64 53.6V32z"
+            )
+        }
+
+        val CreditCard: ImageVector by lazy {
+            buildIcon(
+                name = "fa-credit-card",
+                viewportWidth = 576f,
+                viewportHeight = 512f,
+                pathData = "M64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zm0 64H512v32H64V96zm0 96H512V416H64V192zm64 128H96v48h32v-48zm96 0H160v48h64v-48z"
+            )
+        }
+
+        val VanShuttle: ImageVector by lazy {
+            buildIcon(
+                name = "fa-van-shuttle",
+                viewportWidth = 640f,
+                viewportHeight = 512f,
+                pathData = "M48 0C21.5 0 0 21.5 0 48V368c0 26.5 21.5 48 48 48h16c0 53 43 96 96 96s96-43 96-96H384c0 53 43 96 96 96s96-43 96-96h16c26.5 0 48-21.5 48-48V256c0-17-6.7-33.3-18.7-45.3L512 101.3C496.9 86.2 476.5 77.7 455.2 77.7H416V48c0-26.5-21.5-48-48-48H48zM160 464a48 48 0 1 1 0-96 48 48 0 1 1 0 96zm320 0a48 48 0 1 1 0-96 48 48 0 1 1 0 96zM416 128h39.2c7.1 0 13.9 2.8 18.9 7.8L512 173.7V224H416V128z"
+            )
+        }
+
+        val CommentSms: ImageVector by lazy {
+            buildIcon(
+                name = "fa-comment-sms",
+                viewportWidth = 384f,
+                viewportHeight = 512f,
+                pathData = "M16 64C16 28.7 44.7 0 80 0H304c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H80c-35.3 0-64-28.7-64-64V64zM192 448a32 32 0 1 0 0-64 32 32 0 1 0 0 64zM64 96V352H320V96H64z"
+            )
+        }
+
+        val Check: ImageVector by lazy {
+            buildIcon(
+                name = "fa-check",
+                viewportWidth = 448f,
+                viewportHeight = 512f,
+                pathData = "M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"
+            )
+        }
+
+        val Bolt: ImageVector by lazy {
+            buildIcon(
+                name = "fa-bolt",
+                viewportWidth = 384f,
+                viewportHeight = 512f,
+                pathData = "M0 256L192 0v176h128L128 512V336H0z"
             )
         }
     }

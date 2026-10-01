@@ -270,7 +270,11 @@ fun AdminDashboardScreen(
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier.weight(1f).height(38.dp)
                             ) {
-                                Text("✓ 1-Click Sanction", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(FontAwesomeIcons.Solid.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(11.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("1-Click Sanction", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
                             }
                             OutlinedButton(
                                 onClick = onNavigateToScrutiny,

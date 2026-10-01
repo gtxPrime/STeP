@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.step.admin.data.AdminRepository
 import com.step.admin.data.HeatmapDistrict
+import com.step.admin.ui.components.FontAwesomeIcons
 import com.step.admin.ui.theme.*
 
 @Composable
@@ -115,10 +116,10 @@ fun SaturationHeatmapScreen(
                 DistrictHeatmapCard(
                     item = district,
                     onDispatchVan = {
-                        actionToastMessage = "🚐 Mobile Enrollment Van dispatched to ${district.district}, ${district.state}! Camp scheduled at Ashram Schools."
+                        actionToastMessage = "Mobile Enrollment Van dispatched to ${district.district}, ${district.state}! Camp scheduled at Ashram Schools."
                     },
                     onBroadcastSms = {
-                        actionToastMessage = "📱 Geo-targeted SMS broadcast dispatched to ${district.gapCount} unreached ST families in ${district.district}."
+                        actionToastMessage = "Geo-targeted SMS broadcast dispatched to ${district.gapCount} unreached ST families in ${district.district}."
                     }
                 )
             }
@@ -207,7 +208,11 @@ fun DistrictHeatmapCard(
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("🚐 Dispatch Van", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(FontAwesomeIcons.Solid.VanShuttle, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Dispatch Van", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
                 }
 
                 OutlinedButton(
@@ -217,7 +222,11 @@ fun DistrictHeatmapCard(
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("📱 Broadcast SMS", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(FontAwesomeIcons.Solid.CommentSms, contentDescription = null, tint = StatusInProgress, modifier = Modifier.size(11.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Broadcast SMS", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }

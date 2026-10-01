@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.step.app.firebase.FirebaseManager
+import com.step.app.ui.components.FontAwesomeIcons
 import com.step.app.ui.theme.*
 
 @Composable
@@ -83,13 +84,24 @@ fun DocumentVaultScreen(
                                 color = EmeraldSuccess.copy(alpha = 0.2f),
                                 shape = RoundedCornerShape(6.dp)
                             ) {
-                                Text(
-                                    text = "✓ ${doc.confidenceScore}% Confidence",
-                                    color = EmeraldSuccess,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
+                                ) {
+                                    Icon(
+                                        imageVector = FontAwesomeIcons.Solid.Check,
+                                        contentDescription = null,
+                                        tint = EmeraldSuccess,
+                                        modifier = Modifier.size(9.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "${doc.confidenceScore}% Confidence",
+                                        color = EmeraldSuccess,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(

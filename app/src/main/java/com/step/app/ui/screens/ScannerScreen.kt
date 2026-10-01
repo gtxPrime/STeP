@@ -214,9 +214,9 @@ fun ScannerScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Analyzing with Gemini Vision...", fontSize = 11.sp)
                         } else {
-                            Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(FontAwesomeIcons.Solid.Camera, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("📷 Scan Certificate (Two-Tier AI OCR)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("Scan Certificate (Two-Tier AI OCR)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -249,13 +249,24 @@ fun ScannerScreen(
                                 color = EmeraldSuccess.copy(alpha = 0.2f),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text(
-                                    text = "✓ ${doc.confidenceScore}% Confidence",
-                                    color = EmeraldSuccess,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
+                                ) {
+                                    Icon(
+                                        imageVector = FontAwesomeIcons.Solid.Check,
+                                        contentDescription = null,
+                                        tint = EmeraldSuccess,
+                                        modifier = Modifier.size(10.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "${doc.confidenceScore}% Confidence",
+                                        color = EmeraldSuccess,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
 
@@ -370,7 +381,7 @@ fun ScannerScreen(
                                     isUploadingToSharedHost = true
                                     FirebaseManager.saveDocumentToFirestore(doc, doc.sharedHostingUrl)
                                     isUploadingToSharedHost = false
-                                    uploadStatusMessage = "✓ Sovereign DigiLocker XML & verification metadata saved!"
+                                    uploadStatusMessage = "Sovereign DigiLocker XML & verification metadata saved!"
                                 }
                             },
                             shape = RoundedCornerShape(10.dp),
@@ -396,9 +407,9 @@ fun ScannerScreen(
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = null)
+                            Icon(FontAwesomeIcons.Solid.Bolt, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("⚡ Auto-Fill Application Form", fontWeight = FontWeight.Bold)
+                            Text("Auto-Fill Application Form", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -473,7 +484,7 @@ fun ScannerScreen(
                             MoTaRepository.scannedDocuments.add(0, extracted)
                             selectedDoc = extracted
                             isScanningWithGemini = false
-                            uploadStatusMessage = "✓ Extracted via Gemini Vision AI (Strict JSON Verified)"
+                            uploadStatusMessage = "Extracted via Gemini Vision AI (Strict JSON Verified)"
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = SaffronPrimary)

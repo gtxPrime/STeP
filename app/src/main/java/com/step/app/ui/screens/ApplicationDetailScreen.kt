@@ -4,8 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,7 +18,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.*
 import com.step.app.data.ApplicationRecord
+import com.step.app.data.MoTaRepository
+import com.step.app.intelligence.DeficiencyDefenseEngine
+import com.step.app.intelligence.StatutoryDefenseNotice
 import com.step.app.ui.components.FontAwesomeIcons
 import com.step.app.ui.theme.*
 
@@ -27,6 +33,9 @@ fun ApplicationDetailScreen(
     onExplainDeficiency: () -> Unit,
     onEscalateGrievance: () -> Unit
 ) {
+    var showDefenseDialog by remember { mutableStateOf(false) }
+    var defenseNotice by remember { mutableStateOf<StatutoryDefenseNotice?>(null) }
+    var appealSubmittedMessage by remember { mutableStateOf<String?>(null) }
     Scaffold(
         topBar = {
             Surface(
@@ -210,6 +219,39 @@ fun ApplicationDetailScreen(
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedButton(
+                                onClick = {
+                                    val notice = DeficiencyDefenseEngine.generateDefense(
+                                        deficiency = def,
+                                        student = MoTaRepository.currentStudent,
+                                        schemeTitle = application.schemeTitle
+                                    )
+                                    defenseNotice = notice
+                                    showDefenseDialog = true
+                                },
+                                border = androidx.compose.foundation.BorderStroke(1.dp, StatusRejected),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                                        contentDescription = null,
+                                        tint = StatusRejected,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "JAGO Statutory Anti-Corruption Defense",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = StatusRejected
                                     )
                                 }
                             }
@@ -413,6 +455,87 @@ fun ApplicationDetailScreen(
                     }
                 }
             }
+        }
+
+        if (showDefenseDialog && defenseNotice != null) {
+            val notice = defenseNotice!!
+            AlertDialog(
+                onDismissRequest = { showDefenseDialog = false },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                            contentDescription = null,
+                            tint = StatusDisbursed,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Statutory Anti-Corruption Appeal",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = TextDark
+                        )
+                    }
+                },
+                text = {
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            color = PrimarySurfaceLight,
+                            shape = RoundedCornerShape(8.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryDeepOrange.copy(alpha = 0.3f))
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text("GOVERNING STATUTORY NORM:", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = PrimaryDeepOrangeDark)
+                                Text(notice.statutoryGoverningRule, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("LEGAL PRECEDENT / ACT:", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = PrimaryDeepOrangeDark)
+                                Text(notice.legalCitation, fontSize = 11.sp, color = TextBody)
+                            }
+                        }
+
+                        Text("Auto-Drafted Formal Legal Counter-Notice:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                        Surface(
+                            color = SurfaceCard,
+                            shape = RoundedCornerShape(8.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = notice.formalAppealText,
+                                fontSize = 9.5.sp,
+                                fontFamily = FontFamily.Monospace,
+                                color = TextSubtle,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+
+                        Text("Escalation Target: ${notice.escalationAuthority} (15-Day SLA Guarantee)", fontSize = 10.sp, color = TextSubtle)
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showDefenseDialog = false
+                            appealSubmittedMessage = "Statutory Appeal filed under Ticket ${notice.grievanceTicketId}! 15-Day statutory response SLA active."
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryDeepOrange),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("File Statutory Appeal (Zero-Bribe Protection)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDefenseDialog = false }) {
+                        Text("Close", color = TextSubtle, fontSize = 12.sp)
+                    }
+                },
+                containerColor = BackgroundWhite,
+                shape = RoundedCornerShape(16.dp)
+            )
         }
     }
 }

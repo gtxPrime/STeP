@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.sp
 import com.step.app.data.MoTaRepository
 import com.step.app.data.Scheme
 import com.step.app.ui.components.FontAwesomeIcons
+import com.step.app.intelligence.ScholarshipAutopilot
+import com.step.app.intelligence.AutoplanResult
 import com.step.app.ui.theme.*
 
 @Composable
@@ -50,21 +52,17 @@ fun EligibilityWizardScreen(
         "Above ₹ 8.00 Lakh / year (NFST Research Fellowship)"
     )
 
-    val matchedSchemes = remember(isEvaluated) {
-        if (!isEvaluated) emptyList()
-        else {
-            val list = mutableListOf<Scheme>()
-            if (selectedEducation == 0 && selectedIncomeIndex == 0) list.add(MoTaRepository.schemes[0])
-            if (selectedEducation >= 1 && selectedIncomeIndex == 0) list.add(MoTaRepository.schemes[1])
-            if (selectedEducation == 2 && selectedIncomeIndex <= 1) list.add(MoTaRepository.schemes[2])
-            if (selectedEducation == 3) list.add(MoTaRepository.schemes[3])
-            if (selectedEducation == 4 && selectedIncomeIndex <= 2) list.add(MoTaRepository.schemes[4])
-            if (list.isEmpty()) {
-                list.add(MoTaRepository.schemes[2])
-                list.add(MoTaRepository.schemes[1])
-            }
-            list.sortedByDescending { it.maxBenefitAmount }
-        }
+    val student = MoTaRepository.currentStudent
+    val documents = MoTaRepository.scannedDocuments
+
+    val autoplan = remember(isEvaluated) {
+        if (!isEvaluated) null
+        else ScholarshipAutopilot.generateAutoplan(student, documents, MoTaRepository.schemes)
+    }
+
+    val matchedSchemes = remember(autoplan) {
+        autoplan?.schemeMatches?.filter { it.isEligible }?.map { it.scheme }
+            ?: emptyList()
     }
 
     Scaffold(
@@ -144,19 +142,86 @@ fun EligibilityWizardScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Sovereign AI Evaluation Complete",
-                                    fontSize = 14.sp,
+                                    text = "Scholarship Autopilot Plan Ready",
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = PrimaryDeepOrangeDark
                                 )
                             }
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Based on your income and academic profile, you qualify for ${matchedSchemes.size} MoTA scholarships, ranked below by highest financial benefit.",
+                                text = "Based on your verified student profile, DigiLocker certificates, and academic status, you qualify for ${matchedSchemes.size} MoTA scholarships.",
                                 fontSize = 12.sp,
                                 color = TextBody,
                                 lineHeight = 16.sp
                             )
+
+                            if (autoplan != null) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("One-Time Registration (OTR):", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                    Text("${autoplan.otrCompletionPercentage}% Complete", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = PrimaryDeepOrange)
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                LinearProgressIndicator(
+                                    progress = { autoplan.otrCompletionPercentage / 100f },
+                                    color = PrimaryDeepOrange,
+                                    trackColor = Color.White,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Missing Documents Requirement Graph
+                if (autoplan != null && autoplan.missingDocuments.isNotEmpty()) {
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, StatusPending.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = FontAwesomeIcons.Solid.TriangleExclamation,
+                                        contentDescription = null,
+                                        tint = StatusPending,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Document Requirement Graph (${autoplan.missingDocuments.size} Missing)",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = StatusPending
+                                    )
+                                }
+                                autoplan.missingDocuments.forEach { missingItem ->
+                                    Surface(
+                                        color = BackgroundWhite,
+                                        shape = RoundedCornerShape(8.dp),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
+                                            Text(missingItem.docName, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                                            Text("Needed for: ${missingItem.schemeCodesNeededFor.joinToString(", ")}", fontSize = 10.sp, color = PrimaryDeepOrange)
+                                            Text("How to get: ${missingItem.howToGetIt}", fontSize = 10.sp, color = TextSubtle)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

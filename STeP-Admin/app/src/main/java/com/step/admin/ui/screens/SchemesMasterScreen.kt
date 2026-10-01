@@ -265,7 +265,7 @@ fun CreateSchemeBottomSheet(
                     }
                 }
                 IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                    Text("✕", fontSize = 16.sp, color = TextSubtle, fontWeight = FontWeight.Bold)
+                    Icon(FontAwesomeIcons.Solid.CircleXmark, contentDescription = "Close", tint = TextSubtle, modifier = Modifier.size(16.dp))
                 }
             }
 

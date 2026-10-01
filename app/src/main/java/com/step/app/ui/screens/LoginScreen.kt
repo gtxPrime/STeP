@@ -44,6 +44,7 @@ import kotlinx.coroutines.launch
 private const val TAG = "STePGoogleLogin"
 
 enum class LoginStep {
+    LANGUAGE_SELECTION,
     SIGN_IN,
     PROFILE_SETUP,
     DIGILOCKER_SETUP,
@@ -58,7 +59,9 @@ fun LoginScreen(
     val activity = context as? Activity
     val scope = rememberCoroutineScope()
 
-    var currentStep by remember { mutableStateOf(LoginStep.SIGN_IN) }
+    var currentStep by remember { mutableStateOf(LoginStep.LANGUAGE_SELECTION) }
+    var selectedLanguage by remember { mutableStateOf("English") }
+    var isPvtgVoiceAssistEnabled by remember { mutableStateOf(true) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -206,6 +209,183 @@ fun LoginScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // STEP 0: LANGUAGE SELECTION & PVTG VOICE ONBOARDING MODE
+            if (currentStep == LoginStep.LANGUAGE_SELECTION) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+                    shape = RoundedCornerShape(18.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, BorderLight, RoundedCornerShape(18.dp))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Surface(
+                            color = PrimarySurfaceLight,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "ACCESSIBILITY & INCLUSION",
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryDeepOrangeDark,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Select Language / भाषा चुनें",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 17.sp,
+                            color = TextDark
+                        )
+                        Text(
+                            text = "Choose your regional language for scholarship guidance and voice assistance.",
+                            fontSize = 11.5.sp,
+                            color = TextSubtle,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 16.sp,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 14.dp)
+                        )
+
+                        val languageList = listOf(
+                            "English" to "Default",
+                            "हिन्दी" to "Hindi",
+                            "ଓଡ଼ିଆ" to "Odia",
+                            "मराठी" to "Marathi",
+                            "తెలుగు" to "Telugu",
+                            "தமிழ்" to "Tamil",
+                            "ᱥᱟᱱᱛᱟᱲᱤ" to "Santhali",
+                            "गोंडी" to "Gondi"
+                        )
+
+                        // 2-Column Grid for Language Options
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            languageList.chunked(2).forEach { rowPair ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    rowPair.forEach { (nativeName, engName) ->
+                                        val isSelected = selectedLanguage == engName || selectedLanguage == nativeName
+                                        Surface(
+                                            color = if (isSelected) PrimarySurfaceLight else BackgroundWhite,
+                                            shape = RoundedCornerShape(12.dp),
+                                            border = androidx.compose.foundation.BorderStroke(
+                                                if (isSelected) 1.5.dp else 1.dp,
+                                                if (isSelected) PrimaryDeepOrange else BorderLight
+                                            ),
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clickable { selectedLanguage = engName }
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                RadioButton(
+                                                    selected = isSelected,
+                                                    onClick = { selectedLanguage = engName },
+                                                    colors = RadioButtonDefaults.colors(selectedColor = PrimaryDeepOrange),
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Column {
+                                                    Text(
+                                                        text = nativeName,
+                                                        fontSize = 13.sp,
+                                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                        color = TextDark
+                                                    )
+                                                    Text(
+                                                        text = engName,
+                                                        fontSize = 9.sp,
+                                                        color = TextSubtle
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // PVTG Voice Onboarding Mode Card
+                        Surface(
+                            color = BackgroundWhite,
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(PrimarySurfaceLight),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = FontAwesomeIcons.Solid.Microphone,
+                                        contentDescription = null,
+                                        tint = PrimaryDeepOrange,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "PVTG Voice-Guided Mode",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextDark
+                                    )
+                                    Text(
+                                        text = "Voice prompts & spoken form filling",
+                                        fontSize = 10.sp,
+                                        color = TextSubtle
+                                    )
+                                }
+                                Switch(
+                                    checked = isPvtgVoiceAssistEnabled,
+                                    onCheckedChange = { isPvtgVoiceAssistEnabled = it },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = Color.White,
+                                        checkedTrackColor = PrimaryDeepOrange
+                                    ),
+                                    modifier = Modifier.height(24.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        Button(
+                            onClick = { currentStep = LoginStep.SIGN_IN },
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryDeepOrange),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                        ) {
+                            Text(
+                                text = "Continue to Sign In →",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
 
             // STEP 1: INITIAL SIGN IN CARD
             if (currentStep == LoginStep.SIGN_IN) {
@@ -623,13 +803,24 @@ fun LoginScreen(
                                                         color = StatusDisbursed.copy(alpha = 0.15f),
                                                         shape = RoundedCornerShape(4.dp)
                                                     ) {
-                                                        Text(
-                                                            text = "VERIFIED ✓",
-                                                            color = StatusDisbursed,
-                                                            fontSize = 9.sp,
-                                                            fontWeight = FontWeight.Bold,
+                                                        Row(
+                                                            verticalAlignment = Alignment.CenterVertically,
                                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                                        )
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = FontAwesomeIcons.Solid.Check,
+                                                                contentDescription = null,
+                                                                tint = StatusDisbursed,
+                                                                modifier = Modifier.size(8.dp)
+                                                            )
+                                                            Spacer(modifier = Modifier.width(3.dp))
+                                                            Text(
+                                                                text = "VERIFIED",
+                                                                color = StatusDisbursed,
+                                                                fontSize = 9.sp,
+                                                                fontWeight = FontWeight.Bold
+                                                            )
+                                                        }
                                                     }
                                                 }
                                             }

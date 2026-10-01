@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.step.app.data.MoTaRepository
+import com.step.app.ui.components.FontAwesomeIcons
 import com.step.app.ui.theme.*
 
 @Composable
@@ -119,7 +120,16 @@ fun EligibilityScreen(
                                     color = if (isSelected) SaffronLight else TextMain
                                 )
                                 if (isSelected) {
-                                    Text("✓ Selected", fontSize = 11.sp, color = SaffronLight, fontWeight = FontWeight.Bold)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = FontAwesomeIcons.Solid.Check,
+                                            contentDescription = null,
+                                            tint = SaffronLight,
+                                            modifier = Modifier.size(10.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Selected", fontSize = 11.sp, color = SaffronLight, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }
@@ -184,12 +194,21 @@ fun EligibilityScreen(
                     .border(2.dp, EmeraldSuccess, RoundedCornerShape(16.dp))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "★ HIGHEST BENEFIT ENTITLEMENT FOR YOU",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFFA7F3D0)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.Star,
+                            contentDescription = null,
+                            tint = Color(0xFFA7F3D0),
+                            modifier = Modifier.size(11.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "HIGHEST BENEFIT ENTITLEMENT FOR YOU",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFFA7F3D0)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = when (selectedEdu) {
@@ -260,13 +279,24 @@ fun EligibilityScreen(
                                 color = if (isEligible) EmeraldSuccess.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.08f),
                                 shape = RoundedCornerShape(6.dp)
                             ) {
-                                Text(
-                                    text = if (isEligible) "✓ Fully Eligible" else "✕ Not Applicable",
-                                    color = if (isEligible) EmeraldSuccess else TextMuted,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
+                                ) {
+                                    Icon(
+                                        imageVector = if (isEligible) FontAwesomeIcons.Solid.Check else FontAwesomeIcons.Solid.Xmark,
+                                        contentDescription = null,
+                                        tint = if (isEligible) EmeraldSuccess else TextMuted,
+                                        modifier = Modifier.size(9.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = if (isEligible) "Fully Eligible" else "Not Applicable",
+                                        color = if (isEligible) EmeraldSuccess else TextMuted,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
