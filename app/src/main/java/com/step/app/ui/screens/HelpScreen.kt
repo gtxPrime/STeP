@@ -54,15 +54,32 @@ fun HelpScreen() {
     // On-device Text-To-Speech
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
     DisposableEffect(context) {
-        val textToSpeech = TextToSpeech(context) { status ->
+        var ttsInstance: TextToSpeech? = null
+        ttsInstance = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // Default language setup
+                ttsInstance?.language = Locale.ENGLISH
             }
         }
-        tts = textToSpeech
+        tts = ttsInstance
         onDispose {
-            textToSpeech.stop()
-            textToSpeech.shutdown()
+            ttsInstance?.stop()
+            ttsInstance?.shutdown()
+        }
+    }
+
+    // Update TTS locale when user switches language
+    LaunchedEffect(selectedLanguage) {
+        val locale = when {
+            selectedLanguage.contains("Hindi", ignoreCase = true) -> Locale.forLanguageTag("hi")
+            selectedLanguage.contains("Marathi", ignoreCase = true) -> Locale.forLanguageTag("mr")
+            selectedLanguage.contains("Odia", ignoreCase = true) -> Locale.forLanguageTag("or")
+            selectedLanguage.contains("Telugu", ignoreCase = true) -> Locale.forLanguageTag("te")
+            selectedLanguage.contains("Tamil", ignoreCase = true) -> Locale.forLanguageTag("ta")
+            else -> Locale.ENGLISH
+        }
+        val result = tts?.setLanguage(locale)
+        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+            tts?.language = Locale.ENGLISH // fallback to English if locale not available
         }
     }
 
@@ -126,11 +143,15 @@ fun HelpScreen() {
                 }
                 q.contains("appeal") || q.contains("defect") || q.contains("rejection") || q.contains("defense") -> {
                     val activeDeficiencyApp = MoTaRepository.applications.firstOrNull { it.deficiency != null }
+                    val dynamicDeadline = run {
+                        val cal = java.util.Calendar.getInstance().apply { add(java.util.Calendar.DAY_OF_YEAR, 30) }
+                        java.text.SimpleDateFormat("dd-MMM-yyyy", java.util.Locale.ENGLISH).format(cal.time)
+                    }
                     val deficiency = activeDeficiencyApp?.deficiency ?: com.step.app.data.DeficiencyInfo(
                         code = "DEF-DISCREPANCY",
                         bureaucraticReason = "Community certificate spelling mismatch with Aadhaar",
-                        deadlineDate = "15-Nov-2026",
-                        daysRemaining = 14
+                        deadlineDate = dynamicDeadline,
+                        daysRemaining = 30
                     )
                     val schemeTitle = activeDeficiencyApp?.schemeTitle ?: "National Fellowship and Scholarship for Higher Education of ST Students"
                     val docRef = MoTaRepository.sampleCasteDoc?.certificateNumber ?: "ST/OD/2022/49201"

@@ -529,7 +529,7 @@ fun HomeScreen(
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
-                    text = "Profile Data: Authenticated via Google SSO • Verified via DigiLocker Sandbox • MoTa Test Environment",
+                    text = "Profile Data: Authenticated via Google SSO • Certificates Verified via DigiLocker Sandbox (stage1.digitallocker.gov.in)",
                     fontSize = 10.sp,
                     color = TextSubtle,
                     textAlign = TextAlign.Center,

@@ -188,8 +188,8 @@ object GeminiService {
                     return@withContext ScannedDocument(
                         id = "gemini_${System.currentTimeMillis()}",
                         documentType = parsed.optString("documentType", "ST Caste / Income Certificate"),
-                        candidateName = parsed.optString("candidateName", MoTaRepository.currentStudent.fullName.takeIf { it != "NFS" } ?: "Garvit Meena"),
-                        fatherName = parsed.optString("fatherName", "R. K. Meena"),
+                        candidateName = parsed.optString("candidateName", MoTaRepository.currentStudent.fullName.takeIf { it != "NAS" && it.isNotBlank() } ?: "ST Scholar"),
+                        fatherName = parsed.optString("fatherName", "Parent / Guardian"),
                         certificateNumber = parsed.optString("certificateNumber", "ST/${System.currentTimeMillis().toString().takeLast(6)}"),
                         issuingAuthority = parsed.optString("issuingAuthority", "Office of the Tehsildar (e-District)"),
                         issueDate = parsed.optString("issueDate", "2025-10-25"),
@@ -214,7 +214,7 @@ object GeminiService {
         return@withContext ScannedDocument(
             id = "doc_${System.currentTimeMillis()}",
             documentType = if (isIncome) "Annual Family Income Certificate" else "ST Community Certificate",
-            candidateName = MoTaRepository.currentStudent.fullName.takeIf { it != "NFS" && it.isNotBlank() } ?: "Garvit Meena",
+            candidateName = MoTaRepository.currentStudent.fullName.takeIf { it != "NAS" && it.isNotBlank() } ?: "ST Scholar",
             fatherName = "Father / Guardian",
             certificateNumber = if (isIncome) "OD/INC/2025/49201" else "OD/ST/2025/11093",
             issuingAuthority = "Office of the Tehsildar (e-District)",

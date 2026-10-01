@@ -1,5 +1,9 @@
 package com.step.app.ui.screens
 
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -39,7 +43,7 @@ fun JagoScreen() {
         mutableStateListOf(
             ChatMessage(
                 isUser = false,
-                text = "Johar ${MoTaRepository.currentStudent.fullName.takeIf { it != "NFS" && it.isNotBlank() } ?: "Scholar"}! I am JAGO, your Ministry of Tribal Affairs (MoTA) AI Assistant on the STeP portal. You can speak to me or ask any question about the 5 MoTA scholarship schemes, eligibility criteria, document defects, or DBT bank credits. How can I assist you today?",
+                text = "Johar ${MoTaRepository.currentStudent.fullName.takeIf { it != "NAS" && it.isNotBlank() } ?: "Scholar"}! I am JAGO, your Ministry of Tribal Affairs (MoTA) AI Assistant on the STeP portal. You can speak to me or ask any question about the 5 MoTA scholarship schemes, eligibility criteria, document defects, or DBT bank credits. How can I assist you today?",
                 source = "STeP MoTA Knowledge Core"
             )
         )
@@ -51,6 +55,17 @@ fun JagoScreen() {
         "My DBT payment shows pending",
         "Are PVTG students given relaxation?"
     )
+
+    val speechRecognizerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val spokenText = result.data
+            ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+            ?.firstOrNull()
+        if (!spokenText.isNullOrBlank()) {
+            sendJagoMessage(spokenText, messages, scope)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -163,7 +178,11 @@ fun JagoScreen() {
             ) {
                 IconButton(
                     onClick = {
-                        sendJagoMessage("What is the income ceiling for NOS?", messages, scope)
+                        val speechIntent = Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Ask JAGO about your scholarship...")
+                        }
+                        speechRecognizerLauncher.launch(speechIntent)
                     }
                 ) {
                     Icon(Icons.Default.Mic, contentDescription = "Voice Input", tint = SaffronPrimary)
