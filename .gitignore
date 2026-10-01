@@ -20,3 +20,5 @@ app/build
 web/scripts/firebase-env.js
 STeP-Admin/key.properties
 STeP-Admin/local.properties
+*.apk
+release_apks/
