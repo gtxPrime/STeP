@@ -195,7 +195,8 @@ fun AdminAppRoot() {
                 AdminTab.SCHEMES -> {
                     SchemesMasterScreen(
                         onBack = { selectedTab = AdminTab.DASHBOARD },
-                        openCreateModalInitially = openCreateSchemeDialog
+                        openCreateModalInitially = openCreateSchemeDialog,
+                        onDismissCreateModal = { openCreateSchemeDialog = false }
                     )
                 }
                 AdminTab.OUTREACH -> {
