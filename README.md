@@ -9,6 +9,7 @@
 [![DigiLocker NeGD](https://img.shields.io/badge/DigiLocker-NeGD%20X.509%20Verified-blueviolet)](#-digilocker-sandbox-data-fetching--cryptographic-verification)
 [![Gemini Vision AI](https://img.shields.io/badge/OCR-Gemini%201.5%20Flash%20Vision-red)](#-gemini-vision-ocr--document-scrutiny-engine)
 [![TTS Engine](https://img.shields.io/badge/Voice-On--Device%20Multilingual%20TTS-teal)](#-jago-voice-assistant--multilingual-text-to-speech-tts)
+[![Theme](https://img.shields.io/badge/Theme-Sovereign%20MoTA%20Orange-D9480F)](#-sovereign-design-system--color-theme)
 
 ---
 
@@ -212,6 +213,53 @@ The **STeP-Admin Native App** (`com.step.admin`) is built specifically for Minis
   - Side-by-side financial inputs (Income Ceiling & Annual Grant).
   - One-click **"Publish & Sync to Cloud"** action that updates live Firestore instantly.
 - **Reactive Navigation:** Tapping `+ Create Scheme` from the Home Dashboard or the Schemes tab opens the bottom sheet with zero navigation latency.
+
+---
+
+## 🎨 Sovereign Design System & Color Theme
+
+The STeP ecosystem enforces a unified, dignified **Sovereign Design System** built to reflect the official identity of the **Ministry of Tribal Affairs (MoTA), Government of India**. 
+
+The design harmonizes **tribal cultural identity (Deep Saffron-Orange)**, **institutional authority (Sovereign Navy & Slate)**, and **maximum accessibility (WCAG 2.1 AAA High-Contrast)** across varied ambient lighting conditions and low-resource mobile screens in rural and tribal districts.
+
+### 1. Primary MoTA Brand Identity
+| Swatch | Color Name | Hex Code | Jetpack Compose Token | CSS Variable (`web`) | Role & Functional Usage |
+|:---:|:---|:---|:---|:---|:---|
+| ![#D9480F](https://img.shields.io/badge/-%23D9480F-D9480F?style=flat-square) | **MoTA Deep Orange** | `#D9480F` | `PrimaryDeepOrange` | `--saffron-primary` | Primary brand accent, primary CTA buttons, active tab indicators, focus rings |
+| ![#BF3A0A](https://img.shields.io/badge/-%23BF3A0A-BF3A0A?style=flat-square) | **Deep Orange Dark** | `#BF3A0A` | `PrimaryDeepOrangeDark` | `--saffron-gradient` (end) | Pressed button states, gradient terminations, elevated headers |
+| ![#FF6B35](https://img.shields.io/badge/-%23FF6B35-FF6B35?style=flat-square) | **Deep Orange Light** | `#FF6B35` | `PrimaryDeepOrangeLight` | `--saffron-light` | Highlight chips, active badges, energetic interactive micro-accents |
+| ![#FFF4E6](https://img.shields.io/badge/-%23FFF4E6-FFF4E6?style=flat-square) | **Saffron Surface Tint** | `#FFF4E6` | `PrimarySurfaceLight` | `--saffron-tint` | Light tinted card containers, badge pill fills, scheme category pill backdrops |
+
+### 2. Clean Sovereign Light Palette (Canvas & Surfaces)
+| Swatch | Color Name | Hex Code | Jetpack Compose Token | CSS Variable (`web`) | Role & Functional Usage |
+|:---:|:---|:---|:---|:---|:---|
+| ![#FFFFFF](https://img.shields.io/badge/-%23FFFFFF-FFFFFF?style=flat-square) | **Pure Background White** | `#FFFFFF` | `BackgroundWhite` | `--bg-card` | Main page background, modal bottom sheets, elevated card surfaces |
+| ![#F8F9FA](https://img.shields.io/badge/-%23F8F9FA-F8F9FA?style=flat-square) | **Surface Card Off-White** | `#F8F9FA` | `SurfaceCard` | `--bg-dark` / `--bg-surface` | Secondary surface cards, grouped item containers, list row backdrops |
+| ![#E9ECEF](https://img.shields.io/badge/-%23E9ECEF-E9ECEF?style=flat-square) | **Border Light** | `#E9ECEF` | `BorderLight` | `--border-subtle` | Subtle hairline dividers, card borders, unselected input borders |
+| ![#DEE2E6](https://img.shields.io/badge/-%23DEE2E6-DEE2E6?style=flat-square) | **Border Medium** | `#DEE2E6` | `BorderMedium` | `--border-medium` | Emphasized structural borders, table outlines, search box containers |
+
+### 3. Semantic Scheme & Statutory Status Colors
+| Swatch | Status / Meaning | Hex Code | Compose Foreground / Background | Web CSS Tokens | SLA & Lifecycle Trigger |
+|:---:|:---|:---|:---|:---|:---|
+| ![#2B8A3E](https://img.shields.io/badge/-%232B8A3E-2B8A3E?style=flat-square) | **Disbursed / Verified** | `#2B8A3E` (Tint: `#EBFBEE`) | `StatusDisbursed` / `StatusDisbursedBg` | `--emerald-success` / `--emerald-tint` | DigiLocker X.509 cryptographic validation passed, DBT PFMS credit sanctioned |
+| ![#1971C2](https://img.shields.io/badge/-%231971C2-1971C2?style=flat-square) | **In Progress / Processing** | `#1971C2` (Tint: `#E7F5FF`) | `StatusInProgress` / `StatusInProgressBg` | `--navy-accent` / `--navy-tint` | NeGD handshake in transit, nodal officer review queued, scheme applied |
+| ![#E67700](https://img.shields.io/badge/-%23E67700-E67700?style=flat-square) | **Pending Action / Warning** | `#E67700` (Tint: `#FFF9DB`) | `StatusPending` / `StatusPendingBg` | `--amber-warning` / `--amber-tint` | 30-Day SLA clock running, applicant action requested, secondary proof needed |
+| ![#C92A2A](https://img.shields.io/badge/-%23C92A2A-C92A2A?style=flat-square) | **Rejected / Defect / Alert** | `#C92A2A` (Tint: `#FFE3E3`) | `StatusRejected` / `StatusRejectedBg` | `--red-error` / `--red-tint` | OCR confidence below 85%, invalid/tampered certificate, offline connectivity banner |
+
+### 4. Typography & Sovereign Authority Accents
+| Swatch | Color Name | Hex Code | Jetpack Compose Token | CSS Variable (`web`) | Role & Functional Usage |
+|:---:|:---|:---|:---|:---|:---|
+| ![#1A1D20](https://img.shields.io/badge/-%231A1D20-1A1D20?style=flat-square) | **High-Contrast Dark** | `#1A1D20` | `TextDark` / `TextMain` | `--navy-deep` | High-contrast primary headings, applicant names, critical metrics (WCAG AAA) |
+| ![#495057](https://img.shields.io/badge/-%23495057-495057?style=flat-square) | **Body Charcoal** | `#495057` | `TextBody` / `TextMuted` | `--text-muted` | Regular body copy, scheme guidelines, instruction descriptions |
+| ![#868E96](https://img.shields.io/badge/-%23868E96-868E96?style=flat-square) | **Subtle Slate** | `#868E96` | `TextSubtle` / `TextDim` | `--text-dim` | Timestamps, UTR references, scheme codes, secondary metadata |
+| ![#0F172A](https://img.shields.io/badge/-%230F172A-0F172A?style=flat-square) | **Sovereign Navy Slate** | `#0F172A` | `NavyBackground` | `--navy-deep` | MoTA sovereign crest headers, executive dashboard stamps, QR code borders |
+
+### 5. Architectural Implementation Across Codebases
+The color tokens are synchronized across all modules to guarantee 100% visual parity:
+
+- **Student Native App:** [`app/src/main/java/com/step/app/ui/theme/Color.kt`](file:///f:/Source%20Codes/Educon/app/src/main/java/com/step/app/ui/theme/Color.kt) & [`Theme.kt`](file:///f:/Source%20Codes/Educon/app/src/main/java/com/step/app/ui/theme/Theme.kt)
+- **Admin Mobile Suite:** [`STeP-Admin/app/src/main/java/com/step/admin/ui/theme/Color.kt`](file:///f:/Source%20Codes/Educon/STeP-Admin/app/src/main/java/com/step/admin/ui/theme/Color.kt)
+- **Web Administration Portal:** [`web/styles/main.css`](file:///f:/Source%20Codes/Educon/web/styles/main.css) (`:root` CSS variables)
 
 ---
 
