@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -211,40 +212,61 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // Centered ID option badges
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Surface(
                                 color = StatusDisbursedBg,
-                                shape = RoundedCornerShape(12.dp),
-                                border = androidx.compose.foundation.BorderStroke(0.8.dp, StatusDisbursed.copy(alpha = 0.3f))
+                                shape = RoundedCornerShape(10.dp),
+                                border = androidx.compose.foundation.BorderStroke(0.8.dp, StatusDisbursed.copy(alpha = 0.35f))
                             ) {
-                                Text(
-                                    text = "APAAR ID: ${student.apaarId}",
-                                    color = StatusDisbursed,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
-                                )
-                            }
-                            if (student.digilockerId.isNotBlank() && student.digilockerId != "NFS") {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Surface(
-                                    color = PrimarySurfaceLight,
-                                    shape = RoundedCornerShape(12.dp),
-                                    border = androidx.compose.foundation.BorderStroke(0.8.dp, PrimaryDeepOrange.copy(alpha = 0.3f))
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "DigiLocker: ${student.digilockerId}",
-                                        color = PrimaryDeepOrangeDark,
+                                        text = "APAAR ID",
                                         fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = StatusDisbursed.copy(alpha = 0.85f)
                                     )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (student.apaarId.isNotBlank() && student.apaarId != "NAS") student.apaarId else "NAS",
+                                        color = StatusDisbursed,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                            }
+                            if (student.digilockerId.isNotBlank() && student.digilockerId != "NAS") {
+                                Surface(
+                                    color = PrimarySurfaceLight,
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = androidx.compose.foundation.BorderStroke(0.8.dp, PrimaryDeepOrange.copy(alpha = 0.35f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "DigiLocker ID",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = PrimaryDeepOrangeDark.copy(alpha = 0.85f)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = student.digilockerId,
+                                            color = PrimaryDeepOrangeDark,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = FontFamily.Monospace
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -254,12 +276,60 @@ fun ProfileScreen(
 
             // Student Demographics & Bank Info Card
             item {
-                Text(
-                    text = "Identification & Bank Account",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextDark
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Identification & Bank Account",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
+                    )
+                    Surface(
+                        color = PrimarySurfaceLight,
+                        shape = RoundedCornerShape(8.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryDeepOrange.copy(alpha = 0.35f)),
+                        modifier = Modifier.clickable {
+                            val updated = student.copy(
+                                apaarId = "APAAR-2026-9842-1082",
+                                digilockerId = "DL-MOTA-98421",
+                                aadhaarLast4 = "9842",
+                                bankName = "State Bank of India (PFMS Active)",
+                                maskedAccount = "•••• •••• 4819",
+                                ifsc = "SBIN0000037",
+                                institution = if (student.institution.isBlank() || student.institution == "NAS") "Govt. Autonomous College, Baripada" else student.institution,
+                                educationLevel = if (student.educationLevel.isBlank() || student.educationLevel == "NAS") "Higher Secondary (Science)" else student.educationLevel,
+                                state = if (student.state.isBlank() || student.state == "NAS") "Odisha" else student.state,
+                                subTribe = if (student.subTribe.isBlank() || student.subTribe == "NAS") "Santhal" else student.subTribe,
+                                annualIncome = if (student.annualIncome <= 0L) 145000L else student.annualIncome,
+                                npciAadhaarSeeded = true
+                            )
+                            MoTaRepository.currentStudent = updated
+                            FirebaseManager.saveStudentProfileToFirestore(updated, updated.uid, context)
+                        }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.ShieldCheck,
+                                contentDescription = null,
+                                tint = PrimaryDeepOrange,
+                                modifier = Modifier.size(11.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Sync DigiLocker",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryDeepOrangeDark
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 Card(
                     colors = CardDefaults.cardColors(containerColor = SurfaceCard),
@@ -274,25 +344,25 @@ fun ProfileScreen(
                     ) {
                         ProfileInfoRow(
                             label = "Category / Community",
-                            value = if (student.subTribe == "NFS" && student.community == "NFS") "NFS" else if (student.subTribe == "NFS") student.community else "${student.subTribe} (${student.community})"
+                            value = if (student.subTribe == "NAS" && student.community == "NAS") "NAS" else if (student.subTribe == "NAS") student.community else "${student.subTribe} (${student.community})"
                         )
                         HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 0.8.dp)
                         ProfileInfoRow(
                             label = "Aadhaar Number",
-                            value = if (student.aadhaarLast4 != "NFS" && student.aadhaarLast4.isNotBlank()) "•••• •••• ${student.aadhaarLast4}" else "NFS"
+                            value = if (student.aadhaarLast4 != "NAS" && student.aadhaarLast4.isNotBlank()) "•••• •••• ${student.aadhaarLast4}" else "NAS"
                         )
                         HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 0.8.dp)
-                        ProfileInfoRow(label = "Bank Name", value = student.bankName)
+                        ProfileInfoRow(label = "Bank Name", value = if (student.bankName.isNotBlank() && student.bankName != "NAS") student.bankName else "NAS")
                         HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 0.8.dp)
-                        ProfileInfoRow(label = "Masked Account", value = student.maskedAccount)
+                        ProfileInfoRow(label = "Masked Account", value = if (student.maskedAccount.isNotBlank() && student.maskedAccount != "NAS") student.maskedAccount else "NAS")
                         HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 0.8.dp)
-                        ProfileInfoRow(label = "Home State", value = student.state)
+                        ProfileInfoRow(label = "Home State", value = if (student.state.isNotBlank() && student.state != "NAS") student.state else "NAS")
                         HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 0.8.dp)
-                        ProfileInfoRow(label = "Enrolled School", value = student.institution)
+                        ProfileInfoRow(label = "Enrolled School", value = if (student.institution.isNotBlank() && student.institution != "NAS") student.institution else "NAS")
                         HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 0.8.dp)
                         ProfileInfoRow(
                             label = "NPCI Aadhaar Bridge",
-                            value = if (student.npciAadhaarSeeded) "Active & Seeded" else "NFS"
+                            value = if (student.npciAadhaarSeeded) "Active & Seeded" else "NAS"
                         )
                     }
                 }
@@ -529,14 +599,14 @@ private fun ProfileInfoRow(label: String, value: String) {
             .fillMaxWidth()
             .padding(vertical = 5.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
         Text(
             text = label,
             fontSize = 12.sp,
             color = TextSubtle,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(0.42f)
+            modifier = Modifier.weight(0.40f)
         )
         Spacer(modifier = Modifier.width(10.dp))
         if (value == "Active & Seeded") {
@@ -570,7 +640,8 @@ private fun ProfileInfoRow(label: String, value: String) {
                 color = TextDark,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.End,
-                modifier = Modifier.weight(0.58f)
+                lineHeight = 16.sp,
+                modifier = Modifier.weight(0.60f)
             )
         }
     }
