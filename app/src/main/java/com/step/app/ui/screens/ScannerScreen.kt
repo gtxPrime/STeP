@@ -45,6 +45,16 @@ fun ScannerScreen(
     var isUploadingToSharedHost by remember { mutableStateOf(false) }
     var uploadStatusMessage by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    val galleryLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            selectedImageUri = uri
+            showGeminiConsentDialog = true
+        }
+    }
 
     // Animated laser beam
     val infiniteTransition = rememberInfiniteTransition(label = "laser")
@@ -203,7 +213,7 @@ fun ScannerScreen(
                     Button(
                         onClick = {
                             pendingDocHint = "ST Community / Income Certificate"
-                            showGeminiConsentDialog = true
+                            galleryLauncher.launch("image/*")
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = SaffronPrimary),
                         shape = RoundedCornerShape(8.dp),
@@ -477,8 +487,13 @@ fun ScannerScreen(
                         scope.launch {
                             isScanningWithGemini = true
                             uploadStatusMessage = "Analyzing document with Gemini Vision (JSON mode)..."
+                            val uri = selectedImageUri
+                            val bytes = if (uri != null) {
+                                context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: ByteArray(0)
+                            } else ByteArray(0)
+
                             val extracted = GeminiService.extractDocumentJson(
-                                imageBytes = ByteArray(10),
+                                imageBytes = bytes,
                                 docTypeHint = pendingDocHint
                             )
                             MoTaRepository.scannedDocuments.add(0, extracted)

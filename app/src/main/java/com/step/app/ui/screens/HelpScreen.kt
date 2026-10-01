@@ -125,17 +125,20 @@ fun HelpScreen() {
                     }
                 }
                 q.contains("appeal") || q.contains("defect") || q.contains("rejection") || q.contains("defense") -> {
-                    val sampleDeficiency = com.step.app.data.DeficiencyInfo(
+                    val activeDeficiencyApp = MoTaRepository.applications.firstOrNull { it.deficiency != null }
+                    val deficiency = activeDeficiencyApp?.deficiency ?: com.step.app.data.DeficiencyInfo(
                         code = "DEF-DISCREPANCY",
                         bureaucraticReason = "Community certificate spelling mismatch with Aadhaar",
                         deadlineDate = "15-Nov-2026",
                         daysRemaining = 14
                     )
+                    val schemeTitle = activeDeficiencyApp?.schemeTitle ?: "National Fellowship and Scholarship for Higher Education of ST Students"
+                    val docRef = MoTaRepository.sampleCasteDoc?.certificateNumber ?: "ST/OD/2022/49201"
                     val defense = DeficiencyDefenseEngine.generateDefense(
-                        deficiency = sampleDeficiency,
+                        deficiency = deficiency,
                         student = MoTaRepository.currentStudent,
-                        schemeTitle = "National Fellowship and Scholarship for Higher Education of ST Students",
-                        documentRef = "ST/OD/2022/49201"
+                        schemeTitle = schemeTitle,
+                        documentRef = docRef
                     )
                     "Statutory Legal Appeal Counter-Notice:\n\n${defense.statutoryGoverningRule}\n\nCitation: ${defense.legalCitation}\nSLA Escalation Window: ${defense.slaDaysToRespond} days.\n\nYou can file this formal counter-notice directly from your Application Tracking screen."
                 }

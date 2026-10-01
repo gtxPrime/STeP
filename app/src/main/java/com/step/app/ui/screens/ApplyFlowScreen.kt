@@ -21,6 +21,7 @@ import com.step.app.ui.components.DigiLockerSandboxBottomSheet
 import com.step.app.ui.components.FontAwesomeIcons
 import com.step.app.ui.theme.*
 import androidx.compose.foundation.clickable
+import kotlinx.coroutines.launch
 
 @Composable
 fun ApplyFlowScreen(
@@ -32,6 +33,7 @@ fun ApplyFlowScreen(
     var isSubmitted by remember { mutableStateOf(false) }
     var decisionResult by remember { mutableStateOf<com.step.app.data.DecisionResult?>(null) }
     var generatedAppId by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
 
     // Step 1: Personal Details State
     val student = MoTaRepository.currentStudent
@@ -166,67 +168,83 @@ fun ApplyFlowScreen(
                                     val appId = "APP-${scheme.code}-${(10000..99999).random()}"
                                     generatedAppId = appId
 
-                                    val newApp = com.step.app.data.ApplicationRecord(
-                                        applicationId = appId,
-                                        schemeId = scheme.id,
-                                        schemeTitle = scheme.title,
-                                        academicYear = "2026-27",
-                                        sourcePortal = scheme.portal,
-                                        stage = decision.stage,
-                                        stageText = decision.stageText,
-                                        currentStepIndex = when (decision.outcome) {
-                                            com.step.app.data.DecisionOutcome.AUTO_APPROVED -> 2
-                                            com.step.app.data.DecisionOutcome.AUTO_REJECTED -> 0
-                                            com.step.app.data.DecisionOutcome.DEFICIENCY_FLAGGED -> 1
-                                            com.step.app.data.DecisionOutcome.MANUAL_REVIEW -> 0
-                                        },
-                                        sanctionAmount = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) scheme.maxBenefitAmount else 0L,
-                                        nextActionText = when (decision.outcome) {
-                                            com.step.app.data.DecisionOutcome.AUTO_APPROVED -> "Sanction Order Generated. Queued for APBS DBT Disbursement."
-                                            com.step.app.data.DecisionOutcome.AUTO_REJECTED -> "Application Rejected based on statutory criteria."
-                                            com.step.app.data.DecisionOutcome.DEFICIENCY_FLAGGED -> "Deficiency flagged. Resolve required documents."
-                                            com.step.app.data.DecisionOutcome.MANUAL_REVIEW -> "Pending institutional nodal verification."
-                                        },
-                                        verificationConfidence = decision.confidenceScore,
-                                        steps = listOf(
-                                            com.step.app.data.TimelineStep("Application Submitted", "01-Oct-2026", true, "Submitted via sovereign mobile application"),
-                                            com.step.app.data.TimelineStep(
-                                                label = "DigiLocker & Gov Verification",
-                                                date = "01-Oct-2026",
-                                                completed = decision.outcome != com.step.app.data.DecisionOutcome.AUTO_REJECTED,
-                                                note = decision.reason
-                                            ),
-                                            com.step.app.data.TimelineStep(
-                                                label = "Ministry Sanction Order",
-                                                date = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) "01-Oct-2026" else "Pending",
-                                                completed = decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED,
-                                                note = decision.sanctionOrderNo ?: (if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_REJECTED) "Application rejected" else "Pending review")
-                                            ),
-                                            com.step.app.data.TimelineStep(
-                                                label = "PFMS DBT Bank Credit",
-                                                date = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) "Scheduled" else "N/A",
-                                                completed = false,
-                                                note = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) "100% Direct Benefit Transfer to Aadhaar seeded bank account" else "Not eligible for disbursement"
-                                            )
-                                        ),
-                                        dbtDetails = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) {
-                                            com.step.app.data.DbtDetails(
-                                                utr = "PFMS${(100000000..999999999).random()}",
-                                                paymentMode = "APBS (Aadhaar Payment Bridge System)",
-                                                disbursedDate = "Scheduled within 48h",
-                                                bankName = student.bankName,
-                                                accountNo = student.maskedAccount,
-                                                centralShare = "75%",
-                                                stateShare = "25%",
-                                                status = "QUEUED_FOR_DISBURSEMENT"
-                                            )
-                                        } else null,
-                                        deficiency = decision.deficiency
-                                    )
+                                    val portalCode = when (scheme.code) {
+                                        "SCH-03", "SCH-04" -> "SFMP"
+                                        "SCH-05" -> "NOS"
+                                        else -> "NSP"
+                                    }
+                                    val connector = com.step.app.connectors.ConnectorRegistry.getConnector(portalCode)
 
-                                    MoTaRepository.applications.add(0, newApp)
-                                    com.step.app.firebase.FirebaseManager.submitApplicationToFirestore(newApp, student.uid)
-                                    isSubmitted = true
+                                    scope.launch {
+                                        val connectorResult = connector.submitApplication(
+                                            applicationId = appId,
+                                            candidateUid = student.uid,
+                                            schemeCode = scheme.code,
+                                            payloadJson = """{"candidateName":"${student.fullName}","schemeCode":"${scheme.code}"}"""
+                                        )
+
+                                        val newApp = com.step.app.data.ApplicationRecord(
+                                            applicationId = appId,
+                                            schemeId = scheme.id,
+                                            schemeTitle = scheme.title,
+                                            academicYear = "2026-27",
+                                            sourcePortal = connectorResult.sourcePortal,
+                                            stage = decision.stage,
+                                            stageText = decision.stageText,
+                                            currentStepIndex = when (decision.outcome) {
+                                                com.step.app.data.DecisionOutcome.AUTO_APPROVED -> 2
+                                                com.step.app.data.DecisionOutcome.AUTO_REJECTED -> 0
+                                                com.step.app.data.DecisionOutcome.DEFICIENCY_FLAGGED -> 1
+                                                com.step.app.data.DecisionOutcome.MANUAL_REVIEW -> 0
+                                            },
+                                            sanctionAmount = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) scheme.maxBenefitAmount else 0L,
+                                            nextActionText = when (decision.outcome) {
+                                                com.step.app.data.DecisionOutcome.AUTO_APPROVED -> "Sanction Order Generated (${connectorResult.externalReferenceNumber}). Queued for APBS DBT Disbursement."
+                                                com.step.app.data.DecisionOutcome.AUTO_REJECTED -> "Application Rejected based on statutory criteria."
+                                                com.step.app.data.DecisionOutcome.DEFICIENCY_FLAGGED -> "Deficiency flagged. Resolve required documents."
+                                                com.step.app.data.DecisionOutcome.MANUAL_REVIEW -> "Pending institutional nodal verification on ${connectorResult.sourcePortal}."
+                                            },
+                                            verificationConfidence = decision.confidenceScore,
+                                            steps = listOf(
+                                                com.step.app.data.TimelineStep("Application Submitted", "01-Oct-2026", true, "Submitted via sovereign mobile application (${connectorResult.externalReferenceNumber})"),
+                                                com.step.app.data.TimelineStep(
+                                                    label = "DigiLocker & Gov Verification",
+                                                    date = "01-Oct-2026",
+                                                    completed = decision.outcome != com.step.app.data.DecisionOutcome.AUTO_REJECTED,
+                                                    note = decision.reason
+                                                ),
+                                                com.step.app.data.TimelineStep(
+                                                    label = "Ministry Sanction Order",
+                                                    date = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) "01-Oct-2026" else "Pending",
+                                                    completed = decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED,
+                                                    note = decision.sanctionOrderNo ?: (if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_REJECTED) "Application rejected" else "Pending review")
+                                                ),
+                                                com.step.app.data.TimelineStep(
+                                                    label = "PFMS DBT Bank Credit",
+                                                    date = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) "Scheduled" else "N/A",
+                                                    completed = false,
+                                                    note = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) "100% Direct Benefit Transfer to Aadhaar seeded bank account" else "Not eligible for disbursement"
+                                                )
+                                            ),
+                                            dbtDetails = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) {
+                                                com.step.app.data.DbtDetails(
+                                                    utr = "PFMS${(100000000..999999999).random()}",
+                                                    paymentMode = "APBS (Aadhaar Payment Bridge System)",
+                                                    disbursedDate = "Scheduled within 48h",
+                                                    bankName = student.bankName,
+                                                    accountNo = student.maskedAccount,
+                                                    centralShare = "75%",
+                                                    stateShare = "25%",
+                                                    status = "QUEUED_FOR_DISBURSEMENT"
+                                                )
+                                            } else null,
+                                            deficiency = decision.deficiency
+                                        )
+
+                                        MoTaRepository.applications.add(0, newApp)
+                                        com.step.app.firebase.FirebaseManager.submitApplicationToFirestore(newApp, student.uid)
+                                        isSubmitted = true
+                                    }
                                 }
                             },
                             enabled = if (currentStep == 4) isDeclared else true,
