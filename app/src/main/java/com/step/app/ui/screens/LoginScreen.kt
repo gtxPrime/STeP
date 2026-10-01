@@ -262,8 +262,8 @@ fun LoginScreen(
                                         googleAuthLauncher.launch(googleSignInClient.signInIntent)
                                     }
                                 } else {
-                                    fullName = "NFS"
-                                    email = "NFS"
+                                    fullName = "NAS"
+                                    email = "NAS"
                                     currentStep = LoginStep.PROFILE_SETUP
                                 }
                             },
@@ -469,27 +469,27 @@ fun LoginScreen(
 
                         Button(
                             onClick = {
-                                if (fullName.isBlank()) fullName = "NFS"
-                                if (email.isBlank()) email = "NFS"
+                                if (fullName.isBlank()) fullName = "NAS"
+                                if (email.isBlank()) email = "NAS"
 
                                 val targetUid = FirebaseManager.currentUser?.uid ?: ("usr_" + email.lowercase().trim().replace(Regex("[^a-zA-Z0-9]"), "_"))
                                 val newProfile = StudentProfile(
                                     uid = targetUid,
-                                    apaarId = "NFS",
-                                    digilockerId = "NFS",
+                                    apaarId = "NAS",
+                                    digilockerId = "NAS",
                                     fullName = fullName,
                                     email = email,
                                     photoUrl = photoUrl,
                                     community = "Scheduled Tribe (ST)",
-                                    subTribe = selectedCommunity.ifBlank { "NFS" },
-                                    institution = institutionName.ifBlank { "NFS" },
-                                    educationLevel = educationLevel.ifBlank { "NFS" },
+                                    subTribe = selectedCommunity.ifBlank { "NAS" },
+                                    institution = institutionName.ifBlank { "NAS" },
+                                    educationLevel = educationLevel.ifBlank { "NAS" },
                                     annualIncome = annualIncome.toLongOrNull() ?: 0L,
-                                    bankName = bankName.ifBlank { "NFS" },
-                                    maskedAccount = maskedAccount.ifBlank { "NFS" },
-                                    ifsc = "NFS",
-                                    aadhaarLast4 = aadhaarLast4.ifBlank { "NFS" },
-                                    state = homeState.ifBlank { "NFS" },
+                                    bankName = bankName.ifBlank { "NAS" },
+                                    maskedAccount = maskedAccount.ifBlank { "NAS" },
+                                    ifsc = "NAS",
+                                    aadhaarLast4 = aadhaarLast4.ifBlank { "NAS" },
+                                    state = homeState.ifBlank { "NAS" },
                                     npciAadhaarSeeded = false
                                 )
                                 MoTaRepository.currentStudent = newProfile
@@ -572,7 +572,11 @@ fun LoginScreen(
                         Spacer(modifier = Modifier.height(6.dp))
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             testCerts.forEach { cert ->
-                                val isVerified = pulledDocs.any { it.docType == cert.docType }
+                                val isVerified = pulledDocs.any { 
+                                    it.docTypeCode.equals(cert.docType, ignoreCase = true) || 
+                                    it.docType.contains(cert.docType, ignoreCase = true) || 
+                                    it.docType.contains(cert.name.replace("*", "").trim(), ignoreCase = true)
+                                }
                                 val isSelected = selectedDocType == cert.docType
                                 Card(
                                     colors = CardDefaults.cardColors(
@@ -582,7 +586,7 @@ fun LoginScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .border(
-                                            1.dp,
+                                            1.5.dp,
                                             if (isVerified) StatusDisbursed else if (isSelected) PrimaryDeepOrange else BorderLight,
                                             RoundedCornerShape(10.dp)
                                         )
@@ -620,7 +624,7 @@ fun LoginScreen(
                                                         shape = RoundedCornerShape(4.dp)
                                                     ) {
                                                         Text(
-                                                            text = "VERIFIED",
+                                                            text = "VERIFIED ✓",
                                                             color = StatusDisbursed,
                                                             fontSize = 9.sp,
                                                             fontWeight = FontWeight.Bold,
@@ -664,15 +668,42 @@ fun LoginScreen(
                                     val res = DigiLockerSandboxManager.pullCertificateFromSandbox(
                                         docType = selectedDocType,
                                         certificateNumber = certNumber,
-                                        candidateName = fullName.ifBlank { "NFS" }
+                                        candidateName = fullName.ifBlank { "NAS" }
                                     )
                                     isPullingDoc = false
                                     if (res.success) {
-                                        if (pulledDocs.none { it.docType == res.docType }) {
+                                        if (pulledDocs.none { it.docTypeCode.equals(res.docTypeCode, ignoreCase = true) || it.docType == res.docType }) {
                                             pulledDocs.add(res)
                                         }
+
+                                        // Seed & sync student sovereign testing credentials
+                                        val current = MoTaRepository.currentStudent
+                                        val updated = current.copy(
+                                            apaarId = if (current.apaarId.isBlank() || current.apaarId == "NAS") "APAAR-2026-9842-1082" else current.apaarId,
+                                            digilockerId = if (current.digilockerId.isBlank() || current.digilockerId == "NAS") "DL-MOTA-98421" else current.digilockerId,
+                                            aadhaarLast4 = if (current.aadhaarLast4.isBlank() || current.aadhaarLast4 == "NAS") "9842" else current.aadhaarLast4,
+                                            bankName = if (current.bankName.isBlank() || current.bankName == "NAS") "State Bank of India (PFMS Active)" else current.bankName,
+                                            maskedAccount = if (current.maskedAccount.isBlank() || current.maskedAccount == "NAS") "•••• •••• 4819" else current.maskedAccount,
+                                            ifsc = if (current.ifsc.isBlank() || current.ifsc == "NAS") "SBIN0000037" else current.ifsc,
+                                            institution = if (current.institution.isBlank() || current.institution == "NAS") "Govt. Autonomous College, Baripada" else current.institution,
+                                            educationLevel = if (current.educationLevel.isBlank() || current.educationLevel == "NAS") "Higher Secondary (Science)" else current.educationLevel,
+                                            state = if (current.state.isBlank() || current.state == "NAS") "Odisha" else current.state,
+                                            community = "Scheduled Tribe (ST)",
+                                            subTribe = if (current.subTribe.isBlank() || current.subTribe == "NAS") "Santhal" else current.subTribe,
+                                            annualIncome = if (current.annualIncome <= 0L) 145000L else current.annualIncome,
+                                            npciAadhaarSeeded = true
+                                        )
+                                        MoTaRepository.currentStudent = updated
+                                        FirebaseManager.saveStudentProfileToFirestore(updated, updated.uid, context)
+
                                         // Auto-advance to next unverified certificate
-                                        val nextUnverified = testCerts.firstOrNull { c -> pulledDocs.none { it.docType == c.docType } }
+                                        val nextUnverified = testCerts.firstOrNull { c -> 
+                                            pulledDocs.none { 
+                                                it.docTypeCode.equals(c.docType, ignoreCase = true) || 
+                                                it.docType.contains(c.docType, ignoreCase = true) ||
+                                                it.docType.contains(c.name.replace("*", "").trim(), ignoreCase = true)
+                                            } 
+                                        }
                                         if (nextUnverified != null) {
                                             selectedDocType = nextUnverified.docType
                                             certNumber = nextUnverified.defaultCertNumber
