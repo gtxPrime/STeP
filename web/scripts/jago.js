@@ -123,7 +123,7 @@ window.EduconJago = (function() {
     const chatContainer = document.getElementById('jago-messages-scroll');
     if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
 
-    const result = await EduconMoTa AI.chatJago(text, conversationHistory);
+    const result = await (window.EduconGemini || window.EduconMoTaAI).chatJago(text, conversationHistory);
 
     removeTypingIndicator(typingId);
     appendMessage('jago', result.reply, result.source);
@@ -192,21 +192,39 @@ window.EduconJago = (function() {
   }
 
   function speakText(btn) {
-    if (!synth) return;
+    if (!window.speechSynthesis) return;
     const rawText = decodeURIComponent(btn.dataset.text);
-    synth.cancel(); // Stop current speech
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(rawText);
-    utterance.rate = 1.0;
+    const langSelect = document.getElementById('global-language-select');
+    const selectedLang = langSelect ? langSelect.value : 'en';
+    const langMap = { en: 'en-IN', hi: 'hi-IN', mr: 'mr-IN', or: 'or-IN', te: 'te-IN', ta: 'ta-IN' };
+    utterance.lang = langMap[selectedLang] || 'en-IN';
+    utterance.rate = 0.95;
     utterance.pitch = 1.0;
-    synth.speak(utterance);
+    window.speechSynthesis.speak(utterance);
     btn.textContent = '⏹ Stop Voice';
     utterance.onend = () => {
       btn.textContent = ' Read Aloud';
     };
   }
 
+  function appendNotice() {
+    const chatContainer = document.querySelector('.jago-chat-container') || document.getElementById('jago-messages-scroll')?.parentElement;
+    if (chatContainer && !document.getElementById('jago-bhashini-downtime-notice')) {
+      const notice = document.createElement('div');
+      notice.id = 'jago-bhashini-downtime-notice';
+      notice.style.cssText = 'padding:6px 12px;font-size:11px;color:#94a3b8;font-family:monospace;text-align:center;background:rgba(0,0,0,0.25);border-top:1px solid rgba(255,255,255,0.06);';
+      notice.textContent = 'Note: Currently utilizing Gemini Multimodal AI & on-device TTS for regional languages as Bhashini registration/API onboarding is currently facing service downtime.';
+      chatContainer.appendChild(notice);
+    }
+  }
+
   return {
-    init,
+    init: function() {
+      init();
+      appendNotice();
+    },
     askQuestion,
     speakText
   };
