@@ -30,18 +30,20 @@ fun ApplyFlowScreen(
 ) {
     var currentStep by remember { mutableStateOf(1) } // 1..4
     var isSubmitted by remember { mutableStateOf(false) }
+    var decisionResult by remember { mutableStateOf<com.step.app.data.DecisionResult?>(null) }
+    var generatedAppId by remember { mutableStateOf("") }
 
     // Step 1: Personal Details State
     val student = MoTaRepository.currentStudent
-    var fullName by remember { mutableStateOf(if (student.fullName.isNotBlank() && student.fullName != "NFS") student.fullName else "") }
-    val existingFather = MoTaRepository.scannedDocuments.firstOrNull { it.fatherName.isNotBlank() && it.fatherName != "NFS" && it.fatherName != "Parent / Guardian" }?.fatherName ?: ""
+    var fullName by remember { mutableStateOf(if (student.fullName.isNotBlank() && student.fullName != "NAS") student.fullName else "") }
+    val existingFather = MoTaRepository.scannedDocuments.firstOrNull { it.fatherName.isNotBlank() && it.fatherName != "NAS" && it.fatherName != "Parent / Guardian" }?.fatherName ?: ""
     var fatherName by remember { mutableStateOf(existingFather) }
-    var community by remember { mutableStateOf(if (student.subTribe.isNotBlank() && student.subTribe != "NFS") "${student.subTribe} (ST)" else "Scheduled Tribe (ST)") }
-    var aadhaarLast4 by remember { mutableStateOf(if (student.aadhaarLast4 != "NFS") student.aadhaarLast4 else "") }
+    var community by remember { mutableStateOf(if (student.subTribe.isNotBlank() && student.subTribe != "NAS") "${student.subTribe} (ST)" else "Scheduled Tribe (ST)") }
+    var aadhaarLast4 by remember { mutableStateOf(if (student.aadhaarLast4 != "NAS") student.aadhaarLast4 else "") }
 
     // Step 2: Academic Details State
-    var courseLevel by remember { mutableStateOf(if (student.educationLevel != "NFS") student.educationLevel else "") }
-    var instituteName by remember { mutableStateOf(if (student.institution != "NFS") student.institution else "") }
+    var courseLevel by remember { mutableStateOf(if (student.educationLevel != "NAS") student.educationLevel else "") }
+    var instituteName by remember { mutableStateOf(if (student.institution != "NAS") student.institution else "") }
     var rollNumber by remember { mutableStateOf("") }
     var percentage by remember { mutableStateOf("") }
 
@@ -154,6 +156,76 @@ fun ApplyFlowScreen(
                                 if (currentStep < 4) {
                                     currentStep++
                                 } else {
+                                    val decision = com.step.app.data.ScholarshipDecisionEngine.evaluateApplication(
+                                        scheme = scheme,
+                                        student = student,
+                                        documents = MoTaRepository.scannedDocuments,
+                                        existingApplications = MoTaRepository.applications
+                                    )
+                                    decisionResult = decision
+                                    val appId = "APP-${scheme.code}-${(10000..99999).random()}"
+                                    generatedAppId = appId
+
+                                    val newApp = com.step.app.data.ApplicationRecord(
+                                        applicationId = appId,
+                                        schemeId = scheme.id,
+                                        schemeTitle = scheme.title,
+                                        academicYear = "2026-27",
+                                        sourcePortal = scheme.portal,
+                                        stage = decision.stage,
+                                        stageText = decision.stageText,
+                                        currentStepIndex = when (decision.outcome) {
+                                            com.step.app.data.DecisionOutcome.AUTO_APPROVED -> 2
+                                            com.step.app.data.DecisionOutcome.AUTO_REJECTED -> 0
+                                            com.step.app.data.DecisionOutcome.DEFICIENCY_FLAGGED -> 1
+                                            com.step.app.data.DecisionOutcome.MANUAL_REVIEW -> 0
+                                        },
+                                        sanctionAmount = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) scheme.maxBenefitAmount else 0L,
+                                        nextActionText = when (decision.outcome) {
+                                            com.step.app.data.DecisionOutcome.AUTO_APPROVED -> "Sanction Order Generated. Queued for APBS DBT Disbursement."
+                                            com.step.app.data.DecisionOutcome.AUTO_REJECTED -> "Application Rejected based on statutory criteria."
+                                            com.step.app.data.DecisionOutcome.DEFICIENCY_FLAGGED -> "Deficiency flagged. Resolve required documents."
+                                            com.step.app.data.DecisionOutcome.MANUAL_REVIEW -> "Pending institutional nodal verification."
+                                        },
+                                        verificationConfidence = decision.confidenceScore,
+                                        steps = listOf(
+                                            com.step.app.data.TimelineStep("Application Submitted", "01-Oct-2026", true, "Submitted via sovereign mobile application"),
+                                            com.step.app.data.TimelineStep(
+                                                label = "DigiLocker & Gov Verification",
+                                                date = "01-Oct-2026",
+                                                completed = decision.outcome != com.step.app.data.DecisionOutcome.AUTO_REJECTED,
+                                                note = decision.reason
+                                            ),
+                                            com.step.app.data.TimelineStep(
+                                                label = "Ministry Sanction Order",
+                                                date = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) "01-Oct-2026" else "Pending",
+                                                completed = decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED,
+                                                note = decision.sanctionOrderNo ?: (if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_REJECTED) "Application rejected" else "Pending review")
+                                            ),
+                                            com.step.app.data.TimelineStep(
+                                                label = "PFMS DBT Bank Credit",
+                                                date = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) "Scheduled" else "N/A",
+                                                completed = false,
+                                                note = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) "100% Direct Benefit Transfer to Aadhaar seeded bank account" else "Not eligible for disbursement"
+                                            )
+                                        ),
+                                        dbtDetails = if (decision.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED) {
+                                            com.step.app.data.DbtDetails(
+                                                utr = "PFMS${(100000000..999999999).random()}",
+                                                paymentMode = "APBS (Aadhaar Payment Bridge System)",
+                                                disbursedDate = "Scheduled within 48h",
+                                                bankName = student.bankName,
+                                                accountNo = student.maskedAccount,
+                                                centralShare = "75%",
+                                                stateShare = "25%",
+                                                status = "QUEUED_FOR_DISBURSEMENT"
+                                            )
+                                        } else null,
+                                        deficiency = decision.deficiency
+                                    )
+
+                                    MoTaRepository.applications.add(0, newApp)
+                                    com.step.app.firebase.FirebaseManager.submitApplicationToFirestore(newApp, student.uid)
                                     isSubmitted = true
                                 }
                             },
@@ -165,8 +237,8 @@ fun ApplyFlowScreen(
                                 .height(50.dp)
                         ) {
                             Text(
-                                text = if (currentStep < 4) "Continue to Step ${currentStep + 1}" else "Submit Application",
-                                fontSize = 15.sp,
+                                text = if (currentStep < 4) "Continue to Step ${currentStep + 1}" else "Submit & Run DigiLocker Auto-Verification",
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
@@ -177,13 +249,16 @@ fun ApplyFlowScreen(
         }
     ) { padding ->
         if (isSubmitted) {
-            // Success Confirmation Screen
+            val decision = decisionResult
+            val isAutoApproved = decision?.outcome == com.step.app.data.DecisionOutcome.AUTO_APPROVED
+            val isAutoRejected = decision?.outcome == com.step.app.data.DecisionOutcome.AUTO_REJECTED
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(BackgroundWhite)
                     .padding(padding)
-                    .padding(24.dp),
+                    .padding(20.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Card(
@@ -191,7 +266,11 @@ fun ApplyFlowScreen(
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, BorderLight, RoundedCornerShape(20.dp))
+                        .border(
+                            1.dp,
+                            if (isAutoApproved) StatusDisbursed.copy(alpha = 0.5f) else if (isAutoRejected) StatusRejected.copy(alpha = 0.5f) else BorderLight,
+                            RoundedCornerShape(20.dp)
+                        )
                 ) {
                     Column(
                         modifier = Modifier.padding(24.dp),
@@ -201,21 +280,40 @@ fun ApplyFlowScreen(
                             modifier = Modifier
                                 .size(64.dp)
                                 .clip(CircleShape)
-                                .background(StatusDisbursedBg),
+                                .background(
+                                    if (isAutoApproved) StatusDisbursedBg else if (isAutoRejected) StatusRejectedBg else StatusInProgressBg
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = FontAwesomeIcons.Solid.CircleCheck,
+                                imageVector = if (isAutoApproved) FontAwesomeIcons.Solid.CircleCheck else if (isAutoRejected) FontAwesomeIcons.Solid.CircleXmark else FontAwesomeIcons.Solid.ShieldCheck,
                                 contentDescription = null,
-                                tint = StatusDisbursed,
+                                tint = if (isAutoApproved) StatusDisbursed else if (isAutoRejected) StatusRejected else StatusInProgress,
                                 modifier = Modifier.size(32.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Surface(
+                            color = if (isAutoApproved) StatusDisbursedBg else if (isAutoRejected) StatusRejectedBg else PrimarySurfaceLight,
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = if (isAutoApproved) "AUTO-APPROVED VIA DIGILOCKER (${decision?.confidenceScore}% MATCH)" 
+                                       else if (isAutoRejected) "AUTO-REJECTED BY VERIFICATION ENGINE" 
+                                       else "DEFICIENCY FLAGGED",
+                                color = if (isAutoApproved) StatusDisbursed else if (isAutoRejected) StatusRejected else PrimaryDeepOrangeDark,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            text = "Application Submitted!",
+                            text = if (isAutoApproved) "Scholarship Sanctioned!" else if (isAutoRejected) "Application Ineligible" else "Action Required",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = TextDark
@@ -224,30 +322,67 @@ fun ApplyFlowScreen(
                         Spacer(modifier = Modifier.height(6.dp))
 
                         Text(
-                            text = "Application ID: STeP-2026-${scheme.code}-9941",
-                            fontSize = 13.sp,
+                            text = "Application ID: $generatedAppId",
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = PrimaryDeepOrange
                         )
 
+                        if (decision?.sanctionOrderNo != null) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Sanction Order: ${decision.sanctionOrderNo}",
+                                fontSize = 11.sp,
+                                color = StatusDisbursed,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        Text(
-                            text = "Your application for ${scheme.title} has been received and routed for Institute Nodal verification.",
-                            fontSize = 12.sp,
-                            color = TextBody,
-                            lineHeight = 18.sp
-                        )
+                        Surface(
+                            color = BackgroundWhite,
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = if (isAutoApproved) "Decision Rationale:" else "Statutory Reason:",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextDark
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = decision?.reason ?: "Application received and cataloged.",
+                                    fontSize = 11.sp,
+                                    color = TextBody,
+                                    lineHeight = 16.sp
+                                )
+                                if (decision?.clause != null) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Clause: ${decision.clause}",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TextSubtle
+                                    )
+                                }
+                            }
+                        }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         Button(
                             onClick = onSubmitSuccess,
-                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryDeepOrange),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isAutoApproved) StatusDisbursed else PrimaryDeepOrange
+                            ),
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().height(48.dp)
                         ) {
-                            Text("Track in My Applications", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Track in My Applications", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
                     }
                 }
