@@ -23,6 +23,14 @@ import androidx.compose.ui.unit.sp
 import com.step.app.ui.components.FontAwesomeIcons
 import com.step.app.ui.theme.*
 
+import android.speech.tts.TextToSpeech
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import com.step.app.data.GeminiService
+import com.step.app.data.MoTaRepository
+import kotlinx.coroutines.launch
+import java.util.Locale
+
 data class HelpChatMessage(
     val id: String,
     val sender: String, // "USER" or "JAGO"
@@ -33,10 +41,27 @@ data class HelpChatMessage(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelpScreen() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var selectedLanguage by remember { mutableStateOf("English") }
     var showLanguageMenu by remember { mutableStateOf(false) }
     var inputText by remember { mutableStateOf("") }
     var isListening by remember { mutableStateOf(false) }
+
+    // On-device Text-To-Speech
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+    DisposableEffect(context) {
+        val textToSpeech = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                // Default language setup
+            }
+        }
+        tts = textToSpeech
+        onDispose {
+            textToSpeech.stop()
+            textToSpeech.shutdown()
+        }
+    }
 
     val languages = listOf("English", "हिन्दी (Hindi)", "मराठी (Marathi)", "ଓଡ଼ିଆ (Odia)", "తెలుగు (Telugu)", "தமிழ் (Tamil)")
 
@@ -192,7 +217,12 @@ fun HelpScreen() {
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 items(messages) { msg ->
-                    ChatBubbleItem(message = msg)
+                    ChatBubbleItem(
+                        message = msg,
+                        onSpeak = { textToSpeak ->
+                            tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "jago_${System.currentTimeMillis()}")
+                        }
+                    )
                 }
             }
 
@@ -214,13 +244,10 @@ fun HelpScreen() {
                                 border = androidx.compose.foundation.BorderStroke(1.dp, BorderMedium),
                                 modifier = Modifier.clickable {
                                     messages.add(HelpChatMessage("u_${System.currentTimeMillis()}", "USER", chip))
-                                    // Generate contextual JAGO answer
-                                    val reply = when (chip) {
-                                        "Check my status" -> "Your Post-Matric Scholarship is successfully Disbursed (UTR: RBI492810488219). Your Top Class application is Sanctioned in PFMS queue. Your NOS application has a pending defect (D-402)."
-                                        "What documents do I need?" -> "For most MoTA scholarships, you need: 1. ST Caste Certificate, 2. Current Year Family Income Certificate, 3. Previous Academic Year Marksheet, and 4. Aadhaar-seeded Bank Passbook."
-                                        else -> "DBT disbursements follow a 75% Central / 25% State funding ratio. If state nodal verification is delayed or Aadhaar is not NPCI mapped, payments stay in clearing. You can escalate via the 30-day Citizen Charter SLA ticket."
+                                    scope.launch {
+                                        val reply = GeminiService.queryJago(chip, MoTaRepository.currentStudent)
+                                        messages.add(HelpChatMessage("j_${System.currentTimeMillis()}", "JAGO", reply))
                                     }
-                                    messages.add(HelpChatMessage("j_${System.currentTimeMillis()}", "JAGO", reply))
                                 }
                             ) {
                                 Text(
@@ -293,13 +320,16 @@ fun HelpScreen() {
                                     val text = inputText
                                     inputText = ""
                                     messages.add(HelpChatMessage("u_${System.currentTimeMillis()}", "USER", text))
-                                    messages.add(
-                                        HelpChatMessage(
-                                            "j_${System.currentTimeMillis()}",
-                                            "JAGO",
-                                            "Under Ministry of Tribal Affairs guidelines, you cannot receive two central scholarships simultaneously for the same academic year, but you can upgrade to Top Class Education if you secure admission in an IIT, NIT, or premier institute."
+                                    scope.launch {
+                                        val reply = GeminiService.queryJago(text, MoTaRepository.currentStudent)
+                                        messages.add(
+                                            HelpChatMessage(
+                                                "j_${System.currentTimeMillis()}",
+                                                "JAGO",
+                                                reply
+                                            )
                                         )
-                                    )
+                                    }
                                 }
                             },
                             modifier = Modifier
@@ -315,6 +345,20 @@ fun HelpScreen() {
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Bhashini temporary downtime notice
+                    Text(
+                        text = "Note: Currently utilizing Gemini Multimodal AI & on-device TTS for regional languages as Bhashini registration/API onboarding is currently facing service downtime.",
+                        fontSize = 9.sp,
+                        color = TextSubtle,
+                        lineHeight = 12.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
                 }
             }
         }
@@ -322,7 +366,10 @@ fun HelpScreen() {
 }
 
 @Composable
-private fun ChatBubbleItem(message: HelpChatMessage) {
+private fun ChatBubbleItem(
+    message: HelpChatMessage,
+    onSpeak: ((String) -> Unit)? = null
+) {
     val isUser = message.sender == "USER"
 
     Row(
@@ -373,6 +420,30 @@ private fun ChatBubbleItem(message: HelpChatMessage) {
                     color = if (isUser) Color.White else TextDark,
                     lineHeight = 18.sp
                 )
+
+                if (!isUser && onSpeak != null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .clickable { onSpeak(message.text) }
+                            .padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.Headset,
+                            contentDescription = "Read Aloud",
+                            tint = PrimaryDeepOrange,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Listen (On-Device TTS)",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PrimaryDeepOrange
+                        )
+                    }
+                }
             }
         }
     }
