@@ -28,6 +28,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import com.step.app.data.GeminiService
 import com.step.app.data.MoTaRepository
+import com.step.app.intelligence.DeficiencyDefenseEngine
+import com.step.app.intelligence.DocumentAutopilot
+import com.step.app.intelligence.ScholarshipAutopilot
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -66,9 +69,11 @@ fun HelpScreen() {
     val languages = listOf("English", "हिन्दी (Hindi)", "मराठी (Marathi)", "ଓଡ଼ିଆ (Odia)", "తెలుగు (Telugu)", "தமிழ் (Tamil)")
 
     val quickChips = listOf(
-        "Check my status",
+        "Check my document readiness",
+        "Explain my scholarship",
+        "Appeal a defect notice",
         "What documents do I need?",
-        "Why was my payment delayed?"
+        "Check my application status"
     )
 
     val messages = remember {
@@ -83,10 +88,64 @@ fun HelpScreen() {
 
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
 
-    // Auto-scroll to the latest response whenever a message is added
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
+    val processJagoQuery = { queryText: String ->
+        messages.add(HelpChatMessage("u_${System.currentTimeMillis()}", "USER", queryText))
+        scope.launch {
+            val q = queryText.lowercase()
+            val reply = when {
+                q.contains("readiness") || q.contains("autopilot") || (q.contains("document") && (q.contains("check") || q.contains("need") || q.contains("verify"))) -> {
+                    val report = DocumentAutopilot.evaluateReadiness(MoTaRepository.currentStudent, MoTaRepository.scannedDocuments)
+                    buildString {
+                        appendLine("Document Readiness Audit (${report.readinessPercentage}% Complete):")
+                        appendLine(report.summaryVerdict)
+                        appendLine()
+                        report.assessments.forEach { p ->
+                            appendLine("• ${p.title}: [${p.signal.code}] ${p.statutoryRemark}")
+                        }
+                        appendLine()
+                        if (report.canProceedToSubmission) {
+                            appendLine("All statutory requirements satisfied. Your dossier is ready for one-click submission!")
+                        } else {
+                            appendLine("Action Required: Please address the blocking defect(s) before final submission.")
+                        }
+                    }
+                }
+                q.contains("explain") || q.contains("entitlement") || (q.contains("scholarship") && q.contains("best")) -> {
+                    val autoplan = ScholarshipAutopilot.generateAutoplan(MoTaRepository.currentStudent, MoTaRepository.scannedDocuments)
+                    val best = autoplan.bestScheme
+                    buildString {
+                        appendLine("Scholarship Entitlement Analysis:")
+                        if (best != null) {
+                            appendLine("Best Recommended Match: ${best.title}")
+                            appendLine("Entitlement: ${best.benefitSummary} (${best.benefitAmountFormatted})")
+                            appendLine("Disbursement: Direct DBT via Aadhaar Payment Bridge (APB)")
+                        }
+                        appendLine("One-Time Registration (OTR) Readiness: ${autoplan.otrCompletionPercentage}%")
+                        appendLine("Statutory Deadlines: ${autoplan.upcomingDeadlinesSummary}")
+                    }
+                }
+                q.contains("appeal") || q.contains("defect") || q.contains("rejection") || q.contains("defense") -> {
+                    val sampleDeficiency = com.step.app.data.DeficiencyInfo(
+                        code = "DEF-DISCREPANCY",
+                        bureaucraticReason = "Community certificate spelling mismatch with Aadhaar",
+                        deadlineDate = "15-Nov-2026",
+                        daysRemaining = 14
+                    )
+                    val defense = DeficiencyDefenseEngine.generateDefense(
+                        deficiency = sampleDeficiency,
+                        student = MoTaRepository.currentStudent,
+                        schemeTitle = "National Fellowship and Scholarship for Higher Education of ST Students",
+                        documentRef = "ST/OD/2022/49201"
+                    )
+                    "Statutory Legal Appeal Counter-Notice:\n\n${defense.statutoryGoverningRule}\n\nCitation: ${defense.legalCitation}\nSLA Escalation Window: ${defense.slaDaysToRespond} days.\n\nYou can file this formal counter-notice directly from your Application Tracking screen."
+                }
+                else -> {
+                    GeminiService.queryJago(queryText, MoTaRepository.currentStudent)
+                }
+            }
+
+            messages.add(HelpChatMessage("j_${System.currentTimeMillis()}", "JAGO", reply))
+            tts?.speak(reply.take(200), TextToSpeech.QUEUE_FLUSH, null, "jago_${System.currentTimeMillis()}")
         }
     }
 
@@ -243,11 +302,7 @@ fun HelpScreen() {
                                 shape = RoundedCornerShape(16.dp),
                                 border = androidx.compose.foundation.BorderStroke(1.dp, BorderMedium),
                                 modifier = Modifier.clickable {
-                                    messages.add(HelpChatMessage("u_${System.currentTimeMillis()}", "USER", chip))
-                                    scope.launch {
-                                        val reply = GeminiService.queryJago(chip, MoTaRepository.currentStudent)
-                                        messages.add(HelpChatMessage("j_${System.currentTimeMillis()}", "JAGO", reply))
-                                    }
+                                    processJagoQuery(chip)
                                 }
                             ) {
                                 Text(
@@ -319,17 +374,7 @@ fun HelpScreen() {
                                 if (inputText.isNotBlank()) {
                                     val text = inputText
                                     inputText = ""
-                                    messages.add(HelpChatMessage("u_${System.currentTimeMillis()}", "USER", text))
-                                    scope.launch {
-                                        val reply = GeminiService.queryJago(text, MoTaRepository.currentStudent)
-                                        messages.add(
-                                            HelpChatMessage(
-                                                "j_${System.currentTimeMillis()}",
-                                                "JAGO",
-                                                reply
-                                            )
-                                        )
-                                    }
+                                    processJagoQuery(text)
                                 }
                             },
                             modifier = Modifier
