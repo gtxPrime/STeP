@@ -313,28 +313,8 @@ fun STePMainApp(
                         scheme = schemeToApply,
                         onBack = { activeSchemeForApply = null },
                         onSubmitSuccess = {
-                            val newApp = ApplicationRecord(
-                                applicationId = "APP-${schemeToApply.code}-${System.currentTimeMillis().toString().takeLast(5)}",
-                                schemeId = schemeToApply.id,
-                                schemeTitle = schemeToApply.title,
-                                academicYear = "2026-27",
-                                sourcePortal = schemeToApply.portal,
-                                stage = "SUBMITTED",
-                                stageText = "Submitted via STeP Unified Portal",
-                                currentStepIndex = 0,
-                                sanctionAmount = schemeToApply.maxBenefitAmount,
-                                nextActionText = "Awaiting institutional verification",
-                                verificationConfidence = 98,
-                                steps = listOf(
-                                    TimelineStep("Submitted", "Today", true, "Applied via STeP Unified Portal"),
-                                    TimelineStep("Verified", "Pending", false, "Institute and Nodal Verification"),
-                                    TimelineStep("Sanctioned", "Pending", false, "MoTA Central Sanction Order"),
-                                    TimelineStep("Disbursed", "Pending", false, "Direct Benefit Transfer via APB")
-                                ),
-                                dbtDetails = null,
-                                deficiency = null
-                            )
-                            FirebaseManager.submitApplicationToFirestore(newApp)
+                            // ApplicationRecord is created inside ApplyFlowScreen and saved to Firestore there.
+                            // Here we only handle navigation and UX feedback.
                             activeSchemeForApply = null
                             activeSchemeForDetail = null
                             selectedTab = MainTab.TRACK
@@ -459,9 +439,10 @@ fun STePMainApp(
                     onDismiss = { showGrievanceDialog = false },
                     onSubmit = {
                         showGrievanceDialog = false
+                        val ticketId = "MOTA-GR-${System.currentTimeMillis().toString().takeLast(6)}"
                         scope.launch {
                             snackbarHostState.showSnackbar(
-                                "RTI SLA Ticket #MOTA-GR-9921 lodged! 30-day statutory countdown timer initiated."
+                                "RTI SLA Ticket #$ticketId lodged! 30-day statutory countdown timer initiated."
                             )
                         }
                     }

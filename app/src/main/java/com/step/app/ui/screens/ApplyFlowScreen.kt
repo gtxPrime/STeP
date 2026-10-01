@@ -22,6 +22,7 @@ import com.step.app.ui.components.FontAwesomeIcons
 import com.step.app.ui.theme.*
 import androidx.compose.foundation.clickable
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 @Composable
 fun ApplyFlowScreen(
@@ -33,7 +34,16 @@ fun ApplyFlowScreen(
     var isSubmitted by remember { mutableStateOf(false) }
     var decisionResult by remember { mutableStateOf<com.step.app.data.DecisionResult?>(null) }
     var generatedAppId by remember { mutableStateOf("") }
+    var stepValidationError by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+
+    // Compute academic year dynamically (e.g. if month >= Aug then "2026-27" else "2025-26")
+    val academicYear = remember {
+        val cal = Calendar.getInstance()
+        val year = cal.get(Calendar.YEAR)
+        val month = cal.get(Calendar.MONTH) // 0-indexed, 7 = August
+        if (month >= 7) "$year-${(year + 1).toString().takeLast(2)}" else "${year - 1}-${year.toString().takeLast(2)}"
+    }
 
     // Step 1: Personal Details State
     val student = MoTaRepository.currentStudent
@@ -41,7 +51,7 @@ fun ApplyFlowScreen(
     val existingFather = MoTaRepository.scannedDocuments.firstOrNull { it.fatherName.isNotBlank() && it.fatherName != "NAS" && it.fatherName != "Parent / Guardian" }?.fatherName ?: ""
     var fatherName by remember { mutableStateOf(existingFather) }
     var community by remember { mutableStateOf(if (student.subTribe.isNotBlank() && student.subTribe != "NAS") "${student.subTribe} (ST)" else "Scheduled Tribe (ST)") }
-    var aadhaarLast4 by remember { mutableStateOf(if (student.aadhaarLast4 != "NAS") student.aadhaarLast4 else "") }
+    var aadhaarLast4 by remember { mutableStateOf(if (student.aadhaarLast4 != "NAS" && student.aadhaarLast4.isNotBlank()) student.aadhaarLast4 else "") }
 
     // Step 2: Academic Details State
     var courseLevel by remember { mutableStateOf(if (student.educationLevel != "NAS") student.educationLevel else "") }
@@ -156,7 +166,26 @@ fun ApplyFlowScreen(
                         Button(
                             onClick = {
                                 if (currentStep < 4) {
-                                    currentStep++
+                                    // Basic validation before advancing
+                                    val validationMsg = when (currentStep) {
+                                        1 -> when {
+                                            fullName.isBlank() -> "Please enter your full name."
+                                            community.isBlank() -> "Please enter your tribe/community."
+                                            else -> null
+                                        }
+                                        2 -> when {
+                                            courseLevel.isBlank() -> "Please enter your current course/class."
+                                            instituteName.isBlank() -> "Please enter your institution name."
+                                            else -> null
+                                        }
+                                        else -> null
+                                    }
+                                    if (validationMsg != null) {
+                                        stepValidationError = validationMsg
+                                    } else {
+                                        stepValidationError = null
+                                        currentStep++
+                                    }
                                 } else {
                                     val decision = com.step.app.data.ScholarshipDecisionEngine.evaluateApplication(
                                         scheme = scheme,
@@ -187,7 +216,7 @@ fun ApplyFlowScreen(
                                             applicationId = appId,
                                             schemeId = scheme.id,
                                             schemeTitle = scheme.title,
-                                            academicYear = "2026-27",
+                                            academicYear = academicYear,
                                             sourcePortal = connectorResult.sourcePortal,
                                             stage = decision.stage,
                                             stageText = decision.stageText,
@@ -233,8 +262,8 @@ fun ApplyFlowScreen(
                                                     disbursedDate = "Scheduled within 48h",
                                                     bankName = student.bankName,
                                                     accountNo = student.maskedAccount,
-                                                    centralShare = "75%",
-                                                    stateShare = "25%",
+                                                    centralShare = if (scheme.id in listOf("TOP_CLASS", "NFST", "NOS")) "100%" else "75%",
+                                                    stateShare = if (scheme.id in listOf("TOP_CLASS", "NFST", "NOS")) "0%" else "25%",
                                                     status = "QUEUED_FOR_DISBURSEMENT"
                                                 )
                                             } else null,
@@ -259,6 +288,16 @@ fun ApplyFlowScreen(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
+                            )
+                        }
+                        // Step validation error message
+                        if (stepValidationError != null) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = stepValidationError!!,
+                                fontSize = 12.sp,
+                                color = StatusRejected,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
@@ -454,7 +493,11 @@ fun ApplyFlowScreen(
                             StepTextField(label = "Community / Tribe Category", value = community, onValueChange = { community = it })
                         }
                         item {
-                            StepTextField(label = "Aadhaar Card (Last 4 Digits)", value = "•••• •••• $aadhaarLast4", onValueChange = {})
+                            StepTextField(
+                                label = "Aadhaar Card (Last 4 Digits)",
+                                value = if (aadhaarLast4.isNotBlank()) "•••• •••• $aadhaarLast4" else "Not linked — will be seeded via NPCI",
+                                onValueChange = {}
+                            )
                         }
                     }
 

@@ -30,11 +30,11 @@ fun TrackScreen(
     var selectedFilter by remember { mutableStateOf("All") } // "All", "Active", "Completed"
     val allApplications = MoTaRepository.applications
 
-    val filteredApplications = remember(selectedFilter) {
+    val filteredApplications = remember(selectedFilter, allApplications.size) {
         when (selectedFilter) {
             "Active" -> allApplications.filter { it.stage != "DISBURSED" }
             "Completed" -> allApplications.filter { it.stage == "DISBURSED" }
-            else -> allApplications
+            else -> allApplications.toList()
         }
     }
 
