@@ -158,7 +158,7 @@ window.EduconEligibility = (function() {
     if (loadingBanner) loadingBanner.classList.remove('hidden');
     if (resultsContainer) resultsContainer.innerHTML = '';
 
-    const evaluation = await EduconMoTa AI.reasonEligibility(state);
+    const evaluation = await (window.EduconGemini || window.EduconMoTaAI).reasonEligibility(state);
 
     if (loadingBanner) loadingBanner.classList.add('hidden');
 
