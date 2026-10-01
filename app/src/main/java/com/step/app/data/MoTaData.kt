@@ -9,22 +9,22 @@ import org.json.JSONArray
 
 data class StudentProfile(
     val uid: String = "",
-    val apaarId: String = "NFS",
-    val digilockerId: String = "NFS",
-    val fullName: String = "NFS",
-    val email: String = "NFS",
+    val apaarId: String = "NAS",
+    val digilockerId: String = "NAS",
+    val fullName: String = "NAS",
+    val email: String = "NAS",
     val photoUrl: String = "",
-    val community: String = "Scheduled Tribe (ST)",
-    val subTribe: String = "NFS",
-    val institution: String = "NFS",
-    val educationLevel: String = "NFS",
+    val community: String = "NAS",
+    val subTribe: String = "NAS",
+    val institution: String = "NAS",
+    val educationLevel: String = "NAS",
     val annualIncome: Long = 0L,
     val incomeCertExpiryDays: Int = 0,
-    val bankName: String = "NFS",
-    val maskedAccount: String = "NFS",
-    val ifsc: String = "NFS",
-    val aadhaarLast4: String = "NFS",
-    val state: String = "NFS",
+    val bankName: String = "NAS",
+    val maskedAccount: String = "NAS",
+    val ifsc: String = "NAS",
+    val aadhaarLast4: String = "NAS",
+    val state: String = "NAS",
     val npciAadhaarSeeded: Boolean = false
 )
 
@@ -125,7 +125,13 @@ data class ScannedDocument(
     val digilockerXml: String = "",
     val signerCn: String = "",
     val dscSerialNumber: String = "",
-    val pkiTimestamp: String = ""
+    val pkiTimestamp: String = "",
+    val rollNumber: String = "",
+    val passingYear: String = "",
+    val boardName: String = "",
+    val marksPercentage: Double = 0.0,
+    val marksObtained: Int = 0,
+    val maxMarks: Int = 0
 )
 
 object MoTaDefaults {
