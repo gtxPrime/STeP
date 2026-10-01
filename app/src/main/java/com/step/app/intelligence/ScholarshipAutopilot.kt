@@ -120,7 +120,11 @@ object ScholarshipAutopilot {
             bestSchemeAnnualEntitlement = bestMatch?.maxBenefitAmount ?: 0L,
             missingDocuments = missingDocs,
             schemeMatches = matches,
-            upcomingDeadlinesSummary = "Next statutory deadline: 31-Oct-2026 (Pre-Matric NSP) • 30-Nov-2026 (Post-Matric)"
+            upcomingDeadlinesSummary = schemes
+                .filter { it.deadlineFormatted.isNotBlank() }
+                .take(3)
+                .joinToString(" • ") { "${it.deadlineFormatted} (${it.code})" }
+                .ifBlank { "Check NSP portal for current deadlines" }
         )
     }
 

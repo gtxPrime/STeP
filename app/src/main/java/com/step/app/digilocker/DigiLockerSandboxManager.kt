@@ -228,18 +228,18 @@ $certDataBlock
         // Determine effective candidate name and father name from inputs / student profile
         val student = MoTaRepository.currentStudent
         val effectiveCandidateName = when {
-            candidateName.isNotBlank() && candidateName != "NFS" -> candidateName
-            student.fullName.isNotBlank() && student.fullName != "NFS" -> student.fullName
+            candidateName.isNotBlank() && candidateName != "NAS" -> candidateName
+            student.fullName.isNotBlank() && student.fullName != "NAS" -> student.fullName
             else -> "Scholar"
         }
         val effectiveFatherName = when {
-            fatherName.isNotBlank() && fatherName != "NFS" -> fatherName
-            student.subTribe.isNotBlank() && student.subTribe != "NFS" -> "Guardian (${student.subTribe})"
+            fatherName.isNotBlank() && fatherName != "NAS" -> fatherName
+            student.subTribe.isNotBlank() && student.subTribe != "NAS" -> "Guardian (${student.subTribe})"
             else -> "Parent / Guardian"
         }
         val effectiveAadhaar = when {
-            aadhaarLast4.isNotBlank() && aadhaarLast4 != "NFS" -> aadhaarLast4
-            student.aadhaarLast4.isNotBlank() && student.aadhaarLast4 != "NFS" -> student.aadhaarLast4
+            aadhaarLast4.isNotBlank() && aadhaarLast4 != "NAS" -> aadhaarLast4
+            student.aadhaarLast4.isNotBlank() && student.aadhaarLast4 != "NAS" -> student.aadhaarLast4
             else -> "9842"
         }
 

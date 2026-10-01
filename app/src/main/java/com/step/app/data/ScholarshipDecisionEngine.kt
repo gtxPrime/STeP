@@ -1,6 +1,7 @@
 package com.step.app.data
 
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -75,11 +76,15 @@ object ScholarshipDecisionEngine {
             )
         }
 
-        // 3. INCOME CEILING EVALUATION
-        val effectiveIncome = if (casteDoc?.annualIncome != null) {
-            casteDoc.annualIncome.replace(Regex("[^0-9]"), "").toLongOrNull() ?: student.annualIncome
-        } else {
-            student.annualIncome
+        // 3. INCOME CEILING EVALUATION — read from incomeDoc, fall back to student profile
+        val incomeDocEarly = documents.firstOrNull { it.documentType.contains("Income", true) }
+        val effectiveIncome: Long = when {
+            incomeDocEarly?.annualIncome != null -> {
+                val parsed = incomeDocEarly.annualIncome.replace(Regex("[^0-9]"), "").toLongOrNull()
+                if (parsed != null && parsed > 0) parsed else student.annualIncome
+            }
+            student.annualIncome > 0 -> student.annualIncome
+            else -> 0L
         }
 
         if (scheme.incomeCeiling != null && effectiveIncome > 0 && effectiveIncome > scheme.incomeCeiling) {
@@ -99,6 +104,9 @@ object ScholarshipDecisionEngine {
         // 4. INCOME CERTIFICATE EXPIRY / DEFICIENCY CHECK
         val incomeDoc = documents.firstOrNull { it.documentType.contains("Income", true) }
         if (incomeDoc != null && incomeDoc.isExpired) {
+            // Compute a dynamic deficiency deadline 30 days from today
+            val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 30) }
+            val deadlineStr = SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH).format(cal.time)
             return DecisionResult(
                 outcome = DecisionOutcome.DEFICIENCY_FLAGGED,
                 stage = "DEFICIENCY_FLAGGED",
@@ -109,8 +117,8 @@ object ScholarshipDecisionEngine {
                 deficiency = DeficiencyInfo(
                     code = "DEF-INC-01",
                     bureaucraticReason = "Income certificate expired. Renewal needed.",
-                    deadlineDate = "15-Nov-2026",
-                    daysRemaining = 14
+                    deadlineDate = deadlineStr,
+                    daysRemaining = 30
                 ),
                 autoApproveEligible = false
             )

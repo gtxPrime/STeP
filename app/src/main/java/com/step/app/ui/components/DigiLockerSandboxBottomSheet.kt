@@ -34,8 +34,8 @@ fun DigiLockerSandboxBottomSheet(
     var selectedDocType by remember { mutableStateOf("CASTC") }
     var certNumber by remember { mutableStateOf("OD/ST/2022/49201") }
     val currentStudent = com.step.app.data.MoTaRepository.currentStudent
-    var candidateName by remember { mutableStateOf(if (currentStudent.fullName.isNotBlank() && currentStudent.fullName != "NFS") currentStudent.fullName else "Scholar") }
-    var fatherName by remember { mutableStateOf(if (currentStudent.subTribe.isNotBlank() && currentStudent.subTribe != "NFS") "Parent (${currentStudent.subTribe})" else "Parent / Guardian") }
+    var candidateName by remember { mutableStateOf(if (currentStudent.fullName.isNotBlank() && currentStudent.fullName != "NAS") currentStudent.fullName else "Scholar") }
+    var fatherName by remember { mutableStateOf(if (currentStudent.subTribe.isNotBlank() && currentStudent.subTribe != "NAS") "Parent (${currentStudent.subTribe})" else "Parent / Guardian") }
     var isPulling by remember { mutableStateOf(false) }
     var pullResult by remember { mutableStateOf<DigiLockerSandboxResult?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
