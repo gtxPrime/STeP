@@ -8,6 +8,8 @@ import androidx.compose.runtime.setValue
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.step.app.data.*
@@ -1173,6 +1175,23 @@ object FirebaseManager {
             idToken = idToken
         )
         currentUser = user
+
+        // Authenticate with Firebase Authentication server so the user appears in Firebase Console Users table
+        if (idToken.isNotBlank()) {
+            try {
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                FirebaseAuth.getInstance().signInWithCredential(credential)
+                    .addOnSuccessListener { authResult ->
+                        val fbUser = authResult.user
+                        Log.i(TAG, "FirebaseAuth registration SUCCESS: ${fbUser?.email} (${fbUser?.uid})")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.w(TAG, "FirebaseAuth.signInWithCredential failed: ${e.message}")
+                    }
+            } catch (e: Exception) {
+                Log.e(TAG, "FirebaseAuth initialization error: ${e.message}")
+            }
+        }
 
         if (context != null) {
             val prefs = context.getSharedPreferences("step_user_prefs", android.content.Context.MODE_PRIVATE)
