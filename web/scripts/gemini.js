@@ -4,7 +4,7 @@
  * Multilingual Deficiency Translation, and 5-Scheme Eligibility Reasoning.
  */
 
-window.EduconMoTa AI = (function() {
+window.EduconGemini = window.EduconMoTaAI = (function() {
   const GEMINI_MODEL = 'gemini-1.5-flash';
   const API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
