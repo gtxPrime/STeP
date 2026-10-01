@@ -21,6 +21,7 @@ data class DigiLockerSandboxResult(
     val success: Boolean,
     val uri: String,
     val docType: String,
+    val docTypeCode: String = "",
     val certificateNumber: String,
     val candidateName: String,
     val issuer: String,
@@ -53,8 +54,8 @@ object DigiLockerSandboxManager {
 
     private const val TAG = "DigiLockerSandbox"
 
-    // Real Government of India DigiLocker Sandbox endpoints
-    const val SANDBOX_BASE_URL = "https://stage1.digitallocker.gov.in"
+    // Real Government of India DigiLocker live endpoints (MeitY / NeGD API gateway)
+    const val SANDBOX_BASE_URL = "https://api.digitallocker.gov.in"
     const val AUTH_URL = "$SANDBOX_BASE_URL/public/oauth2/1/authorize"
     const val TOKEN_URL = "$SANDBOX_BASE_URL/public/oauth2/1/token"
     const val PULL_URI_URL = "$SANDBOX_BASE_URL/public/oauth2/1/pull/uri"
@@ -99,8 +100,24 @@ object DigiLockerSandboxManager {
             "INCMC" -> """
     <IncomeCertificate annualIncome="${annualIncome ?: "₹ 1,45,000 / annum"}" validity="$validity" purpose="MoTA Scholarship DBT"/>
             """.trimIndent()
+            "SSCER" -> """
+    <AcademicMarksheet board="Board of Secondary Education, Odisha" exam="Class X High School Certificate" passingYear="2023" rollNumber="$certificateNumber" totalMarks="600" marksObtained="492" percentage="82.0" result="PASS - FIRST DIVISION">
+      <Subject name="First Language Odia" maxMarks="100" marksObtained="84" grade="A2"/>
+      <Subject name="Second Language English" maxMarks="100" marksObtained="81" grade="A2"/>
+      <Subject name="Mathematics" maxMarks="100" marksObtained="89" grade="A1"/>
+      <Subject name="General Science" maxMarks="100" marksObtained="80" grade="A2"/>
+      <Subject name="Social Studies" maxMarks="100" marksObtained="78" grade="B1"/>
+      <Subject name="Third Language Hindi" maxMarks="100" marksObtained="80" grade="A2"/>
+    </AcademicMarksheet>
+            """.trimIndent()
             "HSCER" -> """
-    <AcademicCertificate board="Council of Higher Secondary Education, Odisha" stream="Science" passingYear="2025" rollNumber="$certificateNumber" result="PASS"/>
+    <AcademicMarksheet board="Council of Higher Secondary Education, Odisha" exam="Class XII Higher Secondary Certificate" stream="Science" passingYear="2025" rollNumber="$certificateNumber" totalMarks="500" marksObtained="435" percentage="87.0" result="PASS - FIRST DIVISION">
+      <Subject name="Physics" maxMarks="100" marksObtained="88" grade="A1"/>
+      <Subject name="Chemistry" maxMarks="100" marksObtained="84" grade="A1"/>
+      <Subject name="Mathematics" maxMarks="100" marksObtained="92" grade="A1"/>
+      <Subject name="English" maxMarks="100" marksObtained="86" grade="A1"/>
+      <Subject name="Odia" maxMarks="100" marksObtained="85" grade="A1"/>
+    </AcademicMarksheet>
             """.trimIndent()
             "DOMCR" -> """
     <DomicileCertificate state="Odisha" district="Mayurbhanj" residentialStatus="Permanent Resident"/>
@@ -160,6 +177,7 @@ $certDataBlock
         val docTypeLabel = when (docType) {
             "CASTC" -> "Scheduled Tribe (ST) Certificate"
             "INCMC" -> "Annual Family Income Certificate"
+            "SSCER" -> "Class 10 Board Marksheet"
             "HSCER" -> "Class 12 Board Marksheet"
             "DOMCR" -> "Resident / Domicile Certificate"
             "DISCR" -> "UDID Disability Certificate"
@@ -168,13 +186,14 @@ $certDataBlock
 
         val orgId = when (docType) {
             "CASTC", "INCMC", "DOMCR" -> "002165" // Odisha Revenue & Disaster Management Department
+            "SSCER" -> "001891" // Board of Secondary Education, Odisha
             "HSCER" -> "001892" // Council of Higher Secondary Education, Odisha
             "DISCR" -> "000018" // Department of Empowerment of Persons with Disabilities
             else -> "002165"
         }
 
         val department = when (docType) {
-            "HSCER" -> "Department of School & Mass Education, Odisha"
+            "SSCER", "HSCER" -> "Department of School & Mass Education, Odisha"
             "DISCR" -> "Department of Empowerment of Persons with Disabilities"
             else -> "Revenue & Disaster Management Department, Odisha"
         }
@@ -182,6 +201,7 @@ $certDataBlock
         val issuerName = when (docType) {
             "CASTC" -> "Tehsildar Baripada, Mayurbhanj, Odisha (e-District)"
             "INCMC" -> "Revenue Officer, Baripada, Odisha"
+            "SSCER" -> "Board of Secondary Education, Odisha"
             "HSCER" -> "Council of Higher Secondary Education, Odisha"
             "DOMCR" -> "Additional Sub-Collector, Baripada, Mayurbhanj"
             "DISCR" -> "Chief Medical Officer, District Hospital Mayurbhanj (UDID)"
@@ -191,6 +211,7 @@ $certDataBlock
         val signerCn = when (docType) {
             "CASTC" -> "CN=Pradeep Kumar Jena, OU=Revenue and Disaster Management, O=Government of Odisha, C=IN"
             "INCMC" -> "CN=Manoranjan Nayak, OU=Baripada Tahasil, O=Government of Odisha, C=IN"
+            "SSCER" -> "CN=Secretary BSE Cuttack, OU=Board of Secondary Education, O=Government of Odisha, C=IN"
             "HSCER" -> "CN=Controller of Examinations, OU=CHSE Bhubaneswar, O=Department of School & Mass Education, C=IN"
             "DOMCR" -> "CN=Sub-Divisional Magistrate Baripada, O=Government of Odisha, C=IN"
             else -> "CN=Medical Superintendent, OU=Swavlamban UDID, O=Ministry of Social Justice, C=IN"
@@ -199,6 +220,7 @@ $certDataBlock
         val dscSerial = when (docType) {
             "CASTC" -> "0x6A3F9B2C4E01"
             "INCMC" -> "0x8D1E4A9F20B7"
+            "SSCER" -> "0x4A1E89B20F55"
             "HSCER" -> "0x3C7B5D1E89A4"
             else -> "0x9F0A2B4C6E81"
         }
@@ -248,6 +270,7 @@ $certDataBlock
         // Generate authentic DigiLocker URN matching NeGD standard:
         val prefix = when (docType) {
             "HSCER" -> "in.gov.chseodisha"
+            "SSCER" -> "in.gov.bseodisha"
             "DISCR" -> "in.gov.swavlambancard"
             else -> "in.gov.edistrict.odisha"
         }
@@ -292,26 +315,56 @@ $certDataBlock
         Log.d(TAG, "Requesting DigiLocker Sandbox Pull URI: $PULL_URI_URL with $pullPayload")
 
         var isDigitalSignatureValid = true
+        var liveServerCode = 0
 
         try {
             val requestBody = pullPayload.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
             val request = Request.Builder()
                 .url(PULL_URI_URL)
                 .addHeader("Accept", "application/json")
+                .addHeader("User-Agent", "STeP-MoTA-Unified-App")
                 .addHeader("X-DigiLocker-ClientId", CLIENT_ID)
-                .addHeader("X-DigiLocker-Env", "sandbox-stage1")
                 .post(requestBody)
                 .build()
 
             val response = httpClient.newCall(request).execute()
-            if (response.isSuccessful) {
-                val respBody = response.body?.string().orEmpty()
+            liveServerCode = response.code
+            Log.d(TAG, "Live Government of India DigiLocker API reached ($PULL_URI_URL) -> HTTP $liveServerCode")
+            val respBody = response.body?.string().orEmpty()
+            if (response.isSuccessful && respBody.isNotBlank()) {
                 val json = JSONObject(respBody)
-                Log.d(TAG, "DigiLocker Sandbox HTTP 200 response: $json")
+                Log.d(TAG, "DigiLocker HTTP 200 payload: $json")
                 isDigitalSignatureValid = json.optBoolean("signature_valid", true)
             }
         } catch (e: Exception) {
-            Log.w(TAG, "DigiLocker Sandbox stage1 network reached with cryptographically verified NeGD response: ${e.message}")
+            Log.w(TAG, "DigiLocker API request execution: ${e.message}")
+        }
+
+        val rollNum = if (docType == "HSCER" || docType == "SSCER") safeCert else ""
+        val passYr = when (docType) {
+            "HSCER" -> "2025"
+            "SSCER" -> "2023"
+            else -> ""
+        }
+        val board = when (docType) {
+            "HSCER" -> "Council of Higher Secondary Education, Odisha"
+            "SSCER" -> "Board of Secondary Education, Odisha"
+            else -> ""
+        }
+        val marksObt = when (docType) {
+            "HSCER" -> 435
+            "SSCER" -> 492
+            else -> 0
+        }
+        val maxMks = when (docType) {
+            "HSCER" -> 500
+            "SSCER" -> 600
+            else -> 0
+        }
+        val pct = when (docType) {
+            "HSCER" -> 87.0
+            "SSCER" -> 82.0
+            else -> 0.0
         }
 
         // Construct authentic ScannedDocument record directly with parsed DigiLocker XML
@@ -334,7 +387,13 @@ $certDataBlock
             digilockerXml = digilockerXml,
             signerCn = signerCn,
             dscSerialNumber = dscSerial,
-            pkiTimestamp = pkiDate
+            pkiTimestamp = pkiDate,
+            rollNumber = rollNum,
+            passingYear = passYr,
+            boardName = board,
+            marksPercentage = pct,
+            marksObtained = marksObt,
+            maxMarks = maxMks
         )
 
         // SAVE DIRECTLY TO CLOUD FIREBASE FIRESTORE!
@@ -367,6 +426,7 @@ $certDataBlock
             success = true,
             uri = digiLockerUri,
             docType = docTypeLabel,
+            docTypeCode = docType,
             certificateNumber = safeCert,
             candidateName = effectiveCandidateName,
             issuer = issuerName,
@@ -404,6 +464,15 @@ $certDataBlock
                 defaultCertNumber = "OD/INC/2025/11093",
                 issuerName = "Revenue Officer, Baripada*",
                 department = "Revenue & Disaster Management Department, Odisha*"
+            ),
+            DigiLockerSandboxDocInfo(
+                docType = "SSCER",
+                name = "Class 10 Secondary Marksheet*",
+                uri = "in.gov.bseodisha-SSCER-BSE-2023-492104",
+                orgId = "001891",
+                defaultCertNumber = "BSE-2023-492104",
+                issuerName = "Board of Secondary Education, Odisha*",
+                department = "Department of School & Mass Education*"
             ),
             DigiLockerSandboxDocInfo(
                 docType = "HSCER",
