@@ -272,7 +272,7 @@ window.EduconTimeline = (function() {
       contentEl.innerHTML = `<div class="p-6 text-center"><span class="spinner-ring"></span> MoTa Sovereign AI translating bureaucratic defect to plain everyday language...</div>`;
     }
 
-    const res = await EduconMoTa AI.explainDeficiency(app.deficiencyData.bureaucraticReason, lang);
+    const res = await (window.EduconGemini || window.EduconMoTaAI).explainDeficiency(app.deficiencyData.bureaucraticReason, lang);
 
     if (contentEl) {
       contentEl.innerHTML = `
