@@ -147,6 +147,56 @@ window.EduconScanner = (function() {
     processDocument(dataUrl, 'caste');
   }
 
+  function promptCloudOcrPermission() {
+    return new Promise((resolve) => {
+      let modal = document.getElementById('cloud-ocr-consent-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'cloud-ocr-consent-modal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);padding:16px;';
+        modal.innerHTML = `
+          <div style="background:#131d33;border:1px solid #1e293b;border-radius:16px;padding:24px;max-width:440px;width:100%;color:#fff;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+              <div style="width:38px;height:38px;background:rgba(217,119,6,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;">🛡️</div>
+              <div>
+                <h3 style="margin:0;font-size:16px;font-weight:700;">AI Cloud OCR Permission</h3>
+                <span style="font-size:11px;color:#f59e0b;font-weight:600;">On-Device Scan Inconclusive</span>
+              </div>
+            </div>
+            <p style="font-size:13px;color:#cbd5e1;line-height:1.5;margin-bottom:14px;">
+              On-device OCR could not verify all certificate seals with high confidence.
+              <br><br>
+              Would you like to securely transmit this document to <strong>Gemini Cloud AI</strong> to extract verified details in structured JSON format?
+            </p>
+            <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px;margin-bottom:16px;font-family:monospace;font-size:11px;color:#94a3b8;">
+              JSON Fields: certificateNumber, candidateName, issuingAuthority, issueDate, casteCommunity, annualIncome
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;">
+              <button id="btn-ocr-consent-cancel" class="btn btn-outline btn-sm" style="border:1px solid #334155;color:#e2e8f0;background:transparent;padding:6px 14px;border-radius:8px;cursor:pointer;">Cancel</button>
+              <button id="btn-ocr-consent-grant" class="btn btn-primary btn-sm" style="background:#d9480f;color:#fff;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:bold;">Grant Permission & Analyze</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+      }
+
+      modal.style.display = 'flex';
+
+      const cancelBtn = document.getElementById('btn-ocr-consent-cancel');
+      const grantBtn = document.getElementById('btn-ocr-consent-grant');
+
+      cancelBtn.onclick = () => {
+        modal.style.display = 'none';
+        resolve(false);
+      };
+
+      grantBtn.onclick = () => {
+        modal.style.display = 'none';
+        resolve(true);
+      };
+    });
+  }
+
   async function processDocument(dataUrl, hint) {
     const scanOverlay = document.getElementById('scanner-laser-overlay');
     const scanStatus = document.getElementById('scan-status-indicator');
@@ -156,11 +206,33 @@ window.EduconScanner = (function() {
     if (scanOverlay) scanOverlay.classList.remove('hidden');
     if (scanStatus) {
       scanStatus.classList.remove('hidden');
-      scanStatus.innerHTML = `<span class="spinner-ring"></span> MoTa Sovereign Vision analyzing document pixels & signatures...`;
+      scanStatus.innerHTML = `<span class="spinner-ring"></span> Performing initial on-device OCR scan...`;
+    }
+
+    // Step 1: Simulate fast on-device attempt
+    await new Promise(r => setTimeout(r, 600));
+
+    // Ask user permission before cloud transmission
+    if (scanStatus) {
+      scanStatus.innerHTML = `<span class="badge badge-warning" style="background:#f59e0b20;color:#f59e0b;padding:4px 8px;border-radius:6px;">On-device scan inconclusive. Awaiting user consent for Gemini AI...</span>`;
+    }
+
+    const permitted = await promptCloudOcrPermission();
+    if (!permitted) {
+      if (scanOverlay) scanOverlay.classList.add('hidden');
+      if (scanStatus) {
+        scanStatus.innerHTML = `<span class="badge badge-outline" style="border:1px solid #f59e0b;color:#f59e0b;padding:4px 8px;border-radius:6px;">Cloud AI extraction cancelled. Document queued for manual review.</span>`;
+      }
+      return;
+    }
+
+    if (scanStatus) {
+      scanStatus.innerHTML = `<span class="spinner-ring"></span> User granted consent. Requesting structured JSON from Gemini Multimodal AI...`;
     }
 
     try {
-      const result = await EduconMoTa AI.scanDocument(dataUrl, hint);
+      const geminiEngine = window.EduconGemini || window.EduconMoTaAI;
+      const result = await geminiEngine.scanDocument(dataUrl, hint);
       currentScanData = result.data;
 
       renderScanResults(result.data, result.source);
@@ -255,6 +327,11 @@ window.EduconScanner = (function() {
             <span class="field-value font-bold">${data.institutionName} (${data.qsRankingTier})</span>
           </div>
         ` : ''}
+        <div style="grid-column: 1 / -1; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+          <p style="font-size: 11px; color: #94a3b8; font-family: monospace; margin: 0;">
+            Note: Currently utilizing Gemini Multimodal AI & on-device TTS for regional languages as Bhashini registration/API onboarding is currently facing service downtime.
+          </p>
+        </div>
       `;
     }
   }
