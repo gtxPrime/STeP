@@ -1,7 +1,18 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+}
+
+val keyPropertiesFile = rootProject.file("key.properties").takeIf { it.exists() }
+    ?: rootProject.file("../key.properties")
+val keyProperties = Properties().apply {
+    if (keyPropertiesFile.exists()) {
+        load(FileInputStream(keyPropertiesFile))
+    }
 }
 
 android {
@@ -18,8 +29,23 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("alphaSigning") {
+            if (keyPropertiesFile.exists()) {
+                storeFile = file(keyProperties.getProperty("storeFile"))
+                storePassword = keyProperties.getProperty("storePassword")
+                keyAlias = keyProperties.getProperty("keyAlias")
+                keyPassword = keyProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("alphaSigning")
+        }
         release {
+            signingConfig = signingConfigs.getByName("alphaSigning")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
