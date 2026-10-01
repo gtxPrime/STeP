@@ -19,8 +19,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.step.app.data.GeminiService
 import com.step.app.data.MoTaRepository
 import com.step.app.ui.theme.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 data class ChatMessage(
     val isUser: Boolean,
@@ -30,6 +33,7 @@ data class ChatMessage(
 
 @Composable
 fun JagoScreen() {
+    val scope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
     val messages = remember {
         mutableStateListOf(
@@ -110,7 +114,7 @@ fun JagoScreen() {
                     shape = RoundedCornerShape(12.dp),
                     border = androidx.compose.foundation.BorderStroke(1.dp, NavyBorder),
                     modifier = Modifier.clickable {
-                        sendJagoMessage(query, messages)
+                        sendJagoMessage(query, messages, scope)
                     }
                 ) {
                     Text(
@@ -159,7 +163,7 @@ fun JagoScreen() {
             ) {
                 IconButton(
                     onClick = {
-                        sendJagoMessage("What is the income ceiling for NOS?", messages)
+                        sendJagoMessage("What is the income ceiling for NOS?", messages, scope)
                     }
                 ) {
                     Icon(Icons.Default.Mic, contentDescription = "Voice Input", tint = SaffronPrimary)
@@ -185,33 +189,53 @@ fun JagoScreen() {
                 IconButton(
                     onClick = {
                         if (inputText.isNotBlank()) {
-                            sendJagoMessage(inputText, messages)
+                            val text = inputText
                             inputText = ""
+                            sendJagoMessage(text, messages, scope)
                         }
                     }
                 ) {
                     Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = SaffronPrimary)
                 }
             }
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Note: Currently utilizing Gemini Multimodal AI & on-device TTS for regional languages as Bhashini registration/API onboarding is currently facing service downtime.",
+                fontSize = 9.sp,
+                color = TextMuted,
+                lineHeight = 12.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 2.dp)
+            )
         }
     }
 }
 
-fun sendJagoMessage(text: String, messages: MutableList<ChatMessage>) {
+fun sendJagoMessage(text: String, messages: MutableList<ChatMessage>, scope: CoroutineScope? = null) {
     messages.add(ChatMessage(isUser = true, text = text))
 
-    val reply = when {
-        text.contains("top class", ignoreCase = true) ->
-            "According to MoTA Policy Clause 4.2, you cannot avail two Central scholarships simultaneously for the same academic level. However, moving from Class 12 to IIT/NIT allows you to transition smoothly to the Top Class Scheme (worth up to ₹2.86 Lakh/yr including a ₹45,000 computer grant) with zero duplicate paperwork!"
-        text.contains("income", ignoreCase = true) ->
-            "Here are the family income limits across the 5 MoTA schemes:\n• Pre-Matric & Post-Matric: Up to ₹2.50 Lakh/yr\n• Top Class (IIT/IIM/NIT): Up to ₹6.00 Lakh/yr\n• National Overseas (NOS): Up to ₹8.00 Lakh/yr\n• National Fellowship (NFST): NO income ceiling!"
-        text.contains("pvtg", ignoreCase = true) ->
-            "Yes! MoTA gives high priority to Particularly Vulnerable Tribal Groups (PVTGs). Under the National Overseas Scheme (NOS), 3 out of 20 slots are exclusively ring-fenced for PVTG candidates. Document verification is expedited under PM-JANMAN mission."
-        else ->
-            "I am connected to the MoTA Knowledge Base. Please ask any question regarding eligibility guidelines, document requirements, or portal applications. You can also view real-time application updates under the Track tab."
-    }
+    if (scope != null) {
+        scope.launch {
+            val reply = GeminiService.queryJago(text, MoTaRepository.currentStudent)
+            messages.add(ChatMessage(isUser = false, text = reply, source = "Gemini 1.5 Flash (Grounded RAG)"))
+        }
+    } else {
+        val reply = when {
+            text.contains("top class", ignoreCase = true) ->
+                "According to MoTA Policy Clause 4.2, you cannot avail two Central scholarships simultaneously for the same academic level. However, moving from Class 12 to IIT/NIT allows you to transition smoothly to the Top Class Scheme (worth up to ₹2.86 Lakh/yr including a ₹45,000 computer grant) with zero duplicate paperwork!"
+            text.contains("income", ignoreCase = true) ->
+                "Here are the family income limits across the 5 MoTA schemes:\n• Pre-Matric & Post-Matric: Up to ₹2.50 Lakh/yr\n• Top Class (IIT/IIM/NIT): Up to ₹6.00 Lakh/yr\n• National Overseas (NOS): Up to ₹8.00 Lakh/yr\n• National Fellowship (NFST): NO income ceiling!"
+            text.contains("pvtg", ignoreCase = true) ->
+                "Yes! MoTA gives high priority to Particularly Vulnerable Tribal Groups (PVTGs). Under the National Overseas Scheme (NOS), 3 out of 20 slots are exclusively ring-fenced for PVTG candidates. Document verification is expedited under PM-JANMAN mission."
+            else ->
+                "I am connected to the MoTA Knowledge Base. Please ask any question regarding eligibility guidelines, document requirements, or portal applications. You can also view real-time application updates under the Track tab."
+        }
 
-    messages.add(ChatMessage(isUser = false, text = reply, source = "MoTA Sovereign AI (Grounded RAG)"))
+        messages.add(ChatMessage(isUser = false, text = reply, source = "MoTA Sovereign AI (Grounded RAG)"))
+    }
 }
 
 @Composable
